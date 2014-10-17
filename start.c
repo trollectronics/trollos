@@ -2,15 +2,10 @@
 ** of the built binary								*/
 
 #include "test.h"
+#include "boot_term.h"
 
 void _start() {
-	unsigned int *ptr = 0x80800;
-	int i;
-
-	for (i = 0; i < 640*480/8; i++) {
-		*ptr = 0x01020304, ptr++;
-		*ptr = 0x01010101, ptr++;
-	}
+	term_init();
 
 	test();
 	for(;;);

@@ -1,9 +1,10 @@
 # Project: m68k-emu
 include $(TOPDIR)/config.mk
 
-CFLAGS		+=	-fPIC -nostdlib -O3
-LDFLAGS		=	-Wl,--oformat=binary
-SRCFILES	=	start.c test.c
+CFLAGS		+=	-nostdlib -O3 -ffreestanding -fno-builtin -nodefaultlibs
+LDFLAGS		=	-Wl,--oformat=binary,-e0x400,-Tbss=0x87000,-Ttext=0x400
+#,-Tdata=0x400
+SRCFILES	=	start.c test.c boot_term.c util.c
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin
 BOOTVEC		=	boot.vec
