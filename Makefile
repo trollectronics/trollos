@@ -2,9 +2,9 @@
 include $(TOPDIR)/config.mk
 
 CFLAGS		+=	-nostdlib -O3 -ffreestanding -fno-builtin -nodefaultlibs
-LDFLAGS		=	-Wl,--oformat=binary,-e0x400,-Tbss=0x87000,-Ttext=0x400
+LDFLAGS		=	-Wl,--oformat=binary,-e0x400,-Tbss=0xCE000,-Ttext=0x400
 #,-Tdata=0x400
-SRCFILES	=	start.c test.c boot_term.c util.c
+SRCFILES	=	start.c test.c boot_term.c util.c romfs.c
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin
 BOOTVEC		=	boot.vec
@@ -23,6 +23,7 @@ clean:
 	@echo " [ RM ] $(OBJFILES)"
 	@$(RM) $(OBJFILES)
 	@echo " [ RM ] $(BOOTBIN)"
+	@$(RM) $(BOOTBIN)
 	@echo "Done."
 	@echo 
 

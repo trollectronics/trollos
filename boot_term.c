@@ -12,14 +12,31 @@ static int pos_y;
 void term_init() {
 	int i;
 	unsigned int *vgabuff = MEM_VGA_RAM;
+	unsigned short *vgapal = MEM_PAL_RAM;
 
 	pos_x = 0;
 	pos_y = 0;
 	
 	for (i = 0; i < 640*480/4; i++)
 		vgabuff[i] = 0;
-
-	/* TODO: Copy palette */
+	
+	vgapal[0] = 0;
+	vgapal[1] = 0x14;
+	vgapal[2] = 0x540;
+	vgapal[3] = 0x554;
+	vgapal[4] = 0xA000;
+	vgapal[5] = 0xA014;
+	vgapal[6] = 0xA380;
+	vgapal[7] = 0xA554;
+	vgapal[8] = 0x52AA;
+	vgapal[9] = 0x52BF;
+	vgapal[10] = 0x57EA;
+	vgapal[11] = 0x57FF;
+	vgapal[12] = 0xFAAA;
+	vgapal[13] = 0xFAAF;
+	vgapal[14] = 0xFFFA;
+	vgapal[15] = 0xFFFF;
+	
 	return;
 }
 
