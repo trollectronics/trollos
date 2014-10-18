@@ -28,7 +28,7 @@ struct RomfsFileDescriptor romfs_locate_step(void *fsptr, struct RomfsFileEntry 
 		return desc;
 	for (;;) {
 		if (streq(name_buff, ((void *) entry) + sizeof(*entry), 255)) {
-			if ((entry->next_fileheader & 0xF) == 2) {
+			if ((entry->next_fileheader & 0x7) == 2) {
 				if (*path) {
 					term_puts(path, 15);
 					return desc;
@@ -42,17 +42,13 @@ struct RomfsFileDescriptor romfs_locate_step(void *fsptr, struct RomfsFileEntry 
 					desc.data = ((void *) entry) + j + sizeof(*entry);
 					return desc;
 				}
-			} else if ((entry->next_fileheader & 0xF) == 1)
+			} else if ((entry->next_fileheader & 0x7) == 1)
 				return romfs_locate_step(fsptr, fsptr + entry->special_info, path);
 			else {
 				term_puts("Bad filetype\n", 12);
 				return desc;
 			}
 		}
-
-		term_puts("Skipping file ", 15);
-		term_puts(((void *) entry) + sizeof(*entry), 15);
-		term_puts("\n", 15);
 
 		if (!(entry->next_fileheader & (~0xF))) {
 			term_puts("End of list\n", 15);

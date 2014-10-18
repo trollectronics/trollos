@@ -24,6 +24,19 @@ void *memset(void *s, int c, unsigned int n) {
 }
 
 
+/* Retarded, slow memcpy to fool GCC from "optimizing" it to a memcpy call */
+void *memcpy(void *dest, void *src, unsigned int n) {
+	char *cdest = dest, *csrc = src;
+	int i;
+
+	for (i = 0; i < n; i += 2)
+		cdest[i] = csrc[i];
+	for (i = 1; i < n; i += 2)
+		cdest[i] = csrc[i];
+	return dest;
+}
+
+
 int streq(const char *s1, const char *s2, int limit) {
 	int i;
 

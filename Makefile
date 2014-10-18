@@ -4,7 +4,7 @@ include $(TOPDIR)/config.mk
 CFLAGS		+=	-nostdlib -O3 -ffreestanding -fno-builtin -nodefaultlibs
 LDFLAGS		=	-Wl,--oformat=binary,-e0x400,-Tbss=0xCE000,-Ttext=0x400
 #,-Tdata=0x400
-SRCFILES	=	start.c test.c boot_term.c util.c romfs.c
+SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin
 BOOTVEC		=	boot.vec
@@ -14,7 +14,10 @@ all: $(OBJFILES) $(DEPENDS)
 	@echo " [ LD ] $(BOOTBIN)"
 	@$(TARGETCC) $(CFLAGS) $(OBJFILES) -o $(BOOTBIN) $(LDFLAGS)
 	@echo " [MIMG] $(BOOTIMG)"
-	@cat $(BOOTVEC) $(BOOTBIN) > $(BOOTIMG)
+	@dd if=/dev/zero of=boot.img bs=1024 count=64 2>/dev/null
+	@dd if=$(BOOTVEC) of=boot.img conv=notrunc 2>/dev/null
+	@dd if=$(BOOTBIN) of=boot.img bs=1024 seek=1 conv=notrunc 2>/dev/null
+	@mv boot.img $(BOOTIMG)
 	@echo "Done."
 	@echo
 	
