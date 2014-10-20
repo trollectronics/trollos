@@ -1,6 +1,7 @@
 #include "boot_term.h"
 #include "vgafont.h"
 #include "mem_addr.h"
+#include "bios_info.h"
 
 #define TERM_W		71
 #define	TERM_H		30
@@ -84,5 +85,28 @@ void term_putc_term(unsigned char c, int color) {
 void term_puts(char *str, int color) {
 	for (; *str; str++)
 		term_putc_term((unsigned) *str, color);
+	return;
+}
+
+
+void term_export() {
+	struct BiosInfo *bi = BIOS_INFO_ADDR;
+
+	bi->font = vgafont_data;
+	bi->term_x = pos_x;
+	bi->term_y = pos_y;
+	bi->def_fg = 15;
+	bi->def_bg = 0;
+
+	return;
+}
+
+
+void term_import() {
+	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	
+	pos_x = bi->term_x;
+	pos_y = bi->term_y;
+	
 	return;
 }

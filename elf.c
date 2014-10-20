@@ -2,6 +2,7 @@
 #include "boot_term.h"
 #include "mem_addr.h"
 #include "util.h"
+#include "bios_info.h"
 
 
 int elf_load(void *ptr, int argc, char **argv) {
@@ -77,6 +78,9 @@ int elf_load(void *ptr, int argc, char **argv) {
 
 	entry = (void *) eh->e_entry;
 	term_puts("ELF sections loaded. PREPARE FOR LIFT-OFF!!\n", MEM_PAL_NEUTRAL);
-	return entry(argc, argv);
+	term_export();
+	i = entry(argc, argv);
+	term_import();
+	return i;
 }
 

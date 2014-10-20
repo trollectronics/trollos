@@ -1,6 +1,6 @@
 #ifndef __VGA_FONT_H__
 #define __VGA_FONT_H__
-static char vgafont_data[2672] = {
+static unsigned char vgafont_data[2672] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 24, 102, 66, 66, 165, 129, 165, 90, 66, 102, 24, 0, 0, 0, 0,
 	0, 24, 126, 126, 126, 219, 255, 219, 102, 126, 126, 24, 0, 0, 0, 0,
