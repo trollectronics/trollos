@@ -7,17 +7,17 @@ SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.o)
 .PHONY: all clean
 
-LDFLAGS		=	-nostdlib -Wl,-Ttext=0x10000000
-CFLAGS		=	-Wall -O2
+LDFLAGS		=	-nostdlib -Wl,-Ttext=0x10000000 -static -lgcc
+CFLAGS		=	-Wall -O2 -I../
 
 all: $(OBJFILES) $(DEPENDS)
-	@echo " [ LD ] $(OSLOADERBIN)"
+	@echo " [ LD ] $(LOADERBIN)"
 	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) -o $(LOADERBIN) $(LDFLAGS) $(OSLDFLAGS)
 	@echo " [MKFS] $(OSFS)"
 	@mkdir -p root
 	@mkdir -p root/boot
 	@cp $(LOADERBIN) root/boot/$(LOADERBIN)
-	@genromfs -f $(OSFS) -d root/
+	@genromfs -f $(OSFS) -d root/ -V TrollBookOS
 	@rm -Rf root/
 	@echo "Done."
 	@echo
