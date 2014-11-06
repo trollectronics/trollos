@@ -53,7 +53,7 @@ void term_putc(int c, int color) {
 	for (i = 0; i < 16; i++) {
 		data = vgafont_data[c * 16 + i];
 		for (j = 0; j < 8; j++) {
-			vgabuff[(row + i) * 640 + col + j] = (data & 1) ? color : 0;
+			vgabuff[(row + i) * 800 + col + j] = (data & 1) ? color : 0;
 			data >>= 1;
 		}
 	}

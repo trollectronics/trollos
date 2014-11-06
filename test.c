@@ -5,11 +5,12 @@
 int test() {
 	struct RomfsFileDescriptor desc;
 	char *argv[] = { "osloader.elf", "arne" };
+	int i;
 	
-	if (!romfs_detect((void *) 0x10000))
+	if (!romfs_detect((void *) 0x90000))
 		term_puts("Bad magic in RomFS\n", 12);
 	else {
-		desc = romfs_locate((void *) 0x10000, "/boot/osloader.elf");
+		desc = romfs_locate((void *) 0x90000, "/boot/osloader.elf");
 		if (!desc.filename)
 			term_puts("Couldn't find file /boot/osloader.elf", 12);
 		else {
@@ -19,5 +20,8 @@ int test() {
 		}
 	}
 
-	for (;;);
+	for (;;) {
+		for (i = 0; i < 1000000; i++);
+		term_putc(',', 4);
+	}
 }

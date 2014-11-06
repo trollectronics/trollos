@@ -2,17 +2,19 @@
 include $(TOPDIR)/config.mk
 
 CFLAGS		+=	-nostdlib -O3 -ffreestanding -fno-builtin -nodefaultlibs
-LDFLAGS		=	-Wl,--oformat=binary,-e0x400,-Tbss=0xCE000,-Ttext=0x400
+LDFLAGS		=	-Wl,--oformat=binary,-e0x80400,-Tbss=0x4E000,-Ttext=0x80400
 #,-Tdata=0x400
+ASMFILES	=	dummy.s
 SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c
+AOBJFILES	=	$(ASMFILES:.s=.ao)
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin
 BOOTVEC		=	boot.vec
 .PHONY: all clean
 
-all: $(OBJFILES) $(DEPENDS)
+all: $(OBJFILES) $(AOBJFILES) $(DEPENDS)
 	@echo " [ LD ] $(BOOTBIN)"
-	@$(TARGETCC) $(CFLAGS) $(OBJFILES) -o $(BOOTBIN) $(LDFLAGS)
+	@$(TARGETCC) $(CFLAGS) $(OBJFILES) $(AOBJFILES) -o $(BOOTBIN) $(LDFLAGS)
 	@echo " [MIMG] $(BOOTIMG)"
 	@dd if=/dev/zero of=boot.img bs=1024 count=64 2>/dev/null
 	@dd if=$(BOOTVEC) of=boot.img conv=notrunc 2>/dev/null
@@ -31,6 +33,9 @@ clean:
 	@echo 
 
 %.o: %.c %.h
-	@echo " [ CC ] src/$<"
+	@echo " [ CC ] bootimg/$<"
 	@$(TARGETCC) $(CFLAGS) -c -o $@ $<
-	
+
+%.ao: %.s
+	@echo " [ AS ] bootimg/$<"
+	@$(TARGETAS) -o $@ $<
