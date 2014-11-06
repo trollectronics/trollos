@@ -3,16 +3,18 @@ include $(TOPDIR)/config.mk
 
 LOADERBIN	=	osloader.elf
 
+ASMFILES	=	$(wildcard *.s)
 SRCFILES	=	$(wildcard *.c)
+AOBJFILES	=	$(ASMFILES:.s=.o)
 OBJFILES	=	$(SRCFILES:.c=.o)
 .PHONY: all clean
 
 LDFLAGS		=	-nostdlib -Wl,-Ttext=0x10000000 -static -lgcc
 CFLAGS		=	-Wall -O2 -I../
 
-all: $(OBJFILES) $(DEPENDS)
+all: $(OBJFILES) $(DEPENDS) $(AOBJFILES)
 	@echo " [ LD ] $(LOADERBIN)"
-	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) -o $(LOADERBIN) $(LDFLAGS) $(OSLDFLAGS)
+	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) $(AOBJFILES) -o $(LOADERBIN) $(LDFLAGS) $(OSLDFLAGS)
 	@echo " [MKFS] $(OSFS)"
 	@mkdir -p root
 	@mkdir -p root/boot
@@ -33,3 +35,6 @@ clean:
 	@echo " [ CC ] osloader/$<"
 	@$(TARGETCC) $(CFLAGS) $(OSCFLAGS) -c -o $@ $<
 	
+%.o: %.s
+	@echo " [ AS ] osloader/$<"
+	@$(TARGETAS) -o $@ $<

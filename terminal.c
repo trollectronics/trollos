@@ -13,11 +13,11 @@ void terminal_scroll() {
 	int i, j;
 
 	for (i = 0; i < (TERM_H - 1) * 16; i++)
-		for (j = 0; j < 640/4; j++)
-			vgabuff[i * 640/4 + j] = vgabuff[(i + 16) * 640/4 + j];
+		for (j = 0; j < 800/4; j++)
+			vgabuff[i * 800/4 + j] = vgabuff[(i + 16) * 800/4 + j];
 	for (; i < TERM_H * 16; i++)
-		for (; j < 640/4; j++)
-			vgabuff[i * 640/4 + j] = 0;
+		for (; j < 800/4; j++)
+			vgabuff[i * 800/4 + j] = 0;
 	return;
 }
 
@@ -33,7 +33,7 @@ void terminal_putc(int c, int fg, int bg) {
 	for (i = 0; i < 16; i++) {
 		data = bi->font[c * 16 + i];
 		for (j = 0; j < 9; j++) {
-			vgabuff[(row + i) * 640 + col + j] = (data & 1) ? fg : bg;
+			vgabuff[(row + i) * 800 + col + j] = (data & 1) ? fg : bg;
 			data >>= 1;
 		}
 
