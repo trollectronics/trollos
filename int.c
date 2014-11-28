@@ -20,5 +20,8 @@ void int_init() {
 }
 
 void int_stub_handle() {
+	int *addr = (void *) 0x20000004;
+
 	terminal_putc_simple('.');
+	*addr = 0;
 }
