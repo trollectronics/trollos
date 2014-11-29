@@ -1,4 +1,4 @@
-
+#include <stdint.h>
 /* Non-portable way of confusing GCC's optimizer */
 void *memset(void *s, int c, unsigned int n) {
 	unsigned char *b = s;
@@ -26,13 +26,37 @@ void *memset(void *s, int c, unsigned int n) {
 
 /* Retarded, slow memcpy to fool GCC from "optimizing" it to a memcpy call */
 void *memcpy(void *dest, void *src, unsigned int n) {
-	char *cdest = dest, *csrc = src;
+	/*char *cdest = dest, *csrc = src;
 	int i;
 
 	for (i = 0; i < n; i += 2)
 		cdest[i] = csrc[i];
 	for (i = 1; i < n; i += 2)
-		cdest[i] = csrc[i];
+		cdest[i] = csrc[i];*/
+	
+	register uint8_t *to = dest, *from = src;
+	register unsigned int count = (n + 7)/8;
+	switch(n % 8) {
+		case 0:
+			do {
+				*to++ = *from++;
+		case 7:
+				*to++ = *from++;
+		case 6:
+				*to++ = *from++;
+		case 5:
+				*to++ = *from++;
+		case 4:
+				*to++ = *from++;
+		case 3:
+				*to++ = *from++;
+		case 2:
+				*to++ = *from++;
+		case 1:
+				*to++ = *from++;
+			} while(count-- > 0);
+	 }
+	
 	return dest;
 }
 
