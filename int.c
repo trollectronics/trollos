@@ -22,6 +22,6 @@ void int_init() {
 void int_stub_handle() {
 	volatile int *addr = (volatile void *) 0x20000004;
 
-	terminal_putc_simple('.');
+	//terminal_putc_simple('.');
 	*addr = 0;
 }

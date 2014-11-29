@@ -10,7 +10,7 @@ OBJFILES	=	$(SRCFILES:.c=.o)
 .PHONY: all clean
 
 LDFLAGS		=	-nostdlib -Wl,-Ttext=0x10000000 -static -lgcc
-CFLAGS		=	-Wall -O2 -I../
+CFLAGS		=	-Wall -O2 -ffreestanding -I../
 
 all: $(OBJFILES) $(DEPENDS) $(AOBJFILES)
 	@echo " [ LD ] $(LOADERBIN)"
