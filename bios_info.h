@@ -1,7 +1,7 @@
 #ifndef __BIOS_INFO_H__
 #define	__BIOS_INFO_H__
 
-#define	BIOS_INFO_ADDR		((void *) 0x7FF00)
+#define	BIOS_INFO_ADDR		((volatile void *) 0x7FF00)
 
 
 struct BiosInfo {
