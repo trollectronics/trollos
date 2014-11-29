@@ -2,22 +2,22 @@
 #define	__TERMINAL_H__
 
 enum TerminalColor {
-	TerminalColorBlack		= 0,
-	TerminalColorBlue		= 1,
-	TerminalColorGreen		= 2,
-	TerminalColorCyan		= 3,
-	TerminalColorRed		= 4,
-	TerminalColorMagenta		= 5,
-	TerminalColorBrown		= 6,
-	TerminalColorLightGray		= 7,
-	TerminalColorGray		= 8,
-	TerminalColorLightBlue		= 9,
-	TerminalColorLightGreen		= 10,
-	TerminalColorLightCyan		= 11,
-	TerminalColorLightRed		= 12,
-	TerminalColorLightMagenta	= 13,
-	TerminalColorYellow		= 14,
-	TerminalColorWhite		= 15,
+	TERMINAL_COLOR_BLACK,
+	TERMINAL_COLOR_BLUE,
+	TERMINAL_COLOR_GREEN,
+	TERMINAL_COLOR_CYAN,
+	TERMINAL_COLOR_RED,
+	TERMINAL_COLOR_MAGENTA,
+	TERMINAL_COLOR_BROWN,
+	TERMINAL_COLOR_LIGHT_GRAY,
+	TERMINAL_COLOR_GRAY,
+	TERMINAL_COLOR_LIGHT_BLUE,
+	TERMINAL_COLOR_LIGHT_GREEN,
+	TERMINAL_COLOR_LIGHT_CYAN,
+	TERMINAL_COLOR_LIGHT_RED,
+	TERMINAL_COLOR_LIGHT_MAGENTA,
+	TERMINAL_COLOR_YELLOW,
+	TERMINAL_COLOR_WHITE,
 };
 
 void terminal_puts(char *str);

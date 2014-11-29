@@ -9,7 +9,7 @@
 /* TODO: Implement cursor */
 
 void terminal_scroll() {
-	unsigned int *vgabuff = MEM_VGA_RAM;
+	volatile unsigned int *vgabuff = MEM_VGA_RAM;
 	int i, j;
 
 	for (i = 0; i < (TERM_H - 1) * 16; i++)
@@ -24,8 +24,8 @@ void terminal_scroll() {
 
 void terminal_putc(int c, int fg, int bg) {
 	int i, j, row, col, data;
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
-	unsigned char *vgabuff = MEM_VGA_RAM;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile unsigned char *vgabuff = MEM_VGA_RAM;
 
 	col = bi->term_x * 9;
 	row = bi->term_y * 16;
@@ -49,7 +49,7 @@ void terminal_putc(int c, int fg, int bg) {
 
 
 void terminal_putc_ctrl(int c, int fg, int bg) {
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	
 	if (c == '\n') {
 		bi->term_x = 0, bi->term_y++;
@@ -68,7 +68,7 @@ void terminal_putc_ctrl(int c, int fg, int bg) {
 }
 
 void terminal_set_fg(enum TerminalColor color) {
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	
 	bi->def_fg = color;
 	return;
@@ -76,7 +76,7 @@ void terminal_set_fg(enum TerminalColor color) {
 
 
 void terminal_set_bg(enum TerminalColor color) {
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	
 	bi->def_bg = color;
 	return;
@@ -84,7 +84,7 @@ void terminal_set_bg(enum TerminalColor color) {
 
 
 void terminal_putc_simple(char c) {
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	unsigned char uc = (unsigned char) c;
 
 	terminal_putc_ctrl(uc, bi->def_fg, bi->def_bg);
@@ -94,7 +94,7 @@ void terminal_putc_simple(char c) {
 
 void terminal_put_counted(char *str, int count) {
 	unsigned char *ustr = (void *) str;
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	
 	for (; count; terminal_putc_ctrl(*ustr, bi->def_fg, bi->def_bg), ustr++, count--);
 	return;
@@ -103,7 +103,7 @@ void terminal_put_counted(char *str, int count) {
 
 void terminal_puts(char *str) {
 	unsigned char *ustr = (void *) str;
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 
 	for (; *ustr; terminal_putc_ctrl(*ustr, bi->def_fg, bi->def_bg), ustr++);
 	return;
