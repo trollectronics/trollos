@@ -1,6 +1,7 @@
 #ifndef __MMU_H__
 #define __MMU_H__
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifndef NULL
 #define NULL 0x0
@@ -203,6 +204,7 @@ enum MmuDescriptorType {
 
 void mmu_init();
 void mmu_bus_error();
+void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect, MmuKernelSegment segment, uint32_t count);
 void mmu_set_tc(MmuRegTranslationControl *tc);
 void mmu_get_tc(MmuRegTranslationControl *tc);
 void mmu_set_srp(MmuRegRootPointer *srp);

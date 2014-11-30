@@ -54,7 +54,7 @@ void mmu_init() {
 	mmu_set_tc(&tc);
 }
 
-void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect, MmuKernelSegment segment) {
+void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect, MmuKernelSegment segment, uint32_t count) {
 	uint32_t table_number = virtual_address / (4096*1024);
 	uint32_t descriptor_number = virtual_address % (4096*1024);
 	uint32_t page_address = MMU_LOGIAL_START + (4096*allocated_frames);
@@ -70,6 +70,9 @@ void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect, MmuKernel
 		}
 	};
 	MmuDescriptorShort *segment_table;
+	
+	if(!count)
+		return NULL;
 	
 	switch(segment) {
 		case MMU_KERNEL_SEGMENT_TEXT:
@@ -100,6 +103,8 @@ void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect, MmuKernel
 	descriptor_table[descriptor_number].whole = descriptor.whole;
 	
 	allocated_frames++;
+	
+	mmu_allocate_frame(virtual_address + 4096, write_protect, segment, count - 1); //because i'm bad.
 	return (void *) page_address;
 }
 
