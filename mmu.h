@@ -2,6 +2,17 @@
 #define __MMU_H__
 #include <stdint.h>
 
+#ifndef NULL
+#define NULL 0x0
+#endif
+
+typedef enum MmuKernelSegment MmuKernelSegment;
+enum MmuKernelSegment {
+	MMU_KERNEL_SEGMENT_TEXT,
+	MMU_KERNEL_SEGMENT_DATA,
+	MMU_KERNEL_SEGMENT_STACK,
+};
+
 typedef enum MmuPageSize MmuPageSize;
 enum MmuPageSize {
 	MMU_PAGE_SIZE_256 = 0x8,

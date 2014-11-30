@@ -54,7 +54,7 @@ void mmu_init() {
 	mmu_set_tc(&tc);
 }
 
-void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect) {
+void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect, MmuKernelSegment segment) {
 	uint32_t table_number = virtual_address / (4096*1024);
 	uint32_t descriptor_number = virtual_address % (4096*1024);
 	uint32_t page_address = MMU_LOGIAL_START + (4096*allocated_frames);
@@ -69,6 +69,21 @@ void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect) {
 			.page_address = page_address >> 8,
 		}
 	};
+	MmuDescriptorShort *segment_table;
+	
+	switch(segment) {
+		case MMU_KERNEL_SEGMENT_TEXT:
+			segment_table = supervisor.text;
+			break;
+		case MMU_KERNEL_SEGMENT_DATA:
+			segment_table = supervisor.data;
+			break;
+		case MMU_KERNEL_SEGMENT_STACK:
+			segment_table = supervisor.stack;
+			break;
+		default:
+			return NULL;
+	}
 	
 	if(supervisor.page_table[table_number].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT) {
 		MmuDescriptorShort table = {
@@ -76,7 +91,7 @@ void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect) {
 				.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT,
 				.write_protected = false,
 				.used = false,
-				.table_address = ((uint32_t) supervisor.text) >> 4,
+				.table_address = ((uint32_t) segment_table) >> 4,
 			}
 		};
 		supervisor.page_table[table_number].whole = table.whole;
