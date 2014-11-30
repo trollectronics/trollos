@@ -3,6 +3,7 @@ include $(TOPDIR)/config.mk
 
 CFLAGS		+=	-m68030 -nostdlib -O3 -ffreestanding -fno-builtin -nostdlib
 LDFLAGS		=	-Wl,--oformat=binary,-e0x80400,-Tbss=0x4E000,-Ttext=0x80400
+ASFLAGS		+=	-m68030
 #,-Tdata=0x400
 ASMFILES	=	dummy.s
 SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c
@@ -38,4 +39,4 @@ clean:
 
 %.ao: %.s
 	@echo " [ AS ] bootimg/$<"
-	@$(TARGETAS) -o $@ $<
+	@$(TARGETAS) $(ASFLAGS) -o $@ $<
