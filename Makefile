@@ -11,6 +11,7 @@ OBJFILES	=	$(SRCFILES:.c=.o)
 
 LDFLAGS		=	-nostdlib -Wl,-Ttext=0x10000000 -static -lgcc
 CFLAGS		=	-m68030 -Wall -O2 -ffreestanding -I../
+ASFLAGS		=	-m68030
 
 all: $(OBJFILES) $(DEPENDS) $(AOBJFILES)
 	@echo " [ LD ] $(LOADERBIN)"
@@ -37,4 +38,4 @@ clean:
 	
 %.o: %.s
 	@echo " [ AS ] osloader/$<"
-	@$(TARGETAS) -o $@ $<
+	@$(TARGETAS) $(ASFLAGS) -o $@ $<
