@@ -2,8 +2,19 @@
 #define __MMU_H__
 #include <stdint.h>
 
-void mmu_init();
+typedef enum MmuPageSize MmuPageSize;
+enum MmuPageSize {
+	MMU_PAGE_SIZE_256 = 0x8,
+	MMU_PAGE_SIZE_512,
+	MMU_PAGE_SIZE_1K,
+	MMU_PAGE_SIZE_2K,
+	MMU_PAGE_SIZE_4K,
+	MMU_PAGE_SIZE_8K,
+	MMU_PAGE_SIZE_16K,
+	MMU_PAGE_SIZE_32K,
+};
 
+typedef struct MmuRegTranslationControl MmuRegTranslationControl;
 struct MmuRegTranslationControl {
 	uint32_t table_indices_d : 4;
 	uint32_t table_indices_c : 4;
@@ -17,6 +28,7 @@ struct MmuRegTranslationControl {
 	uint32_t enable : 1;
 };
 
+typedef struct MmuRegTransparentTranslation MmuRegTransparentTranslation;
 struct MmuRegTransparentTranslation {
 	uint32_t function_code_mask : 3;
 	uint32_t : 1;
@@ -31,6 +43,7 @@ struct MmuRegTransparentTranslation {
 	uint32_t logical_address_base : 8;
 };
 
+typedef struct MmuRegStatus MmuRegStatus;
 struct MmuRegStatus {
 	uint16_t number_of_levels : 3;
 	uint16_t : 3;
@@ -45,8 +58,9 @@ struct MmuRegStatus {
 	uint16_t bus_error : 1;
 };
 
+typedef struct MmuRegRootPointer MmuRegRootPointer;
 struct MmuRegRootPointer {
-	uint64_t unused : 4;
+	uint64_t : 4;
 	uint64_t table_address : 28;
 	uint64_t descriptor_type : 2;
 	uint64_t : 14;
@@ -175,5 +189,10 @@ enum MmuDescriptorType {
 	MMU_DESCRIPTOR_TYPE_TABLE_SHORT,
 	MMU_DESCRIPTOR_TYPE_TABLE_LONG,
 };
+
+void mmu_init();
+void mmu_bus_error();
+void mmu_set_tc(MmuRegTranslationControl *tc);
+void mmu_get_tc(MmuRegTranslationControl *tc);
 
 #endif
