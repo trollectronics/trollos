@@ -1,16 +1,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "printf.h"
+#include "terminal.h"
 #include "mmu.h"
-
-static MmuRegRootPointer supervisor_root_pointer;
-
 
 /** This is probably not nessecary for the bootloader, since we won'd deallocate frames.
  *   We should just use a simple counter to count sequentially allocated frames!*/
 /*bitmap of allocated physical memory frames*/
-#define MEM_PHYS_SIZE 67108864
-uint32_t frame_map[MEM_PHYS_SIZE/4096/32];
+//#define MEM_PHYS_SIZE (64*1024*1024)
+//uint32_t frame_map[MEM_PHYS_SIZE/4096/32];
+#define MMU_LOGIAL_START (16*1024*1024)
+uint32_t allocated_frames;
 
 struct {
 	MmuDescriptorShort page_table[1024];
@@ -26,7 +26,7 @@ void mmu_init() {
 		.table_indices_a = 10, /*1024 entries * 4 byte/entry = 4k*/
 		.table_indices_b = 10,
 		.supervisor_root_pointer = true,
-		.enable = true,
+		.enable = false,
 	};
 	MmuRegTransparentTranslation tt0 = {
 		.function_code_mask = 0x3,
@@ -47,27 +47,51 @@ void mmu_init() {
 		.limit = 0x0,
 		.lu = false,
 	};
-	MmuDescriptorShort table = {
-		.table = {
-			.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT,
-			.write_protected = true,
+	
+	mmu_set_srp(&srp);
+	mmu_set_tt0(&tt0);
+	mmu_set_tt1(&tt1);
+	mmu_set_tc(&tc);
+}
+
+void *mmu_allocate_frame(uint32_t virtual_address, bool write_protect) {
+	uint32_t table_number = virtual_address / (4096*1024);
+	uint32_t descriptor_number = virtual_address % (4096*1024);
+	uint32_t page_address = MMU_LOGIAL_START + (4096*allocated_frames);
+	MmuDescriptorShort *descriptor_table;
+	MmuDescriptorShort descriptor = {
+		.page = {
+			.descriptor_type = true,
+			.write_protected = write_protect,
 			.used = false,
-			.table_address = ((uint32_t) supervisor.text) >> 4,
+			.modified = false,
+			.cache_inhibit = false,
+			.page_address = page_address >> 8,
 		}
 	};
-	/*Kernel .text starts at 16MB*/
-	supervisor.page_table[3].whole = table.whole;
 	
-	table.table.write_protected = false;
-	table.table.table_address = ((uint32_t) supervisor.data) >> 4;
-	supervisor.page_table[3 + 1].whole = table.whole;
+	if(supervisor.page_table[table_number].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT) {
+		MmuDescriptorShort table = {
+			.table = {
+				.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT,
+				.write_protected = false,
+				.used = false,
+				.table_address = ((uint32_t) supervisor.text) >> 4,
+			}
+		};
+		supervisor.page_table[table_number].whole = table.whole;
+	}
+	descriptor_table = (void *) (supervisor.page_table[table_number].table.table_address << 4);
+	descriptor_table[descriptor_number].whole = descriptor.whole;
 	
-	table.table.table_address = ((uint32_t) supervisor.stack) >> 4;
-	supervisor.page_table[1023].whole = table.whole;
-	
-	//TODO: set up supervisor root pointer
+	allocated_frames++;
+	return (void *) page_address;
 }
 
 void mmu_bus_error() {
+	terminal_set_bg(TERMINAL_COLOR_RED);
+	terminal_set_fg(TERMINAL_COLOR_WHITE);
+	terminal_puts("PANIC: bus error");
 	
+	for(;;);
 }

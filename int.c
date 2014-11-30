@@ -1,8 +1,10 @@
 #include "../src/chipset.h"
 #include "../bootimg/mem_addr.h"
 #include "printf.h"
+#include "mmu.h"
 
 extern void *int_stub;
+extern void *int_stub_bus_error;
 extern void int_enable();
 
 void int_init() {
@@ -10,12 +12,12 @@ void int_init() {
 	volatile unsigned int *io_port = (MEM_CHIPSET_SPACE);
 	int i;
 
-	for (i = 0; i < 8; i++)
-		int_vec[i] = &int_stub;
+	for (i = 0; i < 15; i++)
+		int_vec[i] = &int_stub_bus_error;
 	int_vec[CHIPSET_INT_NUM_VGA_VSYNC] = &int_stub;
 	printf("interrupt stub: %p\n",  &int_stub);
 	__asm__("mov.w 0x3000, %sr");
-	*io_port = 1;
+	//*io_port = 1;
 	return;
 }
 

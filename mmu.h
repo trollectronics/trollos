@@ -13,6 +13,7 @@ enum MmuPageSize {
 	MMU_PAGE_SIZE_16K,
 	MMU_PAGE_SIZE_32K,
 };
+
 typedef struct MmuRegTranslationControl MmuRegTranslationControl;
 struct MmuRegTranslationControl {
 	uint32_t enable : 1;
