@@ -21,12 +21,11 @@ int test() {
 			term_puts("Couldn't find file /boot/osloader.elf", 12);
 		else {
 			term_puts("Attempting to launch /boot/osloader.elf...\n", 10);
-			//elf_run(desc.data, 2, argv);
 			mmu_init();
 			go = elf_load(desc.data);
-			printf("phys of entry 0x%X is 0x%X\n", go, mmu_get_physical(go));
+			printf(" -> Entry is 0x%X, mapped to physical address 0x%X\n", go, mmu_get_physical(go));
 			term_export();
-			mmu_enable_and_jump(go);
+			mmu_enable_and_jump(go, 2, argv);
 			for(;;);
 			term_puts("Returned from elf_load()\n", 15);
 		}

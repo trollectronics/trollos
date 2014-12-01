@@ -130,14 +130,6 @@ int (*(elf_load(void *ptr)))(int argc, char **argv) {
 	
 	sh = ptr + eh->e_shoff;
 	ph = ptr + eh->e_phoff;
-	
-	/*for (i = 0; i < eh->e_phnum; i++, ph = ((void *) ph) + eh->e_phentsize) {
-		if (ph->p_type != 1)
-			continue;
-		count = (ph->p_memsz + 4095)/4096;
-		mmu_allocate_frame(ph->p_vaddr, MMU_KERNEL_SEGMENT_TEXT, count);
-		memcpy((void *) ph->p_vaddr, ptr + ph->p_offset, ph->p_filesz);
-	}*/
 
 	for (i = 0; i < eh->e_shnum; i++, sh = ((void *) sh) + eh->e_shentsize) {
 		if (!sh->sh_addr)
@@ -154,15 +146,12 @@ int (*(elf_load(void *ptr)))(int argc, char **argv) {
 		count = (sh->sh_size + 4095)/4096;
 		if (sh->sh_type == 8) {	/* No bits. .bss et al */
 			p = mmu_allocate_frame(sh->sh_addr, segment, count);
-			printf("BSS @ 0x%X -> 0x%X\n", sh->sh_addr, p);
 			memset(p + (sh->sh_addr & 0xFFF), 0, sh->sh_size);
 			continue;
 		}
 		
 		p = mmu_allocate_frame(sh->sh_addr, segment, count);
-		printf("something @ 0x%X -> 0x%X %s\n", sh->sh_addr, p, (sh->sh_flags & SHF_WRITE) ? "writeable" : "write-protected");
 		memcpy(p + (sh->sh_addr & 0xFFF), ptr + sh->sh_offset, sh->sh_size);
-		printf("copy %i 0x%X\n", sh->sh_size, sh->sh_offset);
 	}
 	
 	entry = (void *) eh->e_entry;

@@ -52,8 +52,6 @@ void mmu_init() {
 	mmu_set_tt0(&tt0);
 	mmu_set_tt1(&tt1);
 	mmu_set_tc(&tc);
-	
-	printf("0x%X\n0x%X\n0x%X\n0x%X\n", supervisor.page_table, supervisor.text, supervisor.data, supervisor.stack);
 }
 
 void *mmu_allocate_frame(uint32_t virtual_address, MmuKernelSegment segment, uint32_t count) {
@@ -105,6 +103,7 @@ void *mmu_allocate_frame(uint32_t virtual_address, MmuKernelSegment segment, uin
 	}
 	descriptor_table = (void *) (supervisor.page_table[table_number].table.table_address << 4);
 	if(descriptor_table[descriptor_number].page.descriptor_type == MMU_DESCRIPTOR_TYPE_PAGE) {
+		mmu_allocate_frame(virtual_address + 4096, segment, count - 1);
 		return (void *)(((descriptor_table[descriptor_number].page.page_address) << 8) & ~0xFFF);
 	}
 	descriptor_table[descriptor_number].whole = descriptor.whole;
