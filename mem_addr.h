@@ -6,7 +6,7 @@
 #define	MEM_LLRAM		((volatile void *) 0x80000)
 #define	MEM_PAL_RAM		((volatile void *) (0x1400 + MEM_LLRAM))
 #define	MEM_VGA_RAM		((volatile void *) (0x1800 + MEM_LLRAM))
-#define	MEM_CHIPSET_SPACE	((volatile void *) 0x20000000)
+#define	MEM_CHIPSET_SPACE	((volatile void *) 0x200000)
 #define	MEM_SPI_SEND1		((volatile uint8_t *) (0x78000 + MEM_LLRAM))
 #define	MEM_SPI_SEND2		((volatile uint8_t *) (0x7A000 + MEM_LLRAM))
 #define	MEM_SPI_RECV1		((volatile uint8_t *) (0x7C000 + MEM_LLRAM))

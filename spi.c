@@ -1,4 +1,3 @@
-#if 0
 #include "spi.h"
 
 void spi_wait_done() {
@@ -28,4 +27,3 @@ void spi_start(bool wait_for_non_ff, bool wait_for_non_00, bool send, bool recie
 	*SPI_REG_STATE = reg;
 }
 
-#endif

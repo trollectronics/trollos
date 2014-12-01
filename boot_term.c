@@ -9,6 +9,18 @@
 
 static int pos_x;
 static int pos_y;
+static uint32_t vsync_count;
+
+void boot_term_vsync() {
+	vsync_count++;
+	BOOT_TERM_VSYNC_ACK;
+	return;
+}
+
+
+uint32_t boot_term_get_vsync() {
+	return vsync_count;
+}
 
 
 void term_init() {
@@ -38,6 +50,8 @@ void term_init() {
 	vgapal[13] = 0xFAAF;
 	vgapal[14] = 0xFFFA;
 	vgapal[15] = 0xFFFF;
+
+	BOOT_TERM_VSYNC_ENABLE;
 	
 	return;
 }
