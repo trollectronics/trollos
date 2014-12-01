@@ -1,7 +1,6 @@
 #include "../src/chipset.h"
 #include "../bootimg/mem_addr.h"
 #include "printf.h"
-#include "mmu.h"
 
 extern void *int_stub;
 extern void *int_stub_bus_error;
@@ -13,7 +12,7 @@ void int_init() {
 	int i;
 
 	for (i = 0; i < 15; i++)
-		int_vec[i] = &int_stub_bus_error;
+		int_vec[i] = &int_stub;
 	int_vec[CHIPSET_INT_NUM_VGA_VSYNC] = &int_stub;
 	printf("interrupt stub: %p\n",  &int_stub);
 	__asm__("mov.w 0x3000, %sr");

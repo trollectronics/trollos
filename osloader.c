@@ -1,7 +1,5 @@
-#include <limits.h>
 #include "terminal.h"
 #include "printf.h"
-#include "mmu.h"
 #include "int.h"
 
 int _start(int argc, char **argv) {
@@ -11,7 +9,6 @@ int _start(int argc, char **argv) {
 	printf("Arne %.8i '%s'\n", 42, "lol");
 	
 	
-	mmu_init();
 	for (;;);
 	int_init();
 
