@@ -1,6 +1,7 @@
 #ifndef __SPI_H__
 #define	__SPI_H__
 
+#include <stdbool.h>
 #include "mem_addr.h"
 
 #define	SPI_REG_MEM	((volatile struct SpiMem *) (MEM_CHIPSET_SPACE + 0x20))
@@ -35,5 +36,7 @@ enum SpiSlave {
 };
 
 void spi_wait_done();
+void spi_slave_setup(enum SpiSlave slave, bool ss_enable, bool fast_clock, bool int_enable, int bank);
+void spi_start(bool wait_for_non_ff, bool wait_for_non_00, bool send, bool recieve);
 
 #endif
