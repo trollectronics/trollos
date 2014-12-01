@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define	MEM_LLRAM		((volatile void *) 0x0)
+#define	MEM_LLRAM		((volatile void *) 0x80000)
 #define	MEM_PAL_RAM		((volatile void *) (0x1400 + MEM_LLRAM))
 #define	MEM_VGA_RAM		((volatile void *) (0x1800 + MEM_LLRAM))
 #define	MEM_CHIPSET_SPACE	((volatile void *) 0x20000000)

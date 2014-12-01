@@ -1,12 +1,17 @@
 # Project: m68k-emu
 include $(TOPDIR)/config.mk
 
-CFLAGS		+=	-m68030 -nostdlib -O3 -ffreestanding -fno-builtin -nostdlib
-LDFLAGS		=	-Wl,--oformat=binary,-e0x80400,-Tbss=0x4E000,-Ttext=0x80400
+TEXT		=	0x00400
+ENTRY		=	0x00400
+BSS			=	0xEA000
+
+
+CFLAGS		+=	-m68030 -nostdlib -O3 -ffreestanding -fno-builtin -nostdlib -DENTRY=$(ENTRY) -DTEXT=$(TEXT) -DBSS=$(BSS)
+LDFLAGS		=	-Wl,--oformat=binary,-e$(ENTRY),-Tbss=$(BSS),-Ttext=$(TEXT)
 ASFLAGS		+=	-m68030
 #,-Tdata=0x400
-ASMFILES	=	dummy.s
-SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c spi.c sd.c
+ASMFILES	=	dummy.s mmu-helpers.s
+SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c mmu.c printf.c
 AOBJFILES	=	$(ASMFILES:.s=.ao)
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin

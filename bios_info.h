@@ -3,7 +3,7 @@
 
 #include "mem_addr.h"
 
-#define	BIOS_INFO_ADDR		((volatile void *) (0x7FF00 + MEM_LLRAM))
+#define	BIOS_INFO_ADDR		((volatile void *) (0x0 + MEM_LLRAM))
 
 
 struct BiosInfo {

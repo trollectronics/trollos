@@ -11,6 +11,9 @@
 #define	ELF_TYPE_EXEC		2
 #define	ELF_MACHINE_M68K	4
 
+#define SHF_WRITE 0x1
+#define SHF_ALLOC 0x2
+
 struct ElfHeader {
 	unsigned char		e_ident[16];
 	unsigned short		e_type;
@@ -54,6 +57,7 @@ struct ElfProgramHeader {
 	unsigned int		p_align;
 };
 
-int elf_load(void *ptr, int argc, char **argv);
+int elf_run(void *ptr, int argc, char **argv);
+int (*(elf_load(void *ptr)))(int argc, char **argv);
 
 #endif
