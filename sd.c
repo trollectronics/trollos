@@ -1,3 +1,4 @@
+#if 0
 #include "mem_addr.h"
 #include "sd.h"
 #include "spi.h"
@@ -9,7 +10,7 @@ static volatile struct SpiLineSelect *spi_reg_line = SPI_REG_LINE;
 static volatile struct SpiState *spi_reg_state = SPI_REG_STATE;
 
 
-void sd_init_clk() {
+void sd_init_clock() {
 	struct SpiMem spi_mem;
 	
 	memset(MEM_SPI_SEND1, 0xFF, MEM_SPI_SIZE);
@@ -26,3 +27,5 @@ void sd_init_clk() {
 int sd_init() {
 	sd_init_clock();
 }
+
+#endif

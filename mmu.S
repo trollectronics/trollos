@@ -2,6 +2,11 @@
 
 hej:	.long 0xDEADBEEF
 
+.global mmu_int_stub
+mmu_int_stub:
+	jsr.l mmu_bus_error
+	rte
+
 .global mmu_get_physical
 mmu_get_physical:
 	link %fp, #-4
