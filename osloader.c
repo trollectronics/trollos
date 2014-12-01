@@ -4,7 +4,7 @@
 
 int ostkaka = 42;
 
-int _start(int argc, char **argv) {
+int main(int argc, char **argv) {
 	int i;
 	
 	terminal_set_bg(TERMINAL_COLOR_BLACK);

@@ -3,9 +3,9 @@ include $(TOPDIR)/config.mk
 
 LOADERBIN	=	osloader.elf
 
-ASMFILES	=	$(wildcard *.s)
+ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
-AOBJFILES	=	$(ASMFILES:.s=.o)
+AOBJFILES	=	$(ASMFILES:.S=.ao)
 OBJFILES	=	$(SRCFILES:.c=.o)
 .PHONY: all clean
 
@@ -36,6 +36,6 @@ clean:
 	@echo " [ CC ] osloader/$<"
 	@$(TARGETCC) $(CFLAGS) $(OSCFLAGS) -c -o $@ $<
 	
-%.o: %.s
+%.ao: %.S
 	@echo " [ AS ] osloader/$<"
 	@$(TARGETAS) $(ASFLAGS) -o $@ $<

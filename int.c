@@ -8,7 +8,7 @@ extern void int_enable();
 
 void int_init() {
 	volatile void **int_vec = (volatile void **) 0x60;
-	volatile unsigned int *io_port = (MEM_CHIPSET_SPACE);
+	//volatile unsigned int *io_port = (MEM_CHIPSET_SPACE);
 	int i;
 
 	for (i = 0; i < 15; i++)
