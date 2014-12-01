@@ -1,3 +1,4 @@
+#include <limits.h>
 #include "terminal.h"
 #include "printf.h"
 #include "mmu.h"

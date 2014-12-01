@@ -1,6 +1,15 @@
 .text
 .org 0x100
 
+.global mmu_enable
+mmu_enable_and_jump:
+	link %fp, #-4
+	pmove %tc, -4(%fp)
+	ori.l #0x80000000, -4(%fp)
+	pmove -4(%fp), %tc
+	move.l #0x0, %sp
+	jmp 8(%fp)
+
 .global mmu_set_tc
 mmu_set_tc:
 	link %fp, #0
