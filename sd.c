@@ -24,5 +24,5 @@ void sd_init_clk() {
 }
 
 int sd_init() {
-	sd_init_clock();
+	sd_init_clk();
 }

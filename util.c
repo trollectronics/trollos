@@ -1,4 +1,5 @@
 #include <stdint.h>
+
 /* Non-portable way of confusing GCC's optimizer */
 void *memset(void *s, int c, unsigned int n) {
 	unsigned char *b = s;
