@@ -1,0 +1,11 @@
+*.out
+*.elf
+*.img
+*.bin
+*.rom
+*.o
+*.ao
+*.so
+*.swp
+*.swo
+*.orig
