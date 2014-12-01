@@ -1,24 +1,5 @@
 #include <stdint.h>
 
-void *memset(void *s, int c, unsigned int n) {
-	uint8_t *dest = s;
-	
-	for(; n; n--)
-		*dest = c;
-	
-	return s;
-}
-
-
-void *memcpy(void *dest, void *src, unsigned int n) {
-	uint8_t *d = dest, *s = src;
-	
-	for(; n; n--)
-		*d++ = *s++;
-	
-	return dest;
-}
-
 
 int streq(const char *s1, const char *s2, int limit) {
 	int i;
