@@ -90,7 +90,6 @@ int elf_run(void *ptr, int argc, char **argv) {
 int (*(elf_load(void *ptr)))(int argc, char **argv) {
 	struct ElfHeader *eh = ptr;
 	struct ElfSectionHeader *sh;
-	struct ElfProgramHeader *ph;
 	int i;
 	int (*entry)(int argc, char **argv);
 	unsigned int count;
@@ -129,7 +128,6 @@ int (*(elf_load(void *ptr)))(int argc, char **argv) {
 	}
 	
 	sh = ptr + eh->e_shoff;
-	ph = ptr + eh->e_phoff;
 
 	for (i = 0; i < eh->e_shnum; i++, sh = ((void *) sh) + eh->e_shentsize) {
 		if (!sh->sh_addr)

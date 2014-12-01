@@ -3,6 +3,7 @@
 
 void term_init();
 void term_putc(int c, int color);
+void term_putc_term(unsigned char c, int color);
 void term_puts(char *str, int color);
 
 void term_export();

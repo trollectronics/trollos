@@ -10,9 +10,9 @@ CFLAGS		+=	-m68030 -nostdlib -O3 -ffreestanding -fno-builtin -nostdlib -DENTRY=$
 LDFLAGS		=	-Wl,--oformat=binary,-e$(ENTRY),-Tbss=$(BSS),-Ttext=$(TEXT)
 ASFLAGS		+=	-m68030
 #,-Tdata=0x400
-ASMFILES	=	dummy.s mmu-helpers.s
+ASMFILES	=	dummy.S mmu.S
 SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c mmu.c printf.c
-AOBJFILES	=	$(ASMFILES:.s=.ao)
+AOBJFILES	=	$(ASMFILES:.S=.ao)
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin
 BOOTVEC		=	boot.vec
@@ -42,6 +42,6 @@ clean:
 	@echo " [ CC ] bootimg/$<"
 	@$(TARGETCC) $(CFLAGS) -c -o $@ $<
 
-%.ao: %.s
+%.ao: %.S
 	@echo " [ AS ] bootimg/$<"
 	@$(TARGETAS) $(ASFLAGS) -o $@ $<

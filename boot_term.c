@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "boot_term.h"
 #include "vgafont.h"
 #include "mem_addr.h"
@@ -12,8 +13,8 @@ static int pos_y;
 
 void term_init() {
 	int i;
-	unsigned int *vgabuff = MEM_VGA_RAM;
-	unsigned short *vgapal = MEM_PAL_RAM;
+	volatile uint32_t *vgabuff = MEM_VGA_RAM;
+	volatile uint16_t *vgapal = MEM_PAL_RAM;
 
 	pos_x = 0;
 	pos_y = 0;
@@ -45,7 +46,7 @@ void term_init() {
 void term_putc(int c, int color) {
 	int i, j;
 	int row, col, data;
-	unsigned char *vgabuff = MEM_VGA_RAM;
+	volatile uint8_t *vgabuff = MEM_VGA_RAM;
 
 	col = pos_x * 9;
 	row = pos_y * 16;
@@ -90,7 +91,7 @@ void term_puts(char *str, int color) {
 
 
 void term_export() {
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 
 	bi->font = vgafont_data;
 	bi->term_x = pos_x;
@@ -103,7 +104,7 @@ void term_export() {
 
 
 void term_import() {
-	struct BiosInfo *bi = BIOS_INFO_ADDR;
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	
 	pos_x = bi->term_x;
 	pos_y = bi->term_y;
