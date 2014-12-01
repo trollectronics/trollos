@@ -10,7 +10,6 @@ SRCFILES	=	$(wildcard *.c)
 AOBJFILES	=	$(ASMFILES:.S=.ao)
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin
-BOOTVEC		=	boot.vec
 .PHONY: all clean
 
 all: $(OBJFILES) $(AOBJFILES) $(DEPENDS)
@@ -18,7 +17,6 @@ all: $(OBJFILES) $(AOBJFILES) $(DEPENDS)
 	@$(TARGETCC) $(CFLAGS) $(OBJFILES) $(AOBJFILES) -o $(BOOTBIN) $(LDFLAGS)
 	@echo " [MIMG] $(BOOTIMG)"
 	@dd if=/dev/zero of=boot.img bs=1024 count=64 2>/dev/null
-	#@dd if=$(BOOTVEC) of=boot.img conv=notrunc 2>/dev/null
 	@dd if=$(BOOTBIN) of=boot.img bs=1024 seek=0 conv=notrunc 2>/dev/null
 	@mv boot.img $(BOOTIMG)
 	@echo "Done."
