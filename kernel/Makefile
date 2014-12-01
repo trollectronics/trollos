@@ -1,8 +1,6 @@
 # Project: m68k-emu
 include $(TOPDIR)/config.mk
 
-LOADERBIN	=	osloader.elf
-
 ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
 AOBJFILES	=	$(ASMFILES:.S=.ao)
@@ -10,17 +8,17 @@ OBJFILES	=	$(SRCFILES:.c=.o)
 .PHONY: all clean
 
 LDFLAGS		=	-nostdlib -Wl,-Ttext=0x3000000 -static -lgcc
-CFLAGS		=	-m68030 -Wall -O2 -ffreestanding -I../
+CFLAGS		=	-m68030 -Wall -O2 -ffreestanding -I../include
 ASFLAGS		=	-m68030
 
 all: $(OBJFILES) $(DEPENDS) $(AOBJFILES)
-	@echo " [ LD ] $(LOADERBIN)"
-	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) $(AOBJFILES) -o $(LOADERBIN) $(LDFLAGS) $(OSLDFLAGS)
+	@echo " [ LD ] $(KERNEL)"
+	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) $(AOBJFILES) -o $(KERNEL) $(LDFLAGS) $(OSLDFLAGS)
 	@echo " [MKFS] $(OSFS)"
 	@mkdir -p root
 	@mkdir -p root/boot
-	@cp $(LOADERBIN) root/boot/$(LOADERBIN)
-	@genromfs -f $(OSFS) -d root/ -V TrollBookOS
+	@cp $(KERNEL) root/boot/`basename "$(KERNEL)"`
+	@genromfs -f $(OSFS) -d root/ -V TrollOS
 	@rm -Rf root/
 	@echo "Done."
 	@echo
@@ -33,9 +31,9 @@ clean:
 	@echo 
 
 %.o: %.c %.h
-	@echo " [ CC ] osloader/$<"
+	@echo " [ CC ] kernel/$<"
 	@$(TARGETCC) $(CFLAGS) $(OSCFLAGS) -c -o $@ $<
 	
 %.ao: %.S
-	@echo " [ AS ] osloader/$<"
+	@echo " [ AS ] kernel/$<"
 	@$(TARGETAS) $(ASFLAGS) -o $@ $<

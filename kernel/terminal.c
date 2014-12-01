@@ -1,6 +1,6 @@
 #include "terminal.h"
-#include <bootimg/bios_info.h>
-#include <bootimg/mem_addr.h>
+#include <bios_info.h>
+#include <mem_addr.h>
 
 
 #define	TERM_W			71

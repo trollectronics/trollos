@@ -5,21 +5,21 @@
 
 int test() {
 	struct RomfsFileDescriptor desc;
-	char *argv[] = { "osloader.elf", "arne" };
+	char *argv[] = { "kernel.elf", "arne" };
 	int i;
 	void *go;
 
 	term_puts("Init SD-card\n", 10);
-	sd_init();
+	//sd_init();
 	
 	if (!romfs_detect((void *) 0x10000))
 		term_puts("Bad magic in RomFS\n", 12);
 	else {
-		desc = romfs_locate((void *) 0x10000, "/boot/osloader.elf");
+		desc = romfs_locate((void *) 0x10000, "/boot/kernel.elf");
 		if (!desc.filename)
-			term_puts("Couldn't find file /boot/osloader.elf", 12);
+			term_puts("Couldn't find file /boot/kernel.elf", 12);
 		else {
-			term_puts("Attempting to launch /boot/osloader.elf...\n", 10);
+			term_puts("Attempting to launch /boot/kernel.elf...\n", 10);
 			mmu_init();
 			go = elf_load(desc.data);
 			printf(" -> Entry is 0x%X, mapped to physical address 0x%X\n", go, mmu_get_physical(go));

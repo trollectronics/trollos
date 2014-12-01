@@ -51,7 +51,7 @@ void term_init() {
 	vgapal[14] = 0xFFFA;
 	vgapal[15] = 0xFFFF;
 
-	BOOT_TERM_VSYNC_ENABLE;
+	//BOOT_TERM_VSYNC_ENABLE;
 	
 	return;
 }

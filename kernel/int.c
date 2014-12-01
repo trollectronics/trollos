@@ -1,5 +1,5 @@
-#include "../src/chipset.h"
-#include "../bootimg/mem_addr.h"
+#include <chipset.h>
+#include <mem_addr.h>
 #include "printf.h"
 
 extern void *int_stub;

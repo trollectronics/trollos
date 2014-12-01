@@ -21,10 +21,8 @@ const void const *vector[256] __attribute__ ((section (".vector"))) = {
 void main() {
 	memset(&__bss_start, 0, &__bss_end - &__bss_start);
 	term_init();
-	//__asm__("mov.w 0x3000, %sr");
-	printf("%X %X\n", &__bss_start, &__bss_end);
-
 	term_puts("TrollBook(tm) BIOS Version 0.17 (C) Trollectronics 2014\n", 15);
 	test();
+	
 	for(;;);
 }

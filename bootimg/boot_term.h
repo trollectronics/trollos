@@ -2,7 +2,7 @@
 #define	__BOOT_TERM_H__
 
 #include <stdint.h>
-#include "mem_addr.h"
+#include <mem_addr.h>
 
 #define	BOOT_TERM_VSYNC_ENABLE	(*((unsigned int *) (MEM_CHIPSET_SPACE + 0x0)) = 1)
 #define	BOOT_TERM_VSYNC_ACK	(*((unsigned int *) (MEM_CHIPSET_SPACE + 0x4)) = 0)
