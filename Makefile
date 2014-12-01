@@ -11,7 +11,7 @@ LDFLAGS		=	-Wl,--oformat=binary,-e$(ENTRY),-Tbss=$(BSS),-Ttext=$(TEXT)
 ASFLAGS		+=	-m68030
 #,-Tdata=0x400
 ASMFILES	=	dummy.s mmu-helpers.s
-SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c mmu.c printf.c
+SRCFILES	=	start.c test.c boot_term.c util.c romfs.c elf.c mmu.c printf.c spi.c sd.c
 AOBJFILES	=	$(ASMFILES:.s=.ao)
 OBJFILES	=	$(SRCFILES:.c=.o)
 BOOTBIN		=	boot.bin

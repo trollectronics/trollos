@@ -10,6 +10,7 @@ int test() {
 	void *go;
 
 	term_puts("Init SD-card\n", 10);
+	sd_init();
 	
 	if (!romfs_detect((void *) 0x10000))
 		term_puts("Bad magic in RomFS\n", 12);

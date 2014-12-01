@@ -4,7 +4,7 @@ void *memset(void *s, int c, unsigned int n) {
 	uint8_t *dest = s;
 	
 	for(; n; n--)
-		*dest = c;
+		*(dest++) = c;
 	
 	return s;
 }

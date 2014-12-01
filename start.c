@@ -6,6 +6,7 @@
 #include "util.h"
 
 void _start() {
+	for (;;);
 	memset((void *) BSS, 0, 32*1024);
 	term_init();
 
