@@ -12,11 +12,11 @@
 uint32_t allocated_frames;
 
 struct {
-	MmuDescriptorShort page_table[1024]  __attribute__ ((aligned (16)));
-	MmuDescriptorShort text[1024]  __attribute__ ((aligned (16)));
-	MmuDescriptorShort data[1024]  __attribute__ ((aligned (16)));
-	MmuDescriptorShort stack[1024]  __attribute__ ((aligned (16)));
-} supervisor;
+	MmuDescriptorShort page_table[1024]  ;
+	MmuDescriptorShort text[1024];
+	MmuDescriptorShort data[1024];
+	MmuDescriptorShort stack[1024];
+} supervisor __attribute__ ((aligned (16)));
 
 void mmu_init() {
 	MmuRegTranslationControl tc = {
@@ -45,19 +45,21 @@ void mmu_init() {
 		.table_address = ((uint32_t) supervisor.page_table) >> 4,
 		.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT,
 		.limit = 0x0,
-		.lu = false,
+		.lu = true,
 	};
 	
 	mmu_set_srp(&srp);
 	mmu_set_tt0(&tt0);
 	mmu_set_tt1(&tt1);
 	mmu_set_tc(&tc);
+	
+	printf("0x%X\n0x%X\n0x%X\n0x%X\n", supervisor.page_table, supervisor.text, supervisor.data, supervisor.stack);
 }
 
 void *mmu_allocate_frame(uint32_t virtual_address, MmuKernelSegment segment, uint32_t count) {
 	bool write_protect = false;
 	uint32_t table_number = virtual_address / (4096*1024);
-	uint32_t descriptor_number = virtual_address % (4096*1024);
+	uint32_t descriptor_number = (virtual_address/4096) % (1024);
 	uint32_t page_address = MMU_LOGIAL_START + (4096*allocated_frames);
 	MmuDescriptorShort *descriptor_table;
 	MmuDescriptorShort descriptor = {
@@ -102,12 +104,15 @@ void *mmu_allocate_frame(uint32_t virtual_address, MmuKernelSegment segment, uin
 		supervisor.page_table[table_number].whole = table.whole;
 	}
 	descriptor_table = (void *) (supervisor.page_table[table_number].table.table_address << 4);
+	if(descriptor_table[descriptor_number].page.descriptor_type == MMU_DESCRIPTOR_TYPE_PAGE) {
+		return (void *)(((descriptor_table[descriptor_number].page.page_address) << 8) & ~0xFFF);
+	}
 	descriptor_table[descriptor_number].whole = descriptor.whole;
 	
 	allocated_frames++;
 	
 	mmu_allocate_frame(virtual_address + 4096, segment, count - 1); //because i'm bad.
-	return (void *) page_address;
+	return (void *) (page_address & ~0xFFF);
 }
 
 void mmu_bus_error() {

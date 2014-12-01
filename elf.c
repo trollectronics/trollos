@@ -155,18 +155,18 @@ int (*(elf_load(void *ptr)))(int argc, char **argv) {
 		if (sh->sh_type == 8) {	/* No bits. .bss et al */
 			p = mmu_allocate_frame(sh->sh_addr, segment, count);
 			printf("BSS @ 0x%X -> 0x%X\n", sh->sh_addr, p);
-			memset(p, 0, sh->sh_size);
+			memset(p + (sh->sh_addr & 0xFFF), 0, sh->sh_size);
 			continue;
 		}
 		
 		p = mmu_allocate_frame(sh->sh_addr, segment, count);
 		printf("something @ 0x%X -> 0x%X %s\n", sh->sh_addr, p, (sh->sh_flags & SHF_WRITE) ? "writeable" : "write-protected");
-		memcpy(p, ptr + sh->sh_offset, sh->sh_size);
+		memcpy(p + (sh->sh_addr & 0xFFF), ptr + sh->sh_offset, sh->sh_size);
+		printf("copy %i 0x%X\n", sh->sh_size, sh->sh_offset);
 	}
 	
 	entry = (void *) eh->e_entry;
 	
-	mmu_allocate_frame(UINT_MAX - 4096, MMU_KERNEL_SEGMENT_STACK, 1);
-	printf("entry @ 0x%X : 0x%X\n", entry, *((uint32_t *) entry));
+	mmu_allocate_frame(UINT_MAX - 4096 + 1, MMU_KERNEL_SEGMENT_STACK, 1);
 	return entry;
 }
