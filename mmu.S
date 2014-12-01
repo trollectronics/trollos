@@ -2,6 +2,11 @@
 
 hej:	.long 0xDEADBEEF
 
+.global mmu_int_stub
+mmu_int_stub:
+	jsr.l mmu_bus_error
+	rte
+
 .global mmu_get_physical
 mmu_get_physical:
 	link %fp, #-4
@@ -14,6 +19,9 @@ mmu_get_physical:
 	pmove -4(%fp), %tc
 	mov.l (%a0), %d0
 	andi.l #0xFFFFFF00, %d0
+	mov.l 8(%fp), %d1
+	andi.l #0xFFF, %d1
+	or.l %d1, %d0
 	unlk %fp
 	rts
 
@@ -25,6 +33,9 @@ mmu_enable_and_jump:
 	pmove -4(%fp), %tc
 	move.l 8(%fp), %a0
 	move.l #0x0, %sp
+	move.l 16(%fp), -(%sp)
+	move.l 12(%fp), -(%sp)
+	move.l #0, -(%sp)
 	jmp (%a0)
 
 .global mmu_set_tc

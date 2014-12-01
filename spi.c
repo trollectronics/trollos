@@ -1,9 +1,9 @@
+#if 0
 #include "spi.h"
 
 void spi_wait_done() {
 	while (SPI_REG_STATE->send || SPI_REG_STATE->recv);
 }
-
 
 void spi_slave_setup(enum SpiSlave slave, bool ss_enable, bool fast_clock, bool int_enable, int bank) {
 	struct SpiLineSelect line;
@@ -27,3 +27,5 @@ void spi_start(bool wait_for_non_ff, bool wait_for_non_00, bool send, bool recie
 
 	*SPI_REG_STATE = reg;
 }
+
+#endif

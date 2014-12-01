@@ -1,3 +1,4 @@
+#if 0
 #include "mem_addr.h"
 #include "sd.h"
 #include "spi.h"
@@ -5,7 +6,7 @@
 #include "boot_term.h"
 
 
-void sd_init_clk() {
+void sd_init_clock() {
 	struct SpiMem spi_mem;
 	
 //	memset(MEM_SPI_SEND1, 0xFF, 32);
@@ -57,3 +58,5 @@ int sd_init() {
 //	sd_init_clk();
 //	sd_init_cmd();
 }
+
+#endif
