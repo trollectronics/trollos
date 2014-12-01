@@ -11,9 +11,9 @@ extern long __bss_start;
 extern long __bss_end;
 
 const void const *vector[256] __attribute__ ((section (".vector"))) = {
-	_stack,
-	_start,
-	mmu_int_stub,
+	[0] = _stack,
+	[1] = _start,
+	[2 ... 15] = mmu_int_stub,
 };
 
 void main() {
