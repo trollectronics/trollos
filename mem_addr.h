@@ -1,10 +1,17 @@
 #ifndef __MEM_ADDR_H__
 #define	__MEM_ADDR_H__
 
+#include <stdint.h>
 
-#define	MEM_PAL_RAM		((volatile void *) 0x1400)
-#define	MEM_VGA_RAM		((volatile void *) 0x1800)
+#define	MEM_LLRAM		((volatile void *) 0x0)
+#define	MEM_PAL_RAM		((volatile void *) (0x1400 + MEM_LLRAM))
+#define	MEM_VGA_RAM		((volatile void *) (0x1800 + MEM_LLRAM))
 #define	MEM_CHIPSET_SPACE	((volatile void *) 0x20000000)
+#define	MEM_SPI_SEND1		((volatile uint8_t *) (0x78000 + MEM_LLRAM))
+#define	MEM_SPI_SEND2		((volatile uint8_t *) (0x7A000 + MEM_LLRAM))
+#define	MEM_SPI_RECV1		((volatile uint8_t *) (0x7C000 + MEM_LLRAM))
+#define	MEM_SPI_RECV2		((volatile uint8_t *) (0x7E000 + MEM_LLRAM))
+#define	MEM_SPI_SIZE		(0x2000)
 
 #define	MEM_PAL_ERR		12
 #define	MEM_PAL_SUCCESS		10

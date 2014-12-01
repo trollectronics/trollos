@@ -1,12 +1,15 @@
 #include "boot_term.h"
 #include "romfs.h"
 #include "elf.h"
+#include "sd.h"
 
 int test() {
 	struct RomfsFileDescriptor desc;
 	char *argv[] = { "osloader.elf", "arne" };
 	int i;
-	
+
+	term_puts("Init SD-card\n", 10);
+
 	if (!romfs_detect((void *) 0x90000))
 		term_puts("Bad magic in RomFS\n", 12);
 	else {
