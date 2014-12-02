@@ -7,7 +7,7 @@ AOBJFILES	=	$(ASMFILES:.S=.ao)
 OBJFILES	=	$(SRCFILES:.c=.o)
 .PHONY: all clean
 
-LDFLAGS		=	-nostdlib -Wl,-Ttext=0x3000000 -static -lgcc
+LDFLAGS		=	-nostdlib -Wl,-Ttext=0x1000000 -static -lgcc
 CFLAGS		=	-m68030 -Wall -O2 -ffreestanding -I../include
 ASFLAGS		=	-m68030
 

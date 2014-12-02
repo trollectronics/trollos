@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	
 	int_init();
 	//generate bus error
-	i = *((int *) 0x1000000);
+	i = *((int *) 0xDEADBEEF);
 	printf("lalala %i\n", i);
 	for (;;);
 
