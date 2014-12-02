@@ -21,7 +21,8 @@ all:
 
 clean:
 	@echo " [ RM ] bin/"
-	+@$(RM) bin/
+	@$(RM) $(BIOS) $(BOOTIMG) $(KERNEL) $(OSFS)
+	@$(RMDIR) bin/
 	@echo " [ CD ] bios/"
 	+@make -C bios/ clean
 	@echo " [ CD ] kernel/"

@@ -15,7 +15,7 @@ void int_init() {
 		int_vec[i] = &int_stub;
 	int_vec[CHIPSET_INT_NUM_VGA_VSYNC] = &int_stub;
 	printf("interrupt stub: %p\n",  &int_stub);
-	__asm__("mov.w 0x3000, %sr");
+	int_enable();
 	//*io_port = 1;
 	return;
 }
