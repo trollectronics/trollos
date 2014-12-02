@@ -26,7 +26,8 @@ int_move_vector:
 	move.l (%a1)+, (%a0)+
 	dbra %d0, 1b
 	
-	movec %d1, %vbr	
+	movec %d1, %vbr
+	unlk %fp
 	rts
 
 .global int_enable

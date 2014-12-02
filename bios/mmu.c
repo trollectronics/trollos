@@ -115,7 +115,8 @@ void *mmu_allocate_frame(uint32_t virtual_address, MmuKernelSegment segment, uin
 }
 
 void mmu_bus_error() {
-	term_puts("PANIC: bus error", 4);
+	term_set_pos(0, 29);
+	term_puts("*** BIOS PANIC: bus error ***", 12);
 	
 	for(;;);
 }

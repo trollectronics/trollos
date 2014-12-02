@@ -1,19 +1,19 @@
 #include <chipset.h>
 #include <mem_addr.h>
+#include "int.h"
 #include "printf.h"
 
-extern void *int_stub;
-extern void *int_stub_bus_error;
-extern void int_enable();
+void **int_vector = (void *) MEM_LLRAM;
 
 void int_init() {
-	volatile void **int_vec = (volatile void **) 0x60;
+	//int i;
 	//volatile unsigned int *io_port = (MEM_CHIPSET_SPACE);
-	int i;
+	
+	int_move_vector((void *) MEM_LLRAM);
 
-	for (i = 0; i < 15; i++)
-		int_vec[i] = &int_stub;
-	int_vec[CHIPSET_INT_NUM_VGA_VSYNC] = &int_stub;
+	/*for (i = 2; i < 15; i++)
+		int_vector[i] = &int_stub_bus_error;*/
+	int_vector[CHIPSET_INT_NUM_VGA_VSYNC] = &int_stub;
 	printf("interrupt stub: %p\n",  &int_stub);
 	int_enable();
 	//*io_port = 1;
@@ -21,7 +21,7 @@ void int_init() {
 }
 
 void int_stub_handle() {
-	volatile int *addr = (volatile void *) 0x20000004;
+	volatile int *addr = MEM_CHIPSET_SPACE + 0x4;
 
 	//terminal_putc_simple('.');
 	*addr = 0;
