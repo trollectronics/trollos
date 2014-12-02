@@ -21,6 +21,11 @@ void sd_init_clk() {
 
 
 void sd_send_command(int cmd, uint32_t arg) {
+	int i;
+	SPI_REG_LINE->ss_enable = false;
+	for (i = 0; i < 4; i++, ((void) SPI_REG_MEM->offset));
+	SPI_REG_LINE->ss_enable = true;
+	
 	MEM_SPI_SEND1[5] = 0x40 | (cmd & 0x3F);
 	MEM_SPI_SEND1[4] = arg >> 24;
 	MEM_SPI_SEND1[3] = arg >> 16;
@@ -103,6 +108,21 @@ uint32_t sd_get_size() {
 }
 
 
+bool sd_read_sector(uint32_t sector, uint8_t *buff) {
+	int off, i, j;
+	sd_send_command(17, sector);
+
+	if ((off = sd_wait_reply(1)) < 0)
+		return false;
+	if (MEM_SPI_RECV1[off])
+		return false;
+	off = sd_wait_reply(514);
+	for (i = off - 1, j = 0; i > 1; j++, i--)
+		buff[j] = MEM_SPI_RECV1[i];
+	return true;
+}
+
+
 int sd_init_cmd() {
 	uint32_t count;
 	int i, j, k;
@@ -141,6 +161,7 @@ int sd_init_cmd() {
 
 
 int sd_init() {
+	uint8_t buff[512];
 	sd_init_clk();
 	if (!sd_init_cmd()) {
 		printf("Init failed\n");
@@ -154,6 +175,13 @@ int sd_init() {
 	if (!sd_get_size()) {
 		printf("sd_get_size failed\n");
 		return 0;
+	}
+
+	if (!sd_read_sector(0, buff))
+		printf("SD: Read sector 0 failed\n");
+	else {
+		printf("SD: Sucessfully read sector 0\n");
+		printf("Read string: %s\n", buff);
 	}
 	printf("SD Init succeeded\n");
 	return 1;
