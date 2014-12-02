@@ -23,7 +23,7 @@ void sd_init_clk() {
 int sd_init_cmd() {
 	uint32_t count;
 	int i, j, k;
-	for (k = 0; k < 15; k++) {
+	for (k = 0; k < 7; k++) {
 		j = 5;
 		MEM_SPI_SEND1[j--] = 0x40;
 		MEM_SPI_SEND1[j--] = 0;
