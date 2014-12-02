@@ -7,3 +7,5 @@ _start:
 	bra main
 forever:
 	bra forever
+
+.text

@@ -3,6 +3,7 @@
 
 
 void int_stub();
+void int_stub_bus_error();
 void int_init();
 void int_enable();
 void int_move_vector(void *destination);

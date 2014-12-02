@@ -15,8 +15,8 @@ void terminal_scroll() {
 	for (i = 0; i < (TERM_H - 1) * 16; i++)
 		for (j = 0; j < 800/4; j++)
 			vgabuff[i * 800/4 + j] = vgabuff[(i + 16) * 800/4 + j];
-	for (; i < TERM_H * 16; i++)
-		for (; j < 800/4; j++)
+	for (i = (TERM_H - 1) * 16; i < TERM_H * 16; i++)
+		for (j = 0; j < 800/4; j++)
 			vgabuff[i * 800/4 + j] = 0;
 	return;
 }
