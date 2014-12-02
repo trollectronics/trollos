@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #ifndef NULL
-#define NULL 0x0
+#define NULL ((void *) 0x0)
 #endif
 
 typedef enum MmuKernelSegment MmuKernelSegment;
