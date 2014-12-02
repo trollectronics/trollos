@@ -2,157 +2,77 @@
 #include <mem_addr.h>
 #include <bios_info.h>
 #include <mmu.h>
-#include "elf.h"
+#include <elf.h>
 #include "boot_term.h"
 #include "printf.h"
 #include "util.h"
 
-
-int elf_run(void *ptr, int argc, char **argv) {
-	struct ElfHeader *eh = ptr;
-	struct ElfSectionHeader *sh;
-	struct ElfProgramHeader *ph;
-	int i;
-	int (*entry)(int argc, char **argv);
-
-	if (eh->e_ident[0] != ELF_MAGIC1 || eh->e_ident[1] != ELF_MAGIC2 || eh->e_ident[2] != ELF_MAGIC3 ||
-	    eh->e_ident[3] != ELF_MAGIC4) {
-		term_puts("Invalid ELF magic\n", MEM_PAL_ERR);
-		return 0;
-	}
-	
-	if (eh->e_ident[4] != ELF_MAGIC_CLASS) {
-		term_puts("This ELF is not for 32-bit systems\n", MEM_PAL_ERR);
-		return 0;
-	}
-
-	if (eh->e_ident[5] != ELF_MAGIC_ENDIAN) {
-		term_puts("This ELF is not in the correct byte endian\n", MEM_PAL_ERR);
-		return 0;
-	}
-
-	if (eh->e_type != ELF_TYPE_EXEC) {
-		term_puts("This ELF is not executable\n", MEM_PAL_ERR);
-		return 0;
-	}
-
-	if (eh->e_machine != ELF_MACHINE_M68K) {
-		term_puts("This ELF is not executable by a Motorola 68000 processor\n", MEM_PAL_ERR);
-		return 0;
-	}
-
-	if (!eh->e_entry) {
-		term_puts("This ELF has no entry point. Assuming 0x10000000\n", MEM_PAL_WARN);
-		return 0;
-	}
-	
-	sh = ptr + eh->e_shoff;
-	ph = ptr + eh->e_phoff;
-	
-	for (i = 0; i < eh->e_phnum; i++, ph = ((void *) ph) + eh->e_phentsize) {
-		if (ph->p_type != 1)
-			continue;
-		if (ph->p_vaddr < 0x10000000 || ph->p_vaddr + ph->p_memsz >= 0x13000000) {
-			term_puts("One or more sections are out of bounds (0x10000000 .. 0x12FFFFFF)\n", MEM_PAL_ERR);
-			return 0;
-		}
-		
-		memcpy((void *) ph->p_vaddr, ptr + ph->p_offset, ph->p_filesz);
-	}
-
-	for (i = 0; i < eh->e_shnum; i++, sh = ((void *) sh) + eh->e_shentsize) {
-		if (!sh->sh_addr)
-			/* If we're lot loading it, don't pay attention */
-			continue;
-		if (sh->sh_addr < 0x10000000 || sh->sh_addr + sh->sh_size >= 0x13000000) {
-			term_puts("One or more sections are out of bounds (0x10000000 .. 0x12FFFFFF)\n", MEM_PAL_ERR);
-			return 0;
-		}
-
-		if (sh->sh_type == 0)
-			continue;
-		if (sh->sh_type == 8) {	/* No bits. .bss et al */
-			memset((void *) sh->sh_addr, 0, sh->sh_size);
-			continue;
-		}
-
-		memcpy((void *) sh->sh_addr, ptr + sh->sh_offset, sh->sh_size);
-	}
-
-	entry = (void *) eh->e_entry;
-	term_puts("ELF sections loaded. PREPARE FOR LIFT-OFF!!\n", MEM_PAL_NEUTRAL);
-	term_export();
-	i = entry(argc, argv);
-	term_import();
-	return i;
-}
-
-int (*(elf_load(void *ptr)))(int argc, char **argv) {
-	struct ElfHeader *eh = ptr;
-	struct ElfSectionHeader *sh;
+int (*(elf_load(void *elf)))(int argc, char **argv) {
+	struct ElfHeader *header = elf;
+	struct ElfSectionHeader *section_header;
 	int i;
 	int (*entry)(int argc, char **argv);
 	unsigned int count;
 	MmuKernelSegment segment;
 	void *p;
 
-	if (eh->e_ident[0] != ELF_MAGIC1 || eh->e_ident[1] != ELF_MAGIC2 || eh->e_ident[2] != ELF_MAGIC3 ||
-	    eh->e_ident[3] != ELF_MAGIC4) {
+	if (header->ident[0] != ELF_MAGIC1 || header->ident[1] != ELF_MAGIC2 || header->ident[2] != ELF_MAGIC3 ||
+	    header->ident[3] != ELF_MAGIC4) {
 		term_puts("Invalid ELF magic\n", MEM_PAL_ERR);
 		return NULL;
 	}
 	
-	if (eh->e_ident[4] != ELF_MAGIC_CLASS) {
+	if (header->ident[4] != ELF_CLASS_32BIT) {
 		term_puts("This ELF is not for 32-bit systems\n", MEM_PAL_ERR);
 		return NULL;
 	}
 
-	if (eh->e_ident[5] != ELF_MAGIC_ENDIAN) {
+	if (header->ident[5] != ELF_ENDIAN_BIG) {
 		term_puts("This ELF is not in the correct byte endian\n", MEM_PAL_ERR);
 		return NULL;
 	}
 
-	if (eh->e_type != ELF_TYPE_EXEC) {
+	if (header->type != ELF_TYPE_EXEC) {
 		term_puts("This ELF is not executable\n", MEM_PAL_ERR);
 		return NULL;
 	}
 
-	if (eh->e_machine != ELF_MACHINE_M68K) {
+	if (header->machine != ELF_MACHINE_M68K) {
 		term_puts("This ELF is not executable by a Motorola 68000 processor\n", MEM_PAL_ERR);
 		return NULL;
 	}
 
-	if (!eh->e_entry) {
+	if (!header->entry) {
 		term_puts("This ELF has no entry point. Assuming 0x10000000\n", MEM_PAL_WARN);
 		return NULL;
 	}
 	
-	sh = ptr + eh->e_shoff;
+	section_header = elf + header->section_header_offset;
 
-	for (i = 0; i < eh->e_shnum; i++, sh = ((void *) sh) + eh->e_shentsize) {
-		if (!sh->sh_addr)
+	for (i = 0; i < header->section_header_entry_count; i++, section_header = ((void *) section_header) + header->section_header_entry_size) {
+		if (!section_header->address)
 			/* If we're lot loading it, don't pay attention */
 			continue;
 
-		if (sh->sh_type == 0)
+		if (!section_header->type)
 			continue;
 		
-		if (!(sh->sh_flags & SHF_ALLOC))
+		if (!(section_header->flags & ELF_SECTION_HEADER_FLAG_ALLOC))
 			continue;
 		
-		segment = (sh->sh_flags & SHF_WRITE) ? MMU_KERNEL_SEGMENT_DATA : MMU_KERNEL_SEGMENT_TEXT;
-		count = (sh->sh_size + 4095)/4096;
-		if (sh->sh_type == 8) {	/* No bits. .bss et al */
-			p = mmu_allocate_frame(sh->sh_addr, segment, count);
-			memset(p + (sh->sh_addr & 0xFFF), 0, sh->sh_size);
+		segment = (section_header->flags & ELF_SECTION_HEADER_FLAG_WRITE) ? MMU_KERNEL_SEGMENT_DATA : MMU_KERNEL_SEGMENT_TEXT;
+		count = (section_header->size + 4095)/4096;
+		if (section_header->type == 8) {	/* No bits. .bss et al */
+			p = mmu_allocate_frame(section_header->address, segment, count);
+			memset(p + (section_header->address & 0xFFF), 0, section_header->size);
 			continue;
 		}
 		
-		p = mmu_allocate_frame(sh->sh_addr, segment, count);
-		memcpy(p + (sh->sh_addr & 0xFFF), ptr + sh->sh_offset, sh->sh_size);
+		p = mmu_allocate_frame(section_header->address, segment, count);
+		memcpy(p + (section_header->address & 0xFFF), elf + section_header->offset, section_header->size);
 	}
 	
-	entry = (void *) eh->e_entry;
+	entry = (void *) header->entry;
 	
 	mmu_allocate_frame(UINT_MAX - 4096 + 1, MMU_KERNEL_SEGMENT_STACK, 1);
 	return entry;

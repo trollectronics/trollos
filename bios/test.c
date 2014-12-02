@@ -1,6 +1,6 @@
+#include <elf.h>
 #include "boot_term.h"
 #include "romfs.h"
-#include "elf.h"
 #include "sd.h"
 
 int test() {

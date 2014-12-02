@@ -7,5 +7,7 @@ int_stub:
 
 .global int_enable
 int_enable:
-#	mov.w 0x3000, %sr
+	mov.w %sr, %d0
+	ori.w #0x3000, %d0
+	mov.w %d0, %sr
 	rts

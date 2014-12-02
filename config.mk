@@ -19,4 +19,4 @@ INSTARG		=
 #Makefile tools
 RM		=	rm -Rf
 MKDIR		=	mkdir -p
-
+RMDIR		=	rmdir --ignore-fail-on-non-empty
