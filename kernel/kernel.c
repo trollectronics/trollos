@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
 	
 	int_init();
 	//generate bus error
-	//i = *((int *) 0x1000000);
-	//printf("lalala %i\n", i);
+	i = *((int *) 0x1000000);
+	printf("lalala %i\n", i);
 	for (;;);
 
 	return 42;

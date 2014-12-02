@@ -1,14 +1,6 @@
 .text
 buss_error_text: .asciz "*** KERNEL PANIC: bus error ***"
 
-indicate_bus_error:
-	move.l #0x81800, %a0
-	move.l #(640*20)-1, %d0
-1:
-	eori.b #4, (%a0)+
-	dbra %d0, 1b
-	rts
-
 .global int_stub_bus_error
 int_stub_bus_error:
 	move.l %a0, -(%sp)
@@ -17,10 +9,18 @@ int_stub_bus_error:
 	move.l %d1, -(%sp)
 	link %fp, #0
 	
-	move.l buss_error_text, -(%sp)
-	#jsr.l terminal_puts
-	jsr.l indicate_bus_error
-	addq.l #2, %sp
+	pea 4.w
+	jsr.l terminal_set_fg
+	addq.l #4, %sp
+	
+	pea 29.w
+	pea 0.w
+	jsr.l terminal_set_pos
+	addq.l #8, %sp
+	
+	pea buss_error_text
+	jsr.l terminal_puts
+	addq.l #4, %sp
 1:
 	bra 1b
 	

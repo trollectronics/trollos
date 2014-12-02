@@ -83,6 +83,14 @@ void terminal_set_bg(enum TerminalColor color) {
 }
 
 
+void terminal_set_pos(int x, int y) {
+	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
+	
+	bi->term_x = x % (TERM_W + 1);
+	bi->term_y = y % (TERM_H + 1);
+}
+
+
 void terminal_putc_simple(char c) {
 	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	unsigned char uc = (unsigned char) c;
