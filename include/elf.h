@@ -69,47 +69,69 @@ enum ElfSectionHeaderFlag {
 	ELF_SECTION_HEADER_FLAG_THREAD_LOCAL = 0x200,
 };
 
+typedef enum ElfSectionHeaderType ElfSectionHeaderType;
+enum ElfSectionHeaderType {
+	ELF_SECTION_HEADER_TYPE_NONE = 0,
+	ELF_SECTION_HEADER_TYPE_PROGRAM_BITS,
+	ELF_SECTION_HEADER_TYPE_SYMBOL_TABLE,
+	ELF_SECTION_HEADER_TYPE_STRING_TABLE,
+	ELF_SECTION_HEADER_TYPE_RELOCATION_ADDENTS,
+	ELF_SECTION_HEADER_TYPE_HASH_TABLE,
+	ELF_SECTION_HEADER_TYPE_DYNAMIC,
+	ELF_SECTION_HEADER_TYPE_NOTE,
+	ELF_SECTION_HEADER_TYPE_PROGRAM_NOBITS, /*Sections like the BSS segment contain no bits*/
+	ELF_SECTION_HEADER_TYPE_RELOCATION,
+	ELF_SECTION_HEADER_TYPE_SHLIB,
+	ELF_SECTION_HEADER_TYPE_DYNSYM,
+	ELF_SECTION_HEADER_TYPE_INIT_ARRAY,
+	ELF_SECTION_HEADER_TYPE_FINISH_ARRAY,
+	ELF_SECTION_HEADER_TYPE_PREINIT_ARRAY,
+	ELF_SECTION_HEADER_TYPE_GROUP,
+	ELF_SECTION_HEADER_TYPE_EXTENDED_SECTION_INDEX,
+	ELF_SECTION_HEADER_TYPE,
+};
+
 struct ElfHeader {
-	uint8_t		ident[16];
-	uint16_t		type;
-	uint16_t		machine;
-	uint32_t		version;
-	uint32_t		entry;
-	uint32_t		program_header_offset;
-	uint32_t		section_header_offset;
-	uint32_t		flags;
-	uint16_t		header_size;
-	uint16_t		program_header_entry_size;
-	uint16_t		program_header_entry_count;
-	uint16_t		section_header_entry_size;
-	uint16_t		section_header_entry_count;
-	uint16_t		section_index_string;
+	uint8_t ident[16];
+	uint16_t type;
+	uint16_t machine;
+	uint32_t version;
+	uint32_t entry;
+	uint32_t program_header_offset;
+	uint32_t section_header_offset;
+	uint32_t flags;
+	uint16_t header_size;
+	uint16_t program_header_entry_size;
+	uint16_t program_header_entry_count;
+	uint16_t section_header_entry_size;
+	uint16_t section_header_entry_count;
+	uint16_t section_index_string;
 };
 
 
 struct ElfSectionHeader {
-	uint32_t		name;
-	uint32_t		type;
-	uint32_t		flags;
-	uint32_t		address;
-	uint32_t		offset;
-	uint32_t		size;
-	uint32_t		link;
-	uint32_t		info;
-	uint32_t		address_align;
-	uint32_t		entry_size;
+	uint32_t name;
+	uint32_t type;
+	uint32_t flags;
+	uint32_t address;
+	uint32_t offset;
+	uint32_t size;
+	uint32_t link;
+	uint32_t info;
+	uint32_t address_align;
+	uint32_t entry_size;
 };
 
 
 struct ElfProgramHeader {
-	uint32_t		type;
-	uint32_t		offset;
-	uint32_t		virtual_address;
-	uint32_t		physical_address;
-	uint32_t		filesize;
-	uint32_t		memsize;
-	uint32_t		flags;
-	uint32_t		align;
+	uint32_t type;
+	uint32_t offset;
+	uint32_t virtual_address;
+	uint32_t physical_address;
+	uint32_t filesize;
+	uint32_t memsize;
+	uint32_t flags;
+	uint32_t align;
 };
 
 int (*(elf_load(void *ptr)))(int argc, char **argv);

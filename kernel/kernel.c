@@ -20,8 +20,10 @@ int main(int argc, char **argv) {
 	terminal_puts("}\n");
 	
 	
-	for (;;);
 	int_init();
+	//generate bus error
+	*((int *) 0xDEADBEEF);
+	for (;;);
 
 	return 42;
 }

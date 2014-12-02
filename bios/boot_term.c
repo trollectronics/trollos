@@ -74,11 +74,12 @@ void term_putc(int c, int color) {
 	}
 
 	pos_x++;
-	if (pos_x == TERM_W)
+	if (pos_x == TERM_W) {
 		pos_x = 0, pos_y++;
-	if (pos_y == TERM_H)
-		/* TODO: Implement scrolling */
-		pos_y = TERM_H - 1;
+		if (pos_y == TERM_H)
+			/* TODO: Implement scrolling */
+			pos_y = TERM_H - 1;
+	}
 	return;
 }
 
@@ -101,6 +102,12 @@ void term_puts(char *str, int color) {
 	for (; *str; str++)
 		term_putc_term((unsigned) *str, color);
 	return;
+}
+
+
+void term_set_pos(int x, int y) {
+	pos_x = x % (TERM_W + 1);
+	pos_y = y % (TERM_H + 1);
 }
 
 

@@ -62,7 +62,8 @@ int (*(elf_load(void *elf)))(int argc, char **argv) {
 		
 		segment = (section_header->flags & ELF_SECTION_HEADER_FLAG_WRITE) ? MMU_KERNEL_SEGMENT_DATA : MMU_KERNEL_SEGMENT_TEXT;
 		count = (section_header->size + 4095)/4096;
-		if (section_header->type == 8) {	/* No bits. .bss et al */
+		if (section_header->type == ELF_SECTION_HEADER_TYPE_PROGRAM_NOBITS) {
+			/*BSS segment*/
 			p = mmu_allocate_frame(section_header->address, segment, count);
 			memset(p + (section_header->address & 0xFFF), 0, section_header->size);
 			continue;
