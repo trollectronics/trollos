@@ -1,8 +1,8 @@
 #include <stdint.h>
+#include <mem_addr.h>
+#include <bios_info.h>
 #include "boot_term.h"
 #include "vgafont.h"
-#include "mem_addr.h"
-#include "bios_info.h"
 
 #define TERM_W		71
 #define	TERM_H		30

@@ -2,7 +2,7 @@
 #define	__SPI_H__
 
 #include <stdbool.h>
-#include "mem_addr.h"
+#include <mem_addr.h>
 
 #define	SPI_REG_MEM	((volatile struct SpiMem *) (MEM_CHIPSET_SPACE + 0x20))
 #define	SPI_REG_LINE	((volatile struct SpiLineSelect *) (MEM_CHIPSET_SPACE + 0x24))

@@ -10,8 +10,8 @@ export TOPDIR
 all:
 	@echo " [INIT] bin/"
 	@$(MKDIR) bin/
-	@echo " [ CD ] bootimg/"
-	+@make -C bootimg/
+	@echo " [ CD ] bios/"
+	+@make -C bios/
 	@echo " [ CD ] kernel/"
 	+@make -C kernel/
 	@cat "$(OSFS)" >> "$(BOOTIMG)"
@@ -22,8 +22,8 @@ all:
 clean:
 	@echo " [ RM ] bin/"
 	+@$(RM) bin/
-	@echo " [ CD ] bootimg/"
-	+@make -C bootimg/ clean
+	@echo " [ CD ] bios/"
+	+@make -C bios/ clean
 	@echo " [ CD ] kernel/"
 	+@make -C kernel/ clean
 	@echo

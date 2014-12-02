@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <mmu.h>
 #include "boot_term.h"
-#include "mmu.h"
 
 /** This is probably not nessecary for the bootloader, since we won'd deallocate frames.
  *   We should just use a simple counter to count sequentially allocated frames!*/

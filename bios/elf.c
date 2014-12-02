@@ -1,11 +1,11 @@
 #include <limits.h>
+#include <mem_addr.h>
+#include <bios_info.h>
+#include <mmu.h>
 #include "elf.h"
 #include "boot_term.h"
 #include "printf.h"
-#include "mem_addr.h"
 #include "util.h"
-#include "bios_info.h"
-#include "mmu.h"
 
 
 int elf_run(void *ptr, int argc, char **argv) {

@@ -1,6 +1,6 @@
 #include <stdarg.h>
+#include <mem_addr.h>
 #include "boot_term.h"
-#include "mem_addr.h"
 
 void terminal_put_counted(char *str, int count) {
 	unsigned char *ustr = (void *) str;

@@ -30,10 +30,10 @@ clean:
 	@echo "Done."
 	@echo 
 
-%.o: %.c %.h
-	@echo " [ CC ] bootimg/$<"
+%.o: %.c
+	@echo " [ CC ] bios/$<"
 	@$(TARGETCC) $(CFLAGS) -c -o $@ $<
 
 %.ao: %.S
-	@echo " [ AS ] bootimg/$<"
+	@echo " [ AS ] bios/$<"
 	@$(TARGETAS) $(ASFLAGS) -o $@ $<

@@ -30,7 +30,7 @@ clean:
 	@echo "Done."
 	@echo 
 
-%.o: %.c %.h
+%.o: %.c
 	@echo " [ CC ] kernel/$<"
 	@$(TARGETCC) $(CFLAGS) $(OSCFLAGS) -c -o $@ $<
 	

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "../bootimg/mmu.h"
+#include <mmu.h>
 
 #define MAX_PROCESS_FILES 64
 #define MAX_PROCESSES 1024
