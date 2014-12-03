@@ -3,10 +3,6 @@
 
 #include <stdint.h>
 
-#ifndef NULL
-#define NULL ((void *) 0x0)
-#endif
-
 void *malloc(uint32_t size);
 void free(void *pointer);
 

@@ -1,5 +1,5 @@
-#ifndef __CHIPSET_H__
-#define	__CHIPSET_H__
+#ifndef __INCLUDE_CHIPSET_H__
+#define	__INCLUDE_CHIPSET_H__
 
 #include <stdint.h>
 

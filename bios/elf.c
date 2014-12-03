@@ -1,8 +1,8 @@
 #include <limits.h>
 #include <mem_addr.h>
 #include <bios_info.h>
-#include <mmu.h>
-#include <elf.h>
+#include "elf.h"
+#include "mmu.h"
 #include "boot_term.h"
 #include "printf.h"
 #include "util.h"

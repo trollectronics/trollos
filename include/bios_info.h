@@ -1,5 +1,5 @@
-#ifndef __BIOS_INFO_H__
-#define	__BIOS_INFO_H__
+#ifndef __INCLUDE_BIOS_INFO_H__
+#define	__INCLUDE_BIOS_INFO_H__
 
 #include "mem_addr.h"
 

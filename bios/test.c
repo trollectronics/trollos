@@ -1,4 +1,4 @@
-#include <elf.h>
+#include "elf.h"
 #include "boot_term.h"
 #include "romfs.h"
 #include "sd.h"

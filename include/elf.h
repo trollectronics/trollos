@@ -1,5 +1,5 @@
-#ifndef __ELF_H__
-#define	__ELF_H__
+#ifndef __INCLUDE_ELF_H__
+#define	__INCLUDE_ELF_H__
 
 #include <stdint.h>
 
@@ -133,7 +133,5 @@ struct ElfProgramHeader {
 	uint32_t flags;
 	uint32_t align;
 };
-
-int (*(elf_load(void *ptr)))(int argc, char **argv);
 
 #endif

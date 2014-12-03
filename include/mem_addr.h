@@ -1,7 +1,11 @@
-#ifndef __MEM_ADDR_H__
-#define	__MEM_ADDR_H__
+#ifndef __INCLUDE_MEM_ADDR_H__
+#define	__INCLUDE_MEM_ADDR_H__
 
 #include <stdint.h>
+
+#ifndef NULL
+#define NULL ((void *) 0x0)
+#endif
 
 #define	MEM_LLRAM		((volatile void *) 0x80000)
 #define	MEM_PAL_RAM		((volatile void *) (0x1400 + MEM_LLRAM))
