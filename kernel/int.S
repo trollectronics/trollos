@@ -9,7 +9,7 @@ int_stub_bus_error:
 	move.l %d1, -(%sp)
 	link %fp, #0
 	
-	pea 4.w
+	pea 12.w
 	jsr.l terminal_set_fg
 	addq.l #4, %sp
 	

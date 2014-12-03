@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 		printf(", %s ", argv[i]);
 	terminal_puts("}\n");
 	
-	
+	mmu_init();
 	int_init();
 	//generate bus error
 	i = *((int *) 0xDEADBEEF);
