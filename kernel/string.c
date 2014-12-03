@@ -32,7 +32,7 @@ int strcmp(const char *s1, const char *s2) {
 
 
 char *strchr(char *str, char chr) {
-	while (*str++)
+	for (; *str; str++)
 		if (*str == chr)
 			return str;
 	return NULL;
@@ -42,16 +42,19 @@ char *strchr(char *str, char chr) {
 char *strtok_r(char *buff, const char *delim, char **next) {
 	char *search, *ret, *new;
 	
-	search = buff?buff:(*next);
+	if (!(search = buff?buff:(*next)))
+		return NULL;
+	
 	ret = NULL;
 	
-	while (*delim++) {
+	for (; *delim; delim++) {
 		new = strchr(search, *delim);
 		if (!ret || ret > new)
 			ret = new;
 	}
 
-	*ret = 0;
+	if (ret)
+		*ret = 0;
 	*next = ret?ret + 1:NULL;
 	return search;
 }
@@ -77,8 +80,8 @@ uint32_t str_parse_int(const char *str) {
 
 	if (str[1] == 'x' || str[1] == 'X') {
 		/* Parse hex */
-		ret <<= 4;
 		for (i = 2; i < len; i++) {
+			ret <<= 4;
 			if (str[i] < '0' || str[i] > '9') {
 				if (str[i] < 'a' || str[i] > 'f') {
 					if (str[i] < 'A' || str[i] > 'F')

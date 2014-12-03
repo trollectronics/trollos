@@ -11,4 +11,12 @@ enum BlockdevStatus {
 	BLOCKDEV_STATUS_OK	= 0,
 };
 
+
+struct BlockdevHandler {
+	int	(*create_from_arg)(const char *arg);
+	int	(*read)(uint32_t device, uint32_t block, uint32_t count, uint32_t *data);
+	int	(*write)(uint32_t device, uint32_t block, uint32_t count, uint32_t *data);
+	int	(*blocksize)(uint32_t device);
+};
+
 #endif

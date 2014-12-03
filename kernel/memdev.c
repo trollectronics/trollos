@@ -1,30 +1,45 @@
 #include "memdev.h"
 #include "string.h"
 #include "blockdev.h"
+#include "printf.h"
 #include <mem_addr.h>
 
 struct Memdev memdev_state;
 #define	KERNEL_ARGLEN_MAX	512
 
 
-int memdev_from_arg(const char *opt) {
-	char buff[KERNEL_ARGLEN_MAX], *next, *tok, *val;
-	uint32_t devno, i;
+int memdev_new() {
+	int i;
 
-	if (strnlen(opt, KERNEL_ARGLEN_MAX) >= KERNEL_ARGLEN_MAX)
-		return BLOCKDEV_STATUS_ARGLEN;
 	for (i = 0; i < MEMDEV_MAX; i++)
 		if (!memdev_state.entry[i].size)
 			break;
 	if (i == MEMDEV_MAX)
 		return BLOCKDEV_STATUS_NOAVAIL;
-	devno = i;
+	memdev_state.entry[i].ptr = 0;
+	memdev_state.entry[i].size = 0;
+	memdev_state.entry[i].block_size = 512;
+	memdev_state.entry[i].writable = false;
+	
+	return i;
+}
+
+int memdev_from_arg(const char *opt) {
+	char buff[KERNEL_ARGLEN_MAX], *next, *tok, *val;
+	uint32_t devno;
+
+	if (strnlen(opt, KERNEL_ARGLEN_MAX) >= KERNEL_ARGLEN_MAX)
+		return BLOCKDEV_STATUS_ARGLEN;
+	devno = memdev_new();
+	if (devno < 0)
+		return BLOCKDEV_STATUS_NOAVAIL;
 	strncpy(buff, opt, 512);
 	for (tok = strtok_r(buff, ",", &next); tok; tok = strtok_r(NULL, ",", &next)) {
 		if ((val = strchr(tok, '='))) {
-			if (!strcmp(tok, "addr"))
+			*val = 0, val++;
+			if (!strcmp(tok, "addr")) {
 				memdev_state.entry[devno].ptr = (void *) str_parse_int(val);
-			else if (!strcmp(tok, "size")) {
+			} else if (!strcmp(tok, "size")) {
 				if (!(memdev_state.entry[devno].size = str_parse_int(val)))
 					return BLOCKDEV_STATUS_NOSIZE;
 			} else if (!strcmp(tok, "blksize")) {
@@ -35,7 +50,7 @@ int memdev_from_arg(const char *opt) {
 		}
 	}
 	
-	printf("MEM BlockDev #%i @0x%X,size=0x%X\n", devno, *((uint32_t *) memdev_state.entry[devno].ptr), memdev_state.entry[devno].size);
+	printf("MEM BlockDev #%i @0x%X,size=0x%X\n", devno, ((uint32_t *) memdev_state.entry[devno].ptr), memdev_state.entry[devno].size);
 	return devno;
 }
 
@@ -59,4 +74,13 @@ int memdev_read(uint32_t device, uint32_t block, uint32_t count, uint32_t *dest)
 
 int memdev_write(uint32_t device, uint32_t block, uint32_t count, uint32_t *data) {
 	return BLOCKDEV_STATUS_READONLY;
+}
+
+
+int memdev_blocksize(uint32_t device) {
+	if (device >= MEMDEV_MAX)
+		return -1;
+	if (!memdev_state.entry[device].size)
+		return -1;
+	return memdev_state.entry[device].block_size;
 }

@@ -1,20 +1,10 @@
 .text
 
-.global mmu_int_stub
-mmu_int_stub:
-	jsr.l mmu_bus_error
-	rte
-
 .global mmu_get_physical
 mmu_get_physical:
-	link %fp, #-4
-	pmove %tc, -4(%fp)
-	ori.l #0x80000000, -4(%fp)
-	pmove -4(%fp), %tc
+	link %fp, #0
 	mov.l 8(%fp), %a1
 	ptestr #6, (%a1), #7, %a0
-	andi.l #0x7FFFFFFF, -4(%fp)
-	pmove -4(%fp), %tc
 	mov.l (%a0), %d0
 	andi.l #0xFFFFFF00, %d0
 	mov.l 8(%fp), %d1

@@ -1,5 +1,87 @@
 #include "mmu.h"
 
+#define PAGE_TABLE_SIZE 4096
+
+static void scan_page_table_short(MmuDescriptorShort *entry);
+static void scan_page_table_long(MmuDescriptorLong *entry);
+
+static void scan_page_table_short(MmuDescriptorShort *entry) {
+	MmuDescriptorShort *s;
+	MmuDescriptorLong *l;
+	int i;
+	
+	switch(entry->table.descriptor_type) {
+		case MMU_DESCRIPTOR_TYPE_TABLE_SHORT:
+			s = (void *) (entry->table.table_address << 4);
+			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
+				scan_page_table_short(&s[i]);
+			break;
+		case MMU_DESCRIPTOR_TYPE_TABLE_LONG:
+			l = (void *) (entry->table.table_address << 4);
+			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
+				scan_page_table_long(&l[i]);
+			break;
+		case MMU_DESCRIPTOR_TYPE_PAGE:
+			/*Flag as used*/
+			printf("found used page 0x%X\n", (entry->page.page_address << 4));
+			return;
+		case MMU_DESCRIPTOR_TYPE_INVALID:
+			/*Flag as unused*/
+			return;
+	}
+}
+
+static void scan_page_table_long(MmuDescriptorLong *entry) {
+	MmuDescriptorShort *s;
+	MmuDescriptorLong *l;
+	int i;
+	
+	switch(entry->table.descriptor_type) {
+		case MMU_DESCRIPTOR_TYPE_TABLE_SHORT:
+			s = (void *) (entry->table.table_address << 4);
+			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
+				scan_page_table_short(&s[i]);
+			break;
+		case MMU_DESCRIPTOR_TYPE_TABLE_LONG:
+			l = (void *) (entry->table.table_address << 4);
+			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
+				scan_page_table_long(&l[i]);
+			break;
+		case MMU_DESCRIPTOR_TYPE_PAGE:
+			/*Flag as used*/
+			printf("found used page 0x%X\n", (entry->page.page_address << 4));
+			return;
+		case MMU_DESCRIPTOR_TYPE_INVALID:
+			/*Flag as unused*/
+			return;
+	}
+}
+
+
+void mmu_init() {
+	MmuRegRootPointer srp;
+	MmuDescriptorShort root_table_s;
+	MmuDescriptorLong root_table_l;
+	int i;
+	
+	/*Traverse page table, build bitmap of allocated frames*/
+	mmu_get_srp(&srp);
+	switch(srp.descriptor_type) {
+		case MMU_DESCRIPTOR_TYPE_TABLE_SHORT:
+			root_table_s.table.table_address = srp.table_address;
+			root_table_s.table.descriptor_type = srp.descriptor_type;
+			scan_page_table_short(&root_table_s);
+			break;
+		case MMU_DESCRIPTOR_TYPE_TABLE_LONG:
+			root_table_l.table.table_address = srp.table_address;
+			root_table_l.table.descriptor_type = srp.descriptor_type;
+			scan_page_table_long(&root_table_l);
+			break;
+	}
+	
+	
+}
+
 void *mmu_allocate_frame(uint32_t virtual_address, MmuKernelSegment segment, uint32_t count) {
 	#if 0
 	bool write_protect = false;
