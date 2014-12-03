@@ -1,3 +1,4 @@
+#include <chipset.h>
 #include "spi.h"
 
 void spi_wait_done() {

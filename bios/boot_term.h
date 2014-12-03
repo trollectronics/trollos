@@ -3,9 +3,10 @@
 
 #include <stdint.h>
 #include <mem_addr.h>
+#include <chipset.h>
 
-#define	BOOT_TERM_VSYNC_ENABLE	(*((unsigned int *) (MEM_CHIPSET_SPACE + 0x0)) = 1)
-#define	BOOT_TERM_VSYNC_ACK	(*((unsigned int *) (MEM_CHIPSET_SPACE + 0x4)) = 0)
+#define BOOT_TERM_VSYNC_ENABLE() (*CHIPSET_IO(CHIPSET_IO_PORT_INTERRUPT_ENABLE) = 1)
+#define BOOT_TERM_VSYNC_ACK() (*CHIPSET_IO(CHIPSET_IO_PORT_IRQ_ACK_VGA) = 0)
 
 uint32_t boot_term_get_vsync();
 void term_init();
