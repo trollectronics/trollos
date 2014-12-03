@@ -13,7 +13,7 @@ static uint32_t vsync_count;
 
 void boot_term_vsync() {
 	vsync_count++;
-	BOOT_TERM_VSYNC_ACK;
+	BOOT_TERM_VSYNC_ACK();
 	return;
 }
 
@@ -51,7 +51,7 @@ void term_init() {
 	vgapal[14] = 0xFFFA;
 	vgapal[15] = 0xFFFF;
 
-	//BOOT_TERM_VSYNC_ENABLE;
+	//BOOT_TERM_VSYNC_ENABLE();
 	
 	return;
 }

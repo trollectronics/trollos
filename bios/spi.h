@@ -4,10 +4,10 @@
 #include <stdbool.h>
 #include <mem_addr.h>
 
-#define	SPI_REG_MEM	((volatile struct SpiMem *) (MEM_CHIPSET_SPACE + 0x20))
-#define	SPI_REG_LINE	((volatile struct SpiLineSelect *) (MEM_CHIPSET_SPACE + 0x24))
-#define	SPI_REG_STATE	((volatile struct SpiState *) (MEM_CHIPSET_SPACE + 0x28))
-#define	SPI_INT_ACK	(*((volatile int *) (MEM_CHIPSET_SPACE + 0x2C)) = 0)
+#define	SPI_REG_MEM	((volatile struct SpiMem *) CHIPSET_IO(CHIPSET_IO_PORT_SPI_MEM_COUNTER))
+#define	SPI_REG_LINE	((volatile struct SpiLineSelect *) CHIPSET_IO(CHIPSET_IO_PORT_SPI_LINE_SELECT))
+#define	SPI_REG_STATE	((volatile struct SpiState *) CHIPSET_IO(CHIPSET_IO_PORT_SPI_REG))
+#define	SPI_INT_ACK()	(*CHIPSET_IO(CHIPSET_IO_PORT_IRQ_ACK_SPI) = 0)
 
 struct SpiMem {
 	uint32_t			: 18;
