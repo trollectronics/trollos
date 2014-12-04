@@ -102,3 +102,20 @@ uint32_t str_parse_int(const char *str) {
 
 	return ret;
 }
+
+
+char *str_extract_arg(const char *str_in, char *findarg, char *argout, uint32_t arglen) {
+	char buff[STRING_ARG_MAX], *tok, *next, *sep;
+
+	strncpy(buff, str_in, STRING_ARG_MAX);
+	for (tok = strtok_r(buff, ",", &next); tok; tok = strtok_r(NULL, ",", &next))
+		if ((sep = strchr(tok, '='))) {
+			*sep = 0;
+			sep++;
+			if (!strcmp(findarg, tok)) {
+				strncpy(argout, sep, arglen);
+				return argout;
+			}
+		}
+	return NULL;
+}

@@ -5,7 +5,17 @@
 #include <mem_addr.h>
 
 struct Memdev memdev_state;
-#define	KERNEL_ARGLEN_MAX	512
+
+
+bool memdev_init() {
+	int i;
+
+	for (i = 0; i < MEMDEV_MAX; i++)
+		memdev_state.entry[i].size = 0;
+	/* TODO: Register a blockdevice interface */
+
+	return false;
+}
 
 
 int memdev_new() {
@@ -25,10 +35,10 @@ int memdev_new() {
 }
 
 int memdev_from_arg(const char *opt) {
-	char buff[KERNEL_ARGLEN_MAX], *next, *tok, *val;
+	char buff[STRING_ARG_MAX], *next, *tok, *val;
 	uint32_t devno;
 
-	if (strnlen(opt, KERNEL_ARGLEN_MAX) >= KERNEL_ARGLEN_MAX)
+	if (strnlen(opt, STRING_ARG_MAX) >= STRING_ARG_MAX)
 		return BLOCKDEV_STATUS_ARGLEN;
 	devno = memdev_new();
 	if (devno < 0)
