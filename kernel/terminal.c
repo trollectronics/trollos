@@ -100,7 +100,7 @@ void terminal_putc_simple(char c) {
 }
 
 
-void terminal_put_counted(char *str, int count) {
+void terminal_put_counted(const char *str, int count) {
 	unsigned char *ustr = (void *) str;
 	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	
@@ -109,7 +109,7 @@ void terminal_put_counted(char *str, int count) {
 }
 
 
-void terminal_puts(char *str) {
+void terminal_puts(const char *str) {
 	unsigned char *ustr = (void *) str;
 	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 

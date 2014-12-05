@@ -23,7 +23,9 @@ const void const *vector[256] __attribute__ ((section (".vector"))) = {
 void main() {
 	memset(&__bss_start, 0, &__bss_end - &__bss_start);
 	term_init();
-	term_puts("TrollBook(tm) BIOS Version 0.17 (C) Trollectronics 2014\n", 15);
+	printf("TrollBook(tm) BIOS Version 0.17 (C) Trollectronics 2014\n -> %i MB of RAM\n", 
+		(*CHIPSET_IO(CHIPSET_IO_PORT_GET_RAM_SIZE))/(1024*1024)
+	);
 	
 	test();
 	

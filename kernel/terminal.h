@@ -20,10 +20,10 @@ enum TerminalColor {
 	TERMINAL_COLOR_WHITE,
 };
 
-void terminal_puts(char *str);
+void terminal_puts(const char *str);
 void terminal_putc_simple(char c);
 void terminal_putc_ctrl(int c, int fg, int bg);
-void terminal_put_counted(char *str, int count);
+void terminal_put_counted(const char *str, int count);
 void terminal_set_fg(enum TerminalColor color);
 void terminal_set_bg(enum TerminalColor color);
 void terminal_set_pos(int x, int y);

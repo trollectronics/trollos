@@ -1,8 +1,19 @@
 #include "terminal.h"
 #include "printf.h"
 #include "int.h"
+#include "mmu.h"
 
 int ostkaka = 42;
+
+void panic(const char *message) {
+	terminal_set_bg(TERMINAL_COLOR_BLACK);
+	terminal_set_fg(TERMINAL_COLOR_LIGHT_RED);
+	terminal_set_pos(0, 29);
+	terminal_puts("*** KERNEL PANIC: ");
+	terminal_puts(message);
+	terminal_puts(" ***");
+	for(;;);
+}
 
 int main(int argc, char **argv) {
 	int i;

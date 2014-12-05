@@ -1,5 +1,5 @@
 .text
-buss_error_text: .asciz "*** KERNEL PANIC: bus error ***"
+buss_error_text: .asciz "bus error"
 
 .global int_stub_bus_error
 int_stub_bus_error:
@@ -9,17 +9,8 @@ int_stub_bus_error:
 	move.l %d1, -(%sp)
 	link %fp, #0
 	
-	pea 12.w
-	jsr.l terminal_set_fg
-	addq.l #4, %sp
-	
-	pea 29.w
-	pea 0.w
-	jsr.l terminal_set_pos
-	addq.l #8, %sp
-	
 	pea buss_error_text
-	jsr.l terminal_puts
+	jsr.l panic
 	addq.l #4, %sp
 1:
 	bra 1b

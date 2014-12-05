@@ -2,6 +2,16 @@
 #define __MMU_H__
 #include <mmu.h>
 
+#define MMU_PAGE_SIZE 4096
+#define MMU_DRAM_START (16*1024*1024)
+
+typedef struct MmuFreeMemTable MmuFreeMemTable;
+struct MmuFreeMemTable {
+	/*set bit = free frame*/
+	uint32_t *bitmap;
+	/*0x0 = whole bitmap full, 0xFFFFFFFF = whole bitmap empty*/
+	uint32_t blocks;
+};
 
 void mmu_init();
 void *mmu_get_physical(void *phys);
