@@ -5,7 +5,7 @@
 
 int test() {
 	struct RomfsFileDescriptor desc;
-	char *argv[] = { "kernel.elf", "arne" };
+	char *argv[] = { "kernel.elf", "arne", "newdev=memdev,addr=0x10000,size=0x70000"};
 	int i;
 	void *go;
 
@@ -24,7 +24,7 @@ int test() {
 			go = elf_load(desc.data);
 			printf(" -> Entry is 0x%X, mapped to physical address 0x%X\n", go, mmu_get_physical(go));
 			term_export();
-			mmu_enable_and_jump(go, 2, argv);
+			mmu_enable_and_jump(go, 3, argv);
 			for(;;);
 			term_puts("Returned from elf_load()\n", 15);
 		}

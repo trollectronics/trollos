@@ -1,4 +1,5 @@
 #include "terminal.h"
+#include "memdev.h"
 #include "printf.h"
 #include "int.h"
 #include "mmu.h"
@@ -29,6 +30,8 @@ int main(int argc, char **argv) {
 	for(i = 1; i < argc; i++)
 		printf(", %s ", argv[i]);
 	terminal_puts("}\n");
+	if (argc >= 3)
+		memdev_from_arg(argv[2]);
 	
 	mmu_init();
 	int_init();
