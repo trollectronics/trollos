@@ -14,6 +14,8 @@ struct MmuFreeMemTable {
 };
 
 void mmu_init();
+void *mmu_allocate_page();
+void mmu_deallocate_page(void *address);
 void *mmu_get_physical(void *phys);
 void mmu_set_tc(MmuRegTranslationControl *tc);
 void mmu_get_tc(MmuRegTranslationControl *tc);

@@ -3,6 +3,7 @@
 
 
 void int_stub();
+void int_print_shit();
 void int_stub_bus_error();
 void int_init();
 void int_enable();

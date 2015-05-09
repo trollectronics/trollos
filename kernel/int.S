@@ -1,5 +1,6 @@
 .text
 buss_error_text: .asciz "bus error"
+print_shit_text: .asciz "lol\n"
 
 .global int_stub_bus_error
 int_stub_bus_error:
@@ -30,6 +31,23 @@ int_stub:
 	move.l %d1, -(%sp)
 	
 	jsr.l int_stub_handle
+	
+	move.l (%sp)+, %d1
+	move.l (%sp)+, %d0
+	move.l (%sp)+, %a1
+	move.l (%sp)+, %a0
+	rte
+
+.global int_print_shit
+int_print_shit:
+	move.l %a0, -(%sp)
+	move.l %a1, -(%sp)
+	move.l %d0, -(%sp)
+	move.l %d1, -(%sp)
+	
+	pea print_shit_text
+	jsr.l printf
+	addq.l #4, %sp
 	
 	move.l (%sp)+, %d1
 	move.l (%sp)+, %d0

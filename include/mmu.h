@@ -169,7 +169,7 @@ struct MmuDescriptorIndirectShort {
 struct MmuDescriptorIndirectLong {
 	uint64_t : 30;
 	uint64_t descriptor_type : 2;
-	uint32_t descriptor_address : 30;
+	uint64_t descriptor_address : 30;
 	uint64_t : 2;
 };
 

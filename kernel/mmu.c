@@ -132,7 +132,9 @@ static void primitive_heap_init() {
 static void flag_used(uint32_t frame) {
 	uint32_t dir_index = frame/(1024*32);
 	uint32_t map_index = (frame/32) % 1024;
+	uint32_t block_bit = map_index/32;
 	uint32_t bit = frame % 32;
+	int i;
 	
 	if(frame < (MMU_DRAM_START/MMU_PAGE_SIZE))
 		return;
@@ -140,6 +142,51 @@ static void flag_used(uint32_t frame) {
 		return;
 	
 	mem_layout.table[dir_index].bitmap[map_index] &= ~(0x1 << bit);
+	
+	for(i = 0; i < 32; i++) {
+		if(mem_layout.table[dir_index].bitmap[block_bit*32 + i])
+			return;
+	}
+	mem_layout.table[dir_index].blocks &= ~(0x1 << block_bit);
+}
+
+static int32_t find_unused() {
+	uint32_t dir_index, block, blocks, map_index, bit, bits;
+	
+	for(dir_index = 0; dir_index < 32; dir_index++) {
+		if(!(mem_layout.table[dir_index].bitmap && mem_layout.table[dir_index].blocks))
+			continue;
+		
+		blocks = mem_layout.table[dir_index].blocks;
+		for(block = 0; !(blocks & 0x1); block++, blocks >>= 1);
+		
+		for(map_index = block*32; map_index < block*32 + 32; map_index++) {
+			if(!mem_layout.table[dir_index].bitmap[map_index])
+				continue;
+			
+			bits = mem_layout.table[dir_index].bitmap[map_index];
+			for(bit = 0; !(bits & 0x1); bit++, bits >>= 1);
+			
+			return dir_index*32*1024 + map_index*32 + bit;
+		}
+			
+	}
+	return -1;
+}
+
+static void flag_unused(uint32_t frame) {
+	uint32_t dir_index = frame/(1024*32);
+	uint32_t map_index = (frame/32) % 1024;
+	uint32_t block_bit = map_index/32;
+	uint32_t bit = frame % 32;
+	
+	if(frame < (MMU_DRAM_START/MMU_PAGE_SIZE))
+		return;
+	if(frame >= ((MMU_DRAM_START/MMU_PAGE_SIZE) + mem_layout.total_frames ))
+		return;
+	
+	mem_layout.table[dir_index].bitmap[map_index] |= (0x1 << bit);
+	mem_layout.table[dir_index].blocks |= (0x1 << block_bit);
 }
 
 
@@ -172,6 +219,7 @@ static void scan_and_flag() {
 							panic("non-supported page table");
 					}
 				}
+				break;
 			case MMU_DESCRIPTOR_TYPE_INVALID:
 				break;
 			default:
@@ -180,6 +228,24 @@ static void scan_and_flag() {
 	}
 	
 	//TODO: second pass clearing bits in .blocks
+}
+
+
+uint32_t mmu_allocate_frame() {
+	int32_t frame;
+	if((frame = find_unused()) < 0)
+		return NULL;
+	
+	flag_used(frame);
+	mem_layout.allocated_frames++;
+	
+	return (((uint32_t) frame)*MMU_PAGE_SIZE);
+}
+
+
+void mmu_deallocate_frame(uint32_t address) {
+	flag_unused(address/MMU_PAGE_SIZE);
+	mem_layout.allocated_frames--;
 }
 
 

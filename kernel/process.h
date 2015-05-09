@@ -12,6 +12,9 @@ typedef struct Process Process;
 struct Process {
 	uint32_t id;
 	MmuRegRootPointer page_table;
+	void *program_counter;
+	void *stack_pointer;
+	uint32_t status_reg;
 	uint32_t user;
 	uint32_t group;
 	uint32_t time_started;
