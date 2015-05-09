@@ -3,6 +3,7 @@
 #include "printf.h"
 #include "int.h"
 #include "mmu.h"
+#include "mem.h"
 
 int ostkaka = 42;
 
@@ -30,10 +31,18 @@ int main(int argc, char **argv) {
 	for(i = 1; i < argc; i++)
 		printf(", %s ", argv[i]);
 	terminal_puts("}\n");
-	if (argc >= 3)
-		memdev_from_arg(argv[2]);
+	/*if (argc >= 3)
+		memdev_from_arg(argv[2]);*/
 	
 	mmu_init();
+	mmu_print_status();
+	printf("Heap is at 0x%X\n", ksbrk(0));
+	printf("Heap is at 0x%X\n", ksbrk(MMU_PAGE_SIZE));
+	uint32_t *arne = ksbrk(0);
+	arne--;
+	*arne = 0xDEADBEEF;
+	printf("I have written this to mem: 0x%X", *arne);
+	for(;;);
 	int_init();
 	//generate bus error
 	i = *((int *) 0xDEADBEEF);

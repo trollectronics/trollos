@@ -77,6 +77,7 @@ struct MmuRegRootPointer {
 	uint64_t : 4;
 };
 
+typedef struct MmuDescriptorTableShort MmuDescriptorTableShort;
 struct MmuDescriptorTableShort {
 	uint32_t table_address : 28;
 	uint32_t used : 1;
@@ -84,6 +85,7 @@ struct MmuDescriptorTableShort {
 	uint32_t descriptor_type : 2;
 };
 
+typedef struct MmuDescriptorTableLong MmuDescriptorTableLong;
 struct MmuDescriptorTableLong {
 	uint64_t lu : 1;
 	uint64_t limit : 15;
@@ -97,6 +99,7 @@ struct MmuDescriptorTableLong {
 	uint64_t : 4;
 };
 
+typedef struct MmuDescriptorEarlyTerminationShort MmuDescriptorEarlyTerminationShort;
 struct MmuDescriptorEarlyTerminationShort {
 	uint32_t page_address : 24;
 	uint32_t : 1;
@@ -108,6 +111,7 @@ struct MmuDescriptorEarlyTerminationShort {
 	uint32_t descriptor_type : 2;
 };
 
+typedef struct MmuDescriptorEarlyTerminationLong MmuDescriptorEarlyTerminationLong;
 struct MmuDescriptorEarlyTerminationLong {
 	uint64_t lu : 1;
 	uint64_t limit : 15;
@@ -124,6 +128,7 @@ struct MmuDescriptorEarlyTerminationLong {
 	uint64_t : 8;
 };
 
+typedef struct MmuDescriptorPageShort MmuDescriptorPageShort;
 struct MmuDescriptorPageShort {
 	uint32_t page_address : 24;
 	uint32_t : 1;
@@ -135,6 +140,7 @@ struct MmuDescriptorPageShort {
 	uint32_t descriptor_type : 2;
 };
 
+typedef struct MmuDescriptorPageLong MmuDescriptorPageLong;
 struct MmuDescriptorPageLong {
 	uint64_t : 16;
 	uint64_t : 7;
@@ -150,22 +156,26 @@ struct MmuDescriptorPageLong {
 	uint64_t : 8;
 };
 
+typedef struct MmuDescriptorInvalidShort MmuDescriptorInvalidShort;
 struct MmuDescriptorInvalidShort {
 	uint32_t : 30;
 	uint32_t descriptor_type : 2;
 };
 
+typedef struct MmuDescriptorInvalidLong MmuDescriptorInvalidLong;
 struct MmuDescriptorInvalidLong {
 	uint64_t : 30;
 	uint64_t descriptor_type : 2;
 	uint64_t : 32;
 };
 
+typedef struct MmuDescriptorIndirectShort MmuDescriptorIndirectShort;
 struct MmuDescriptorIndirectShort {
 	uint32_t descriptor_address : 30;
 	uint32_t descriptor_type : 2;
 };
 
+typedef struct MmuDescriptorIndirectLong MmuDescriptorIndirectLong;
 struct MmuDescriptorIndirectLong {
 	uint64_t : 30;
 	uint64_t descriptor_type : 2;
@@ -180,6 +190,7 @@ union MmuDescriptorShort {
 	struct MmuDescriptorPageShort page;
 	struct MmuDescriptorTableShort table;
 	struct MmuDescriptorIndirectShort indirect;
+	struct MmuDescriptorEarlyTerminationShort early;
 };
 
 typedef union MmuDescriptorLong MmuDescriptorLong;
@@ -189,6 +200,7 @@ union MmuDescriptorLong {
 	struct MmuDescriptorPageLong page;
 	struct MmuDescriptorTableLong table;
 	struct MmuDescriptorIndirectLong indirect;
+	struct MmuDescriptorEarlyTerminationLong early;
 };
 
 typedef enum MmuDescriptorType MmuDescriptorType;

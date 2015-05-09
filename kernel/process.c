@@ -22,7 +22,7 @@ uint32_t process_create(uint32_t uid, uint32_t gid) {
 	for(j = 0; (entry & 0x1); entry >>= 1, j++);
 	pid = i*32 + j;
 	process_bitmap[i] |= (1 << j);
-	proc = malloc(sizeof(Process));
+	proc = kmalloc(sizeof(Process));
 	memset(proc, 0, sizeof(Process));
 	
 	proc->id = pid;
