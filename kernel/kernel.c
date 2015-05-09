@@ -41,10 +41,11 @@ int main(int argc, char **argv) {
 	uint32_t *arne = ksbrk(0);
 	arne--;
 	*arne = 0xDEADBEEF;
-	printf("I have written this to mem: 0x%X", *arne);
-	for(;;);
+	printf("I have written this to mem: 0x%X\n", *arne);
 	int_init();
 	//generate bus error
+	terminal_set_fg(TERMINAL_COLOR_YELLOW);
+	printf("I will now generate a buss error.");
 	i = *((int *) 0xDEADBEEF);
 	printf("lalala %i\n", i);
 	for (;;);

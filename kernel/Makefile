@@ -3,17 +3,17 @@ include $(TOPDIR)/config.mk
 
 ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
-AOBJFILES	=	$(ASMFILES:.S=.ao)
-OBJFILES	=	$(SRCFILES:.c=.o)
+OBJFILES	=	$(SRCFILES:.c=.c.o)
+OBJFILES	+=	$(ASMFILES:.S=.S.o)
 .PHONY: all clean
 
 LDFLAGS		=	-nostdlib -Wl,-Ttext=0xC0000000 -static -lgcc
 CFLAGS		=	-m68030 -Wall -O2 -ffreestanding -I../include
 ASFLAGS		=	-m68030
 
-all: $(OBJFILES) $(DEPENDS) $(AOBJFILES)
+all: $(OBJFILES) $(DEPENDS)
 	@echo " [ LD ] $(KERNEL)"
-	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) $(AOBJFILES) -o $(KERNEL) $(LDFLAGS) $(OSLDFLAGS)
+	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) -o $(KERNEL) $(LDFLAGS) $(OSLDFLAGS)
 	@echo " [MKFS] $(OSFS)"
 	@mkdir -p root
 	@mkdir -p root/boot
@@ -30,10 +30,10 @@ clean:
 	@echo "Done."
 	@echo 
 
-%.o: %.c
+%.c.o: %.c
 	@echo " [ CC ] kernel/$<"
 	@$(TARGETCC) $(CFLAGS) $(OSCFLAGS) -c -o $@ $<
 	
-%.ao: %.S
+%.S.o: %.S
 	@echo " [ AS ] kernel/$<"
 	@$(TARGETAS) $(ASFLAGS) -o $@ $<

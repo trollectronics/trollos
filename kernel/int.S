@@ -2,6 +2,7 @@
 buss_error_text: .asciz "bus error"
 print_shit_text: .asciz "lol\n"
 
+.align 2
 .global int_stub_bus_error
 int_stub_bus_error:
 	move.l %a0, -(%sp)
@@ -84,4 +85,9 @@ int_move_vector:
 int_enable:
 	and.w #0xF8FF, %sr
 	#mov.w #0x2000, %sr
+	rts
+
+.global int_disable
+int_disable:
+	or.w #0x0700, %sr
 	rts

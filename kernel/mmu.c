@@ -80,6 +80,7 @@ static void *alloc_frame() {
 	mem_layout.free_frame = free->next;
 	
 	memset(free, 0, MMU_PAGE_SIZE);
+	mmu_invalidate();
 	return free;
 }
 
@@ -88,6 +89,7 @@ static void free_frame(void *frame) {
 	free->next = mem_layout.free_frame;
 	mem_layout.free_frame = free;
 	mem_layout.free_frames++;
+	mmu_invalidate();
 }
 
 void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
