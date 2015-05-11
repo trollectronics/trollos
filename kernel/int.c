@@ -1,5 +1,6 @@
 #include <chipset.h>
 #include <mem_addr.h>
+#include <syscall.h>
 #include "int.h"
 #include "printf.h"
 #include "kernel.h"
@@ -15,7 +16,7 @@ void int_init() {
 	for (i = 2; i < 15; i++)
 		int_vector[i] = int_stub_bus_error;
 	
-	int_vector[KERNEL_INTERRUPT] = int_print_shit;
+	int_vector[SYSCALL_TRAP + INT_OFFSET_TRAP] = int_syscall;
 	
 	int_vector[CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC] = int_stub;
 	int_enable();

@@ -42,6 +42,11 @@ void process_kill() {
 	
 }
 
+void process_switch_to(uint32_t pid) {
+	mmu_set_crp(&process[pid]->page_table);
+	
+}
+
 Process *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter) {
 	static uint32_t current_process;
 	uint32_t i, j, bits;

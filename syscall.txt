@@ -1,0 +1,8 @@
+Syscall: trap #10
+	-> vector[42]
+
+Syscall number	arg0	arg1	arg2	arg3	arg4
+%d0		%a0	%a1	%a2	%a3	%a4
+
+Lets just steal these syscalls, shall we:
+http://docs.cs.up.ac.za/programming/asm/derick_tut/syscalls.html

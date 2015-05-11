@@ -1,3 +1,4 @@
+#include <syscall.h>
 #include "terminal.h"
 #include "memdev.h"
 #include "printf.h"
@@ -18,11 +19,12 @@ void panic(const char *message) {
 }
 
 int main(int argc, char **argv) {
+	int (*init)(int argc, char **argv);
 	int i;
 	
 	terminal_set_bg(TERMINAL_COLOR_BLACK);
-	terminal_set_fg(TERMINAL_COLOR_CYAN);
-	terminal_puts("\nHello, MMU-world!\n");
+	terminal_set_fg(TERMINAL_COLOR_LIGHT_BLUE);
+	terminal_puts("\nTrollOS kernel\n");
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
 	
 	terminal_puts("argv = { ");
@@ -43,6 +45,9 @@ int main(int argc, char **argv) {
 	*arne = 0xDEADBEEF;
 	printf("I have written this to mem: 0x%X\n", *arne);
 	int_init();
+	mmu_init_user();
+	init = elf_load(argv[3]);
+	process_jump(init);
 	//generate bus error
 	terminal_set_fg(TERMINAL_COLOR_YELLOW);
 	printf("I will now generate a buss error.");
