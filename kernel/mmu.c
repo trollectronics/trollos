@@ -1,7 +1,7 @@
 #include <chipset.h>
 #include "mmu.h"
 #include "mem.h"
-#include "printf.h"
+#include "log.h"
 #include "kernel.h"
 
 struct {
@@ -96,7 +96,7 @@ void mmu_init_user() {
 	MmuRegRootPointer crp = {};
 	MmuDescriptorShort *dir;
 	
-	printf("init userspace..");
+	kprintf(LOG_LEVEL_DEBUG, "init userspace..");
 	dir = alloc_frame();
 	memset(dir, 0, MMU_PAGE_SIZE);
 	crp.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
@@ -104,7 +104,7 @@ void mmu_init_user() {
 	crp.lu = true;
 	crp.table_address = (((uint32_t) dir) >> 4);
 	mmu_set_crp(&crp);
-	printf("done\n");
+	kprintf(LOG_LEVEL_DEBUG, "done\n");
 }
 
 void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
@@ -127,7 +127,7 @@ void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
 			/* Already allocated */
 			return NULL;
 		case MMU_DESCRIPTOR_TYPE_INVALID:
-			printf("Will allocate extra frame for page table\n");
+			kprintf(LOG_LEVEL_DEBUG, "Will allocate extra frame for page table\n");
 			if(!(page = alloc_frame()))
 				panic("Out of memory");
 			memset(page, 0, MMU_PAGE_SIZE);
@@ -142,12 +142,12 @@ void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
 			page = (void *) (dir[table].table.table_address << 4);
 	}
 	index = (((uint32_t) virt)/MMU_PAGE_SIZE) % 1024U;
-	printf("0x%X is in table %i with index %i\n", virt, table, index);
+	kprintf(LOG_LEVEL_DEBUG, "0x%X is in table %i with index %i\n", virt, table, index);
 	if(!(ret = alloc_frame()))
 		panic("Out of memory");
 	memset(ret, 0, MMU_PAGE_SIZE);
-	printf(" - phys @ 0x%X\n", ret);
-	printf("page table is @ 0x%X\n", page);
+	kprintf(LOG_LEVEL_DEBUG, " - phys @ 0x%X\n", ret);
+	kprintf(LOG_LEVEL_DEBUG, "page table is @ 0x%X\n", page);
 	page[index].whole = 0x0;
 	page[index].page.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
 	page[index].page.page_address = (((uint32_t) ret) >> 8);
@@ -161,5 +161,5 @@ void *mmu_free(void *virt, bool supervisor) {
 }
 
 void mmu_print_status() {
-	printf("%lu kB of %lu kB RAM used\n", (mem_layout.total_frames - mem_layout.free_frames)*(MMU_PAGE_SIZE/1024), mem_layout.total_frames*(MMU_PAGE_SIZE/1024));
+	kprintf(LOG_LEVEL_INFO, "%lu kB of %lu kB RAM used\n", (mem_layout.total_frames - mem_layout.free_frames)*(MMU_PAGE_SIZE/1024), mem_layout.total_frames*(MMU_PAGE_SIZE/1024));
 }

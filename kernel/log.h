@@ -13,6 +13,7 @@ enum LogLevel {
 	LOG_LEVELS
 };
 
-#define	kprintf(x,...)	printf(__VA_ARGS__)
+int kprintf(LogLevel level, char *format, ...);
+void log_set_level(LogLevel level);
 
 #endif

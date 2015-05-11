@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 	init = elf_load(argv[3]);
 	
 	terminal_set_fg(TERMINAL_COLOR_WHITE);
-	printf("Now starting init\n");
+	printf("Now starting init %i\n", -3);
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
 	process_jump(init);
 	//generate bus error
