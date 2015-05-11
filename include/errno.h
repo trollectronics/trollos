@@ -1,0 +1,42 @@
+#ifndef __INCLUDE_ERRNO_H__
+#define __INCLUDE_ERRNO_H__
+
+typedef enum Errno Errno;
+enum Errno {
+	EPERM = 1,
+	ENOENT,
+	ESRCH,
+	EINTR,
+	EIO,
+	ENXIO,
+	E2BIG,
+	ENOEXEC,
+	EBADF,
+	ECHILD,
+	EAGAIN,
+	ENOMEM,
+	EACCES,
+	EFAULT,
+	ENOTBLK,
+	EBUSY,
+	EEXIST,
+	EXDEV,
+	ENODEV,
+	ENOTDIR,
+	EISDIR,
+	EINVAL,
+	ENFILE,
+	EMFILE,
+	ENOTTY,
+	ETXTBSY,
+	EFBIG,
+	ENOSPC,
+	ESPIPE,
+	EROFS,
+	EMLINK,
+	EPIPE,
+	EDOM,
+	ERANGE,
+};
+
+#endif
