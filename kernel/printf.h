@@ -9,7 +9,7 @@ typedef enum LogLevel {
 	LOG_LEVEL_INFO,
 	LOG_LEVEL_DEBUG,
 	LOG_LEVELS
-}
+};
 
 #define	kprintf(x,...)	printf(__VA_ARGS__)
 int printf(char *format, ...);
