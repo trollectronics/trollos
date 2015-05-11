@@ -1,6 +1,6 @@
 #include "terminal.h"
-#include "memdev.h"
-#include "blockdev.h"
+//#include "memdev.h"
+//#include "blockdev.h"
 #include "printf.h"
 #include "int.h"
 
@@ -23,11 +23,11 @@ int main(int argc, char **argv) {
 	
 	mmu_init();
 	int_init();
-	blockdev_init();
-	memdev_init();
+/*	blockdev_init();
+	memdev_init();*/
 	
-	if (argc >= 3)
-		memdev_from_arg(argv[2]);
+/*	if (argc >= 3)
+		memdev_from_arg(argv[2]);*/
 	//generate bus error
 	i = *((int *) 0xDEADBEEF);
 	printf("lalala %i\n", i);
