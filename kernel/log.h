@@ -2,7 +2,8 @@
 #define __LOG_H__
 #include "printf.h"
 
-typedef enum LogLevel {
+typedef enum LogLevel LogLevel;
+enum LogLevel {
 	LOG_LEVEL_NONE,
 	LOG_LEVEL_CRITICAL,
 	LOG_LEVEL_ERROR,
