@@ -5,6 +5,7 @@
 #include "int.h"
 #include "mmu.h"
 #include "mem.h"
+#include "process.h"
 
 int ostkaka = 42;
 
@@ -47,6 +48,10 @@ int main(int argc, char **argv) {
 	int_init();
 	mmu_init_user();
 	init = elf_load(argv[3]);
+	
+	terminal_set_fg(TERMINAL_COLOR_WHITE);
+	printf("Now starting init\n");
+	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
 	process_jump(init);
 	//generate bus error
 	terminal_set_fg(TERMINAL_COLOR_YELLOW);

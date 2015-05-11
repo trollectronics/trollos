@@ -5,6 +5,9 @@ ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.c.o)
 OBJFILES	+=	$(ASMFILES:.S=.S.o)
+
+BINFILE		=	 ../../bin/init
+
 .PHONY: all clean
 
 LDFLAGS		=	-nostdlib -static -lgcc
@@ -13,14 +16,14 @@ ASFLAGS		=	-m68030
 
 all: $(OBJFILES) $(DEPENDS)
 	@echo " [ LD ] userspace/init/init"
-	@$(TARGETCC) $(CFLAGS) $(OBJFILES) -o init $(LDFLAGS)
+	@$(TARGETCC) $(CFLAGS) $(OBJFILES) -o $(BINFILE) $(LDFLAGS)
 	@echo "Done."
 	@echo
 	
 clean:
 	@echo
 	@echo " [ RM ] $(OBJFILES)"
-	@$(RM) $(OBJFILES)
+	@$(RM) $(OBJFILES) $(BINFILE)
 	@echo "Done."
 	@echo 
 

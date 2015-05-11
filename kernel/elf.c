@@ -8,7 +8,7 @@
 
 static void alloc(void *virt, uint32_t count, bool write_protect) {
 	uint32_t i;
-	uint32_t base = ((uint32_t) virt) & ~0xFFF;
+	uint32_t base = ((uint32_t) virt) & ~MMU_PAGE_MASK;
 	
 	for(i = 0; i < count; i++) {
 		mmu_alloc(base + i*MMU_PAGE_SIZE, false, write_protect);
@@ -70,7 +70,7 @@ int (*(elf_load(void *elf)))(int argc, char **argv) {
 		printf("ELF: i have section @ 0x%X\n", section_header->address);
 		
 		write_protect = (section_header->flags & ELF_SECTION_HEADER_FLAG_WRITE) ? false : true;
-		count = (section_header->size + 4095)/4096;
+		count = (section_header->size + (MMU_PAGE_SIZE - 1))/MMU_PAGE_SIZE;
 		if (section_header->type == ELF_SECTION_HEADER_TYPE_PROGRAM_NOBITS) {
 			/*BSS segment*/
 			alloc((uint32_t) section_header->address, count, false);
@@ -84,6 +84,6 @@ int (*(elf_load(void *elf)))(int argc, char **argv) {
 	
 	entry = (void *) header->entry;
 	
-	alloc((void *) (UINT_MAX - 4096 + 1), 1, false);
+	alloc((void *) (UINT_MAX - MMU_PAGE_SIZE + 1), 1, false);
 	return entry;
 }
