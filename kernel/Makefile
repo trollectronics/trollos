@@ -17,7 +17,9 @@ all: $(OBJFILES) $(DEPENDS)
 	@echo " [MKFS] $(OSFS)"
 	@mkdir -p root
 	@mkdir -p root/boot
+	@mkdir -p root/sbin
 	@cp $(KERNEL) root/boot/`basename "$(KERNEL)"`
+	@cp ../bin/init root/sbin/init
 	@genromfs -f $(OSFS) -d root/ -V TrollOS
 	@rm -Rf root/
 	@echo "Done."

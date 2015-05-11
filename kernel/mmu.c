@@ -92,6 +92,21 @@ static void free_frame(void *frame) {
 	mmu_invalidate();
 }
 
+void mmu_init_user() {
+	MmuRegRootPointer crp = {};
+	MmuDescriptorShort *dir;
+	
+	printf("init userspace..");
+	dir = alloc_frame();
+	memset(dir, 0, MMU_PAGE_SIZE);
+	crp.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
+	crp.limit = 0;
+	crp.lu = true;
+	crp.table_address = (((uint32_t) dir) >> 4);
+	mmu_set_crp(&crp);
+	printf("done\n");
+}
+
 void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
 	MmuRegRootPointer rp;
 	MmuDescriptorShort *dir;

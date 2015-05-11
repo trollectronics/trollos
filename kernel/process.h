@@ -22,4 +22,6 @@ struct Process {
 	uint32_t file[MAX_PROCESS_FILES]; /*each entry contains an index in ye big olde file table*/
 };
 
+void process_jump(void *start);
+
 #endif

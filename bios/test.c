@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "elf.h"
 #include "boot_term.h"
 #include "romfs.h"
@@ -5,7 +6,8 @@
 
 int test() {
 	struct RomfsFileDescriptor desc;
-	char *argv[] = { "kernel.elf", "arne", "newdev=memdev,addr=0x10000,size=0x70000"};
+	char *argv[] = { "kernel.elf", "arne", "newdev=memdev,addr=0x10000,size=0x70000", NULL};
+	char init[32];
 	int i;
 	void *go;
 
@@ -23,6 +25,8 @@ int test() {
 			mmu_init();
 			go = elf_load(desc.data);
 			printf(" -> Entry is 0x%X, mapped to physical address 0x%X\n", go, mmu_get_physical(go));
+			desc = romfs_locate((void *) 0x10000, "/sbin/init");
+			argv[3] = desc.data;
 			term_export();
 			mmu_enable_and_jump(go, 3, argv);
 			for(;;);

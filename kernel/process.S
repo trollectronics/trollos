@@ -31,3 +31,15 @@ process_isr:
 	unlk %fp
 	rte
 
+arnetext:	.asciz "dest=0x%X"
+.align 2
+.global process_jump
+process_jump:
+	move.l 4(%sp), %a0
+
+	move.l #0, %d0
+	movec.l %d0, %usp
+	move.w #0, -(%sp)
+	move.l %a0, -(%sp)
+	move.w #0, -(%sp)
+	rte

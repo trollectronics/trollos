@@ -1,6 +1,6 @@
 .text
 buss_error_text: .asciz "bus error"
-print_shit_text: .asciz "lol\n"
+syscall_text: .asciz "I am syscall number %i!\n"
 
 .align 2
 .global int_stub_bus_error
@@ -39,21 +39,15 @@ int_stub:
 	move.l (%sp)+, %a0
 	rte
 
-.global int_print_shit
-int_print_shit:
-	move.l %a0, -(%sp)
-	move.l %a1, -(%sp)
+.global int_syscall
+int_syscall:
 	move.l %d0, -(%sp)
-	move.l %d1, -(%sp)
-	
-	pea print_shit_text
+	pea syscall_text
 	jsr.l printf
-	addq.l #4, %sp
+	addq.l #8, %sp
+
+1:	bra 1b
 	
-	move.l (%sp)+, %d1
-	move.l (%sp)+, %d0
-	move.l (%sp)+, %a1
-	move.l (%sp)+, %a0
 	rte
 
 .global int_move_vector
