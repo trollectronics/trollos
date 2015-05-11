@@ -6,15 +6,29 @@
 
 struct Memdev memdev_state;
 
+int memdev_read(uint32_t device, uint32_t block, uint32_t count, uint32_t *dest);
+int memdev_write(uint32_t device, uint32_t block, uint32_t count, uint32_t *data);
+int memdev_blocksize(uint32_t device);
 
 bool memdev_init() {
 	int i;
+	struct BlockdevHandler bd;
 
 	for (i = 0; i < MEMDEV_MAX; i++)
 		memdev_state.entry[i].size = 0;
-	/* TODO: Register a blockdevice interface */
+	
+	bd.create_from_arg = memdev_from_arg;
+	bd.read = memdev_read;
+	bd.write = memdev_write;
+	bd.unload = NULL;
+	bd.blocksize = memdev_blocksize;
+	strncpy(bd.name, "memdev", 32);
+	if ((memdev_state.iface = blockdev_iface_add(bd)) < 0) {
+		memdev_state.entry[i].size = 0;
+		return false;
+	}
 
-	return false;
+	return true;
 }
 
 
@@ -36,7 +50,7 @@ int memdev_new() {
 
 int memdev_from_arg(const char *opt) {
 	char buff[STRING_ARG_MAX], *next, *tok, *val;
-	uint32_t devno;
+	uint32_t devno, i;
 
 	if (strnlen(opt, STRING_ARG_MAX) >= STRING_ARG_MAX)
 		return BLOCKDEV_STATUS_ARGLEN;
@@ -60,6 +74,9 @@ int memdev_from_arg(const char *opt) {
 		}
 	}
 	
+	if ((i = blockdev_add("memblk", memdev_state.iface, devno)) < 0) {
+
+	memdev_state.iface = i;
 	printf("MEM BlockDev #%i @0x%X,size=0x%X\n", devno, ((uint32_t *) memdev_state.entry[devno].ptr), memdev_state.entry[devno].size);
 	return devno;
 }

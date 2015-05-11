@@ -36,6 +36,7 @@ struct BlockdevEntry {
 	char			name[16];
 	uint32_t		handler;
 	uint32_t		device;
+	int			dev;
 };
 
 struct Blockdev {
@@ -43,5 +44,10 @@ struct Blockdev {
 	struct BlockdevHandler	handler[BLOCKDEV_HANDLER_MAX];
 };
 
+bool blockdev_init();
+int blockdev_iface_add(struct BlockdevHandler bd);
+int blockdev_iface_del(uint32_t blockdev);
+int blockdev_add(const char *name, uint32_t device, uint32_t subdevice);
+int blockdev_del(uint32_t entry);
 
 #endif

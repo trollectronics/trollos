@@ -10,12 +10,14 @@ struct MemdevEntry {
 	uint32_t		*ptr;
 	uint32_t		size;
 	uint32_t		block_size;
+	uint32_t		blockdev;
 	bool			writable;
 };
 
 
 struct Memdev {
 	struct MemdevEntry	entry[MEMDEV_MAX];
+	int			iface;
 };
 
 int memdev_from_arg(const char *opt);
