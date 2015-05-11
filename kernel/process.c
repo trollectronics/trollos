@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include "process.h"
 #include "mem.h"
+#include "mmu.h"
 
 uint32_t process_bitmap[MAX_PROCESSES/32];
 Process *process[MAX_PROCESSES];
@@ -21,7 +22,7 @@ uint32_t process_create(uint32_t uid, uint32_t gid) {
 	for(j = 0; (entry & 0x1); entry >>= 1, j++);
 	pid = i*32 + j;
 	process_bitmap[i] |= (1 << j);
-	proc = malloc(sizeof(Process));
+	proc = kmalloc(sizeof(Process));
 	memset(proc, 0, sizeof(Process));
 	
 	proc->id = pid;
@@ -41,16 +42,22 @@ void process_kill() {
 	
 }
 
-void scheduler() {
+Process *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter) {
 	static uint32_t current_process;
 	uint32_t i, j, bits;
+	
+	process[current_process]->status_reg = status_reg;
+	process[current_process]->stack_pointer = stack_pointer;
+	process[current_process]->program_counter = program_counter;
 	
 	for(i = ((current_process + 1) % MAX_PROCESSES)/(MAX_PROCESSES/32); !process_bitmap[i]; i = (i + 1) % (MAX_PROCESSES/32));
 	bits = process_bitmap[i];
 	for(j = 0; !(bits & 0x1); bits >>=1, j++);
 	
 	current_process = i*32 + j;
-	//TODO: load crp with process page table
+	
+	mmu_set_crp(&process[current_process]->page_table);
 	//TODO: set up stack pointers, load registers
 	//TODO: run process
+	return process[current_process];
 }

@@ -1,145 +1,150 @@
+#include <chipset.h>
 #include "mmu.h"
+#include "mem.h"
+#include "printf.h"
+#include "kernel.h"
 
-#define PAGE_TABLE_SIZE 4096
-
-static void scan_page_table_short(MmuDescriptorShort *entry);
-static void scan_page_table_long(MmuDescriptorLong *entry);
-
-static void scan_page_table_short(MmuDescriptorShort *entry) {
-	MmuDescriptorShort *s;
-	MmuDescriptorLong *l;
-	int i;
+struct {
+	uint32_t free_frames;
+	uint32_t total_frames;
 	
-	switch(entry->table.descriptor_type) {
-		case MMU_DESCRIPTOR_TYPE_TABLE_SHORT:
-			s = (void *) (entry->table.table_address << 4);
-			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
-				scan_page_table_short(&s[i]);
-			break;
-		case MMU_DESCRIPTOR_TYPE_TABLE_LONG:
-			l = (void *) (entry->table.table_address << 4);
-			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
-				scan_page_table_long(&l[i]);
-			break;
-		case MMU_DESCRIPTOR_TYPE_PAGE:
-			/*Flag as used*/
-			printf("found used page 0x%X\n", (entry->page.page_address << 4));
-			return;
-		case MMU_DESCRIPTOR_TYPE_INVALID:
-			/*Flag as unused*/
-			return;
-	}
-}
+	MmuFreeFrame *free_frame;
+} static mem_layout;
 
-static void scan_page_table_long(MmuDescriptorLong *entry) {
-	MmuDescriptorShort *s;
-	MmuDescriptorLong *l;
-	int i;
+static MmuFreeFrame *find_first_free() {
+	MmuRegRootPointer srp;
+	MmuDescriptorShort *dir;
+	MmuDescriptorShort *table;
+	uint32_t i, j;
+	void *free = NULL, *tmp;
 	
-	switch(entry->table.descriptor_type) {
-		case MMU_DESCRIPTOR_TYPE_TABLE_SHORT:
-			s = (void *) (entry->table.table_address << 4);
-			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
-				scan_page_table_short(&s[i]);
-			break;
-		case MMU_DESCRIPTOR_TYPE_TABLE_LONG:
-			l = (void *) (entry->table.table_address << 4);
-			for(i = 0; i < (PAGE_TABLE_SIZE/4); i++)
-				scan_page_table_long(&l[i]);
-			break;
-		case MMU_DESCRIPTOR_TYPE_PAGE:
-			/*Flag as used*/
-			printf("found used page 0x%X\n", (entry->page.page_address << 4));
-			return;
-		case MMU_DESCRIPTOR_TYPE_INVALID:
-			/*Flag as unused*/
-			return;
+	
+	mmu_get_srp(&srp);
+	dir = (void *) (srp.table_address << 4);
+	
+	for(i = MMU_DRAM_START/(MMU_PAGE_SIZE*1024); i < 1024; i++) {
+		if(dir[i].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
+			continue;
+		
+		table = (void *) (dir[i].table.table_address << 4);
+		for(j = 0; j < 1024; j++) {
+			if(table[i].page.descriptor_type != MMU_DESCRIPTOR_TYPE_PAGE)
+				continue;
+			
+			tmp = (void *) (table[i].page.page_address << 8);
+			if(tmp > free)
+				free = tmp;
+		}
 	}
+	return free;
 }
-
 
 void mmu_init() {
+	/*This function assumes page table resides in direct-mapped (phys=virt) LLRAM*/
 	MmuRegRootPointer srp;
-	MmuDescriptorShort root_table_s;
-	MmuDescriptorLong root_table_l;
-	int i;
+	MmuDescriptorShort *dir;
+	uint32_t i;
+	MmuFreeFrame *free;
 	
-	/*Traverse page table, build bitmap of allocated frames*/
 	mmu_get_srp(&srp);
-	switch(srp.descriptor_type) {
-		case MMU_DESCRIPTOR_TYPE_TABLE_SHORT:
-			root_table_s.table.table_address = srp.table_address;
-			root_table_s.table.descriptor_type = srp.descriptor_type;
-			scan_page_table_short(&root_table_s);
-			break;
-		case MMU_DESCRIPTOR_TYPE_TABLE_LONG:
-			root_table_l.table.table_address = srp.table_address;
-			root_table_l.table.descriptor_type = srp.descriptor_type;
-			scan_page_table_long(&root_table_l);
-			break;
+	dir = (void *) (srp.table_address << 4);
+	
+	for(i = MMU_DRAM_START/(MMU_PAGE_SIZE*1024); i < 0xC0000000/(MMU_PAGE_SIZE*1024); i++) {
+		dir[i].whole = 0x0;
+		dir[i].early.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
+		
+		dir[i].early.page_address = (i * (MMU_PAGE_SIZE*1024)) >> 8;
 	}
+	mmu_invalidate();
 	
-	
+	mem_layout.total_frames = *CHIPSET_IO(CHIPSET_IO_PORT_GET_RAM_SIZE) / MMU_PAGE_SIZE;
+	mem_layout.free_frames = 0;
+	mem_layout.free_frame = NULL;
+
+	/* Build linked list of free frames */
+	for(free = find_first_free(); free < (MmuFreeFrame *) (MMU_DRAM_START + mem_layout.total_frames*MMU_PAGE_SIZE); free += MMU_PAGE_SIZE/sizeof(MmuFreeFrame)) {
+		free->next = mem_layout.free_frame;
+		mem_layout.free_frame = free;
+		mem_layout.free_frames++;
+	}
 }
 
-void *mmu_allocate_frame(uint32_t virtual_address, MmuKernelSegment segment, uint32_t count) {
-	#if 0
-	bool write_protect = false;
-	uint32_t table_number = virtual_address / (4096*1024);
-	uint32_t descriptor_number = (virtual_address/4096) % (1024);
-	uint32_t page_address = MMU_LOGIAL_START + (4096*allocated_frames);
-	MmuDescriptorShort *descriptor_table;
-	MmuDescriptorShort descriptor = {
-		.page = {
-			.descriptor_type = true,
-			.write_protected = write_protect,
-			.used = false,
-			.modified = false,
-			.cache_inhibit = false,
-			.page_address = page_address >> 8,
-		}
-	};
-	MmuDescriptorShort *segment_table;
+static void *alloc_frame() {
+	MmuFreeFrame *free;
 	
-	if(!count)
+	if(!mem_layout.free_frames)
 		return NULL;
 	
-	switch(segment) {
-		case MMU_KERNEL_SEGMENT_TEXT:
-			segment_table = supervisor.text;
-			write_protect = true;
-			break;
-		case MMU_KERNEL_SEGMENT_DATA:
-			segment_table = supervisor.data;
-			break;
-		case MMU_KERNEL_SEGMENT_STACK:
-			segment_table = supervisor.stack;
-			break;
-		default:
+	mem_layout.free_frames--;
+	free = mem_layout.free_frame;
+	mem_layout.free_frame = free->next;
+	
+	memset(free, 0, MMU_PAGE_SIZE);
+	mmu_invalidate();
+	return free;
+}
+
+static void free_frame(void *frame) {
+	MmuFreeFrame *free = frame; //Mask?
+	free->next = mem_layout.free_frame;
+	mem_layout.free_frame = free;
+	mem_layout.free_frames++;
+	mmu_invalidate();
+}
+
+void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
+	MmuRegRootPointer rp;
+	MmuDescriptorShort *dir;
+	MmuDescriptorShort *page;
+	uint32_t table, index;
+	void *ret;
+	
+	if(supervisor)
+		mmu_get_srp(&rp);
+	else
+		mmu_get_crp(&rp);
+	
+	dir = (void *) (rp.table_address << 4);
+	table = ((uint32_t) virt)/(MMU_PAGE_SIZE*1024U);
+	
+	switch(dir[table].table.descriptor_type) {
+		case MMU_DESCRIPTOR_TYPE_PAGE:
+			/* Already allocated */
 			return NULL;
+		case MMU_DESCRIPTOR_TYPE_INVALID:
+			printf("Will allocate extra frame for page table\n");
+			if(!(page = alloc_frame()))
+				panic("Out of memory");
+			memset(page, 0, MMU_PAGE_SIZE);
+			dir[table].whole = 0x0;
+			dir[table].table.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
+			//dir[table].table.write_protected = write_protected;
+			dir[table].table.table_address = (((uint32_t) page) >> 4);
+			break;
+		case MMU_DESCRIPTOR_TYPE_TABLE_LONG:
+			panic("Invalid page table");
+		case MMU_DESCRIPTOR_TYPE_TABLE_SHORT:
+			page = (void *) (dir[table].table.table_address << 4);
 	}
+	index = (((uint32_t) virt)/MMU_PAGE_SIZE) % 1024U;
+	printf("0x%X is in table %i with index %i\n", virt, table, index);
+	if(!(ret = alloc_frame()))
+		panic("Out of memory");
+	memset(ret, 0, MMU_PAGE_SIZE);
+	printf(" - phys @ 0x%X\n", ret);
+	printf("page table is @ 0x%X\n", page);
+	page[index].whole = 0x0;
+	page[index].page.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
+	page[index].page.page_address = (((uint32_t) ret) >> 8);
+	page[index].page.write_protected = write_protected;
 	
-	if(supervisor.page_table[table_number].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT) {
-		MmuDescriptorShort table = {
-			.table = {
-				.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT,
-				.write_protected = false,
-				.used = false,
-				.table_address = ((uint32_t) segment_table) >> 4,
-			}
-		};
-		supervisor.page_table[table_number].whole = table.whole;
-	}
-	descriptor_table = (void *) (supervisor.page_table[table_number].table.table_address << 4);
-	if(descriptor_table[descriptor_number].page.descriptor_type == MMU_DESCRIPTOR_TYPE_PAGE) {
-		mmu_allocate_frame(virtual_address + 4096, segment, count - 1);
-		return (void *)(((descriptor_table[descriptor_number].page.page_address) << 8) & ~0xFFF);
-	}
-	descriptor_table[descriptor_number].whole = descriptor.whole;
-	
-	allocated_frames++;
-	
-	mmu_allocate_frame(virtual_address + 4096, segment, count - 1); //because i'm bad.
-	return (void *) (page_address & ~0xFFF);
-	#endif
+	return ret;
+}
+
+void *mmu_free(void *virt, bool supervisor) {
+	//TODO: implement
+}
+
+void mmu_print_status() {
+	printf("%lu kB of %lu kB RAM used\n", (mem_layout.total_frames - mem_layout.free_frames)*(MMU_PAGE_SIZE/1024), mem_layout.total_frames*(MMU_PAGE_SIZE/1024));
 }

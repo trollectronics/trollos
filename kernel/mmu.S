@@ -105,3 +105,8 @@ mmu_get_tt1:
 	pmove %tt1, (%a0)
 	unlk %fp
 	rts
+
+.global mmu_invalidate
+mmu_invalidate:
+	pflusha
+	rts

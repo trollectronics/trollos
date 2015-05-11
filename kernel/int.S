@@ -1,6 +1,8 @@
 .text
-buss_error_text: .asciz "*** KERNEL PANIC: bus error ***"
+buss_error_text: .asciz "bus error"
+print_shit_text: .asciz "lol\n"
 
+.align 2
 .global int_stub_bus_error
 int_stub_bus_error:
 	move.l %a0, -(%sp)
@@ -9,17 +11,8 @@ int_stub_bus_error:
 	move.l %d1, -(%sp)
 	link %fp, #0
 	
-	pea 12.w
-	jsr.l terminal_set_fg
-	addq.l #4, %sp
-	
-	pea 29.w
-	pea 0.w
-	jsr.l terminal_set_pos
-	addq.l #8, %sp
-	
 	pea buss_error_text
-	jsr.l terminal_puts
+	jsr.l panic
 	addq.l #4, %sp
 1:
 	bra 1b
@@ -39,6 +32,23 @@ int_stub:
 	move.l %d1, -(%sp)
 	
 	jsr.l int_stub_handle
+	
+	move.l (%sp)+, %d1
+	move.l (%sp)+, %d0
+	move.l (%sp)+, %a1
+	move.l (%sp)+, %a0
+	rte
+
+.global int_print_shit
+int_print_shit:
+	move.l %a0, -(%sp)
+	move.l %a1, -(%sp)
+	move.l %d0, -(%sp)
+	move.l %d1, -(%sp)
+	
+	pea print_shit_text
+	jsr.l printf
+	addq.l #4, %sp
 	
 	move.l (%sp)+, %d1
 	move.l (%sp)+, %d0
@@ -75,4 +85,9 @@ int_move_vector:
 int_enable:
 	and.w #0xF8FF, %sr
 	#mov.w #0x2000, %sr
+	rts
+
+.global int_disable
+int_disable:
+	or.w #0x0700, %sr
 	rts

@@ -7,14 +7,14 @@ ASFLAGS		+=	-m68030
 #,-Tdata=0x400
 ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
-AOBJFILES	=	$(ASMFILES:.S=.ao)
-OBJFILES	=	$(SRCFILES:.c=.o)
+OBJFILES	=	$(SRCFILES:.c=.c.o)
+OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
 .PHONY: all clean
 
-all: $(OBJFILES) $(AOBJFILES) $(DEPENDS)
+all: $(OBJFILES) $(DEPENDS)
 	@echo " [ LD ] $(BIOS)"
-	@$(TARGETCC) $(CFLAGS) $(OBJFILES) $(AOBJFILES) -o "$(BIOS)" $(LDFLAGS)
+	@$(TARGETCC) $(CFLAGS) $(OBJFILES) -o "$(BIOS)" $(LDFLAGS)
 	@echo " [MIMG] $(BOOTIMG)"
 	@dd if=/dev/zero of="$(BOOTIMG)" bs=1024 count=64 2>/dev/null
 	@dd if=$(BIOS) of="$(BOOTIMG)" bs=1024 seek=0 conv=notrunc 2>/dev/null
@@ -30,10 +30,10 @@ clean:
 	@echo "Done."
 	@echo 
 
-%.o: %.c
+%.c.o: %.c
 	@echo " [ CC ] bios/$<"
 	@$(TARGETCC) $(CFLAGS) -c -o $@ $<
 
-%.ao: %.S
+%.S.o: %.S
 	@echo " [ AS ] bios/$<"
 	@$(TARGETAS) $(ASFLAGS) -o $@ $<
