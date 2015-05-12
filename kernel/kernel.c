@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_BLUE);
 	terminal_puts("\nTrollOS kernel\n");
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
-	
+
 	terminal_puts("argv = { ");
 	if(argv > 0) {
 		terminal_set_fg(TERMINAL_COLOR_LIGHT_CYAN);
@@ -59,10 +59,11 @@ int main(int argc, char **argv) {
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
-	mmu_init_user();
+	
+	mmu_init_userspace();
 	init = elf_load(argv[3]);
 	
-	kprintf(LOG_LEVEL_INFO, "Now starting init\n");
+	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
 	process_jump(init);
 	//generate bus error
 	terminal_set_fg(TERMINAL_COLOR_YELLOW);

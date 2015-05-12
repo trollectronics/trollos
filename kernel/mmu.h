@@ -1,6 +1,7 @@
 #ifndef __MMU_H__
 #define __MMU_H__
 #include <mmu.h>
+#include <stdbool.h>
 
 #define MMU_PAGE_SIZE 4096U
 #define MMU_PAGE_MASK 0x00000FFFUL
@@ -14,9 +15,12 @@ struct MmuFreeFrame {
 };
 
 void mmu_init();
-void *mmu_alloc(void *virt, bool supervisor, bool write_protected);
+void *mmu_alloc_frame();
+void mmu_free_frame(void *frame);
+void *mmu_alloc_at(void *virt, bool supervisor, bool write_protected);
+void mmu_free_at(void *virt, bool supervisor);
 void mmu_print_status();
-void mmu_init_user();
+void mmu_init_userspace();
 
 void *mmu_get_physical(void *phys);
 void mmu_set_tc(MmuRegTranslationControl *tc);

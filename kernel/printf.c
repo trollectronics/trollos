@@ -2,28 +2,9 @@
 #include "terminal.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define PRINT_TYPE(type, argtype, sig) do {\
-	s = int_to_string((type) va_arg(va, argtype), buf + 24, base, (sig)); \
-	j = 24 + buf - s; \
-	if(!width) \
-		width = j; \
-	else \
-		while(width > j)  { \
-			terminal_putc_simple(pad); \
-			width--; \
-		} \
-	terminal_put_counted(s, width); \
-} while(0)
 
-
-
-static char *int_to_string(unsigned long long int n, char *s, int base, int sig) {
+static char *int_to_string(unsigned long long int n, char *s, int base) {
 	char i;
-	if(sig && (((long long int) n ) < 0)) {
-		n = -n;
-	} else
-		sig = 0;
-	
 	do {
 		s--;
 		i = n  % base;
@@ -31,8 +12,6 @@ static char *int_to_string(unsigned long long int n, char *s, int base, int sig)
 		*s = i;
 		n /= base;
 	} while(n);
-	if(sig)
-	*--s = '-';
 	return s;
 }
 
@@ -40,6 +19,8 @@ int vprintf(char *format, va_list va) {
 	unsigned char pad, c;
 	int i;
 	unsigned int j;
+	unsigned long long int num = 0;
+	signed long long int signum = 0;
 	
 	enum {
 		LENGTH_CHAR,
@@ -118,46 +99,51 @@ int vprintf(char *format, va_list va) {
 					baseconv:
 					switch(length) {
 						case LENGTH_CHAR:
-							PRINT_TYPE(unsigned char, unsigned int, 0);
+							num = (unsigned char) va_arg(va, unsigned int);
 							break;
 						case LENGTH_SHORT:
-							PRINT_TYPE(unsigned short, unsigned int, 0);
+							num = (unsigned short) va_arg(va, unsigned int);
 							break;
 						case LENGTH_INT:
-							PRINT_TYPE(unsigned int, unsigned int, 0);
+							num = (unsigned int) va_arg(va, unsigned int);
 							break;
 						case LENGTH_LONG:
-							PRINT_TYPE(unsigned long, unsigned long, 0);
+							num = (unsigned long) va_arg(va, unsigned long);
 							break;
 						case LENGTH_LONG_LONG:
-							PRINT_TYPE(unsigned long long, unsigned long long, 0);
+							num = (unsigned long long) va_arg(va, unsigned long long);
 							break;
 						default:
 							break;
 					}
-					goto next;
+					goto print_num;
 				case 'd':
 				case 'i':
 					switch(length) {
 						case LENGTH_CHAR:
-							PRINT_TYPE(signed char, signed int, 1);
+							signum = (signed char) va_arg(va, signed int);
 							break;
 						case LENGTH_SHORT:
-							PRINT_TYPE(signed short, signed int, 1);
+							signum = (signed short) va_arg(va, signed int);
 							break;
 						case LENGTH_INT:
-							PRINT_TYPE(signed int, signed int, 1);
+							signum = (signed int) va_arg(va, signed int);
 							break;
 						case LENGTH_LONG:
-							PRINT_TYPE(signed long, signed long, 1);
+							signum = (signed long) va_arg(va, signed long);
 							break;
 						case LENGTH_LONG_LONG:
-							PRINT_TYPE(signed long long, signed long long, 1);
+							signum = (signed long long) va_arg(va, signed long long);
 							break;
 						default:
 							break;
 					}
-					goto next;
+					if(signum < 0) {
+						terminal_putc_simple('-');
+						num = -signum;
+					} else
+						num = signum;
+					goto print_num;
 				case 's':
 					terminal_puts(va_arg(va, char *));
 					goto next;
@@ -166,6 +152,17 @@ int vprintf(char *format, va_list va) {
 					goto next;
 			}
 		}
+		print_num:
+		s = int_to_string(num, buf + 24, base);
+		j = 24 + buf - s;
+		if(!width)
+			width = j;
+		else
+			while(width > j)  {
+				terminal_putc_simple(pad);
+				width--;
+			}
+		terminal_put_counted(s, width);
 		next:;
 	}
 	end:

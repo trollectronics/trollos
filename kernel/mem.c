@@ -15,7 +15,7 @@ void *ksbrk(intptr_t increment) {
 		pages = (new - tmp)/MMU_PAGE_SIZE;
 		
 		for(i = 0; i < pages; i++) {
-			mmu_alloc((void *) (tmp + i*MMU_PAGE_SIZE), true, false);
+			mmu_alloc_at((void *) (tmp + i*MMU_PAGE_SIZE), true, false);
 		}			
 	} else if(increment < 0) {
 		//TODO: implement
@@ -26,20 +26,28 @@ void *ksbrk(intptr_t increment) {
 }
 
 void *kmalloc(uint32_t size) {
-	#warning "Unimplemented function malloc"
+	#warning "Unimplemented function kmalloc"
 	return NULL;
 }
 
 void kfree(void *pointer) {
-	#warning "Unimplemented function malloc"
+	#warning "Unimplemented function kfree"
 }
 
 void *memset(void *pointer, int c, uint32_t n) {
-	#warning "Unimplemented function malloc"
+	uint8_t *p1 = pointer;
+	while(n) {
+		p1[--n] = c;
+	}
 	return NULL;
 }
 
 void *memcpy(void *dest, void *src, uint32_t n) {
-	#warning "Unimplemented function malloc"
+	uint8_t *p1 = dest, *p2 = src;
+	while(n) {
+		p1[n] = p2[n];
+		n--;
+	}
+	
 	return NULL;
 }

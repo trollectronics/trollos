@@ -6,12 +6,21 @@
 #include "mem.h"
 #include "log.h"
 
-static void alloc(void *virt, uint32_t count, bool write_protect) {
+static void alloc(void *virt, bool write_protect, void *data, uint32_t size) {
 	uint32_t i;
 	uint32_t base = ((uint32_t) virt) & ~MMU_PAGE_MASK;
+	uint32_t count = (size + (MMU_PAGE_SIZE - 1))/MMU_PAGE_SIZE;
+	uint32_t offset = ((uint32_t) virt) & MMU_PAGE_MASK;
+	void *frame;
 	
 	for(i = 0; i < count; i++) {
-		mmu_alloc((void *) (base + i*MMU_PAGE_SIZE), false, write_protect);
+		frame = mmu_alloc_at((void *) (base + i*MMU_PAGE_SIZE), false, write_protect);
+		if(data) {
+			memcpy(frame + offset, data, size & MMU_PAGE_MASK);
+			data = (void *) ((((uint32_t) data) & ~MMU_PAGE_MASK) + MMU_PAGE_SIZE);
+			size -= MMU_PAGE_SIZE - offset;
+			offset = 0;
+		}
 	}
 }
 
@@ -20,7 +29,6 @@ int (*(elf_load(void *elf)))(int argc, char **argv) {
 	struct ElfSectionHeader *section_header;
 	int i;
 	int (*entry)(int argc, char **argv);
-	unsigned int count;
 	bool write_protect;
 
 	if (header->ident[0] != ELF_MAGIC1 || header->ident[1] != ELF_MAGIC2 || header->ident[2] != ELF_MAGIC3 ||
@@ -70,20 +78,18 @@ int (*(elf_load(void *elf)))(int argc, char **argv) {
 		kprintf(LOG_LEVEL_DEBUG, "ELF: i have section @ 0x%X\n", section_header->address);
 		
 		write_protect = (section_header->flags & ELF_SECTION_HEADER_FLAG_WRITE) ? false : true;
-		count = (section_header->size + (MMU_PAGE_SIZE - 1))/MMU_PAGE_SIZE;
 		if (section_header->type == ELF_SECTION_HEADER_TYPE_PROGRAM_NOBITS) {
 			/*BSS segment*/
-			alloc((void *) section_header->address, count, false);
-			memset_user((void *) section_header->address, 0, section_header->size);
+			alloc((void *) section_header->address, false, NULL, section_header->size);
 			continue;
 		}
 		
-		alloc((void *) section_header->address, count, false);
-		memcpy_to_user((void *) section_header->address, elf + section_header->offset, section_header->size);
+		alloc((void *) section_header->address, write_protect, elf + section_header->offset, section_header->size);
 	}
 	
 	entry = (void *) header->entry;
+	kprintf(LOG_LEVEL_DEBUG, "ELF: entry @ 0x%X\n", entry);
 	
-	alloc((void *) (UINT_MAX - MMU_PAGE_SIZE + 1), 1, false);
+	alloc((void *) (UINT_MAX - MMU_PAGE_SIZE + 1), false, NULL, MMU_PAGE_SIZE);
 	return entry;
 }
