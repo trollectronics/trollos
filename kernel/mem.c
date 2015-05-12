@@ -3,12 +3,16 @@
 #include "mem.h"
 #include "mmu.h"
 #include "kernel.h"
+#include "log.h"
 
 extern uint8_t end;
 
 void *ksbrk(intptr_t increment) {
 	static void * heap_end = &end;
+	void *old_heap_end = heap_end;
 	uint32_t tmp, new, pages, i;
+	
+	kprintf(LOG_LEVEL_DEBUG, "MEM: sbrk inc %i\n", increment);
 	
 	if(increment > 0) {
 		tmp = ((((uint32_t) heap_end) + (MMU_PAGE_SIZE - 1)) & ~MMU_PAGE_MASK);
@@ -23,7 +27,8 @@ void *ksbrk(intptr_t increment) {
 	}
 	
 	heap_end += increment;
-	return heap_end;
+	kprintf(LOG_LEVEL_DEBUG, "MEM: sbrk heap is now @ 0x%X\n", heap_end);
+	return old_heap_end;
 }
 
 void *memset(void *pointer, int c, uint32_t n) {
@@ -127,6 +132,8 @@ void *kmalloc(size_t size) {
 	for(list = 0; list < NRQUICKLISTS && size > (8 << list); list++);
 	#endif
 	
+	kprintf(LOG_LEVEL_DEBUG, "MEM: malloc called with %u bytes\n", size);
+	
 	if(!size)
 		return NULL;
 	
@@ -158,6 +165,7 @@ void *kmalloc(size_t size) {
 			} else
 				*iter = header->next;
 			
+			kprintf(LOG_LEVEL_DEBUG, "MEM: malloc return ptr=0x%X\n", header + 1);
 			return header + 1;
 		} else {
 			/*No free, large enough blocks availble, get more from system*/
@@ -225,7 +233,7 @@ void kfree(void *ptr) {
 	#if STRATEGY == 4
 	int list;
 	#endif
-	
+	kprintf(LOG_LEVEL_DEBUG, "MEM: free called with ptr=0x%X\n", ptr);
 	if(!ptr)
 		return;
 	
