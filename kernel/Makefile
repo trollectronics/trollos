@@ -38,4 +38,4 @@ clean:
 	
 %.S.o: %.S
 	@echo " [ AS ] kernel/$<"
-	@$(TARGETAS) $(ASFLAGS) -o $@ $<
+	@$(TARGETCC) -c $(ASFLAGS) -o $@ $<

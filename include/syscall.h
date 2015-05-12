@@ -18,6 +18,7 @@ enum Syscall {
 	SYSCALL_UNLINK,
 	SYSCALL_EXECVE,
 	SYSCALL_CHDIR,
+	SYSCALLS,
 };
 
 void *_syscall(uint32_t num, void *, void *, void *, void *, void *);

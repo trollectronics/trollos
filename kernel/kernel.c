@@ -1,4 +1,5 @@
 #include <syscall.h>
+#include "kernel.h"
 #include "terminal.h"
 //#include "memdev.h"
 //#include "blockdev.h"
@@ -10,6 +11,8 @@
 #include "mem.h"
 #include "process.h"
 #include "elf.h"
+
+FileModuleMap filetable[MAX_TOTAL_FILES];
 
 void panic(const char *message) {
 	terminal_set_bg(TERMINAL_COLOR_BLACK);

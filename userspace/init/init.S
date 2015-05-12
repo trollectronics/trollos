@@ -8,5 +8,10 @@ _start:
 	trap #5
 	
 	#exit
+	move.l #5, %a4
+	move.l #4, %a3
+	move.l #3, %a2
+	move.l #2, %a1
+	move.l #1, %a0
 	move.l #0, %d0
 	trap #10
