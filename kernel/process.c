@@ -3,13 +3,14 @@
 #include "process.h"
 #include "mem.h"
 #include "mmu.h"
+#include "user.h"
 
 uint32_t process_bitmap[MAX_PROCESSES/32];
 Process *process[MAX_PROCESSES];
 
-uint32_t process_create(uint32_t uid, uint32_t gid) {
+pid_t process_create(uid_t uid, gid_t gid) {
 	Process *proc;
-	uint32_t pid;
+	pid_t pid;
 	uint32_t entry;
 	int i, j;
 	
@@ -25,7 +26,7 @@ uint32_t process_create(uint32_t uid, uint32_t gid) {
 	proc = kmalloc(sizeof(Process));
 	memset(proc, 0, sizeof(Process));
 	
-	proc->id = pid;
+	proc->pid = pid;
 	proc->user = uid;
 	proc->group = gid;
 	//TODO: system_get_ticks()
@@ -42,13 +43,13 @@ void process_kill() {
 	
 }
 
-void process_switch_to(uint32_t pid) {
+void process_switch_to(pid_t pid) {
 	mmu_set_crp(&process[pid]->page_table);
 	
 }
 
 Process *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter) {
-	static uint32_t current_process;
+	static pid_t current_process;
 	uint32_t i, j, bits;
 	
 	process[current_process]->status_reg = status_reg;

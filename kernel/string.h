@@ -7,6 +7,7 @@
 
 uint32_t strnlen(const char *c, uint32_t maxlen);
 char *strncpy(char *dest, const char *src, uint32_t max);
+char *strcpy(char *dest, const char *src);
 int strcmp(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, uint32_t n);
 char *strchr(char *str, char chr);

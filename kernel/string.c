@@ -21,6 +21,12 @@ char *strncpy(char *dest, const char *src, uint32_t max) {
 	return dest;
 }
 
+char *strcpy(char *dest, const char *src) {
+	char *ret = dest;
+	while((*dest++ = *src++));
+	return ret;
+}
+
 
 int strcmp(const char *s1, const char *s2) {
 	int i;
