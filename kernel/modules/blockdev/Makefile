@@ -5,37 +5,33 @@ ifeq ($(shell readlink -f "$(TOPDIR)"),/)
 endif
 include $(TOPDIR)/config.mk
 
-# Files to build
 ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.c.o)
 OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
-# Flags
-CFLAGS		+=	
-ASFLAGS		+=	
-LDFLAGS		+=	-Wl,-Ttext=0xC0000000
+OUTFILE		=	out.a
 
 # Sub directories to build
-SUBDIRS	=	modules util
+SUBDIRS		=
 
-LIBS		=	$(addsuffix /out.a,$(SUBDIRS))
+LIBS		=	$(addsuffix /$(OUTFILE),$(SUBDIRS))
 
 .PHONY: all clean
 .PHONY: $(SUBDIRS)
 
 all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
-	@echo " [ LD ] bin/kernel.elf"
-	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) $(LIBS) -o $(KERNEL) $(LDFLAGS)
-	@mkdir -p $(TOPDIR)/bin/root/boot
-	@cp $(KERNEL) $(TOPDIR)/bin/root/boot/`basename "$(KERNEL)"`
+	@echo " [ AR ] $(CURRENTPATH)$(OUTFILE)"
+	@$(RM) $(OUTFILE)
+	@$(TARGETAR) -cqT $(OUTFILE) $(OBJFILES) $(LIBS)
+	@echo
 	@echo "Done."
 	@echo
 	
 clean: $(SUBDIRS)
 	@echo
-	@echo " [ RM ] $(OBJFILES)"
-	@$(RM) $(OBJFILES)
+	@echo " [ RM ] $(OBJFILES) $(OUTFILE)"
+	@$(RM) $(OBJFILES) $(OUTFILE)
 	@echo "Done."
 	@echo 
 

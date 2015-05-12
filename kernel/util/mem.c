@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <mem_addr.h>
+#include "../mmu.h"
+#include "../kernel.h"
 #include "mem.h"
-#include "mmu.h"
-#include "kernel.h"
 #include "log.h"
 
 extern uint8_t end;

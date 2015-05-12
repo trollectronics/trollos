@@ -1,7 +1,6 @@
 # Project: 68k-emu
 TOPDIR	=	.
 include config.mk
-MAKEFLAGS	+=	--no-print-directory
 
 # Sub directories to build
 SUBDIRS	=	bios kernel userspace

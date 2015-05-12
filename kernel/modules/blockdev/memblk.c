@@ -1,8 +1,8 @@
-#include "log.h"
 #include <limits.h>
 #include <errno.h>
 #include <stdint.h>
-#include "mem.h"
+#include "../../util/mem.h"
+#include "../../util/log.h"
 
 #define	_MEMBLK
 #include "memblk.h"

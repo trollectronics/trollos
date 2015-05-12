@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include "util/mem.h"
 #include "process.h"
-#include "mem.h"
 #include "mmu.h"
 #include "user.h"
 

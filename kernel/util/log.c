@@ -1,7 +1,7 @@
 #include <stdarg.h>
+#include "../modules/chardev/terminal.h"
 #include "log.h"
 #include "printf.h"
-#include "terminal.h"
 
 static const char const *logprefix[] = {
 	[LOG_LEVEL_NONE] = "NONE",

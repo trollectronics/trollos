@@ -1,16 +1,16 @@
 #include <syscall.h>
-#include "kernel.h"
-#include "terminal.h"
-#include "module.h"
-#include "memblk.h"
-#include "printf.h"
-#include "string.h"
-#include "log.h"
+#include "modules/binformat/elf.h"
+#include "modules/blockdev/memblk.h"
+#include "modules/chardev/terminal.h"
+#include "modules/module.h"
+#include "util/log.h"
+#include "util/mem.h"
+#include "util/printf.h"
+#include "util/string.h"
 #include "int.h"
 #include "mmu.h"
-#include "mem.h"
 #include "process.h"
-#include "elf.h"
+#include "kernel.h"
 
 FileModuleMap filetable[MAX_TOTAL_FILES];
 

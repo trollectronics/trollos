@@ -10,21 +10,28 @@ SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.c.o)
 OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
+OUTFILE		=	out.a
+
 # Sub directories to build
-SUBDIRS	=	
+SUBDIRS		=	fs blockdev chardev binformat
+
+LIBS		=	$(addsuffix /$(OUTFILE),$(SUBDIRS))
 
 .PHONY: all clean
 .PHONY: $(SUBDIRS)
 
 all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
+	@echo " [ AR ] $(CURRENTPATH)$(OUTFILE)"
+	@$(RM) $(OUTFILE)
+	@$(TARGETAR) -cqT $(OUTFILE) $(OBJFILES) $(LIBS)
 	@echo
 	@echo "Done."
 	@echo
 	
 clean: $(SUBDIRS)
 	@echo
-	@echo " [ RM ] $(OBJFILES)"
-	@$(RM) $(OBJFILES)
+	@echo " [ RM ] $(OBJFILES) $(OUTFILE)"
+	@$(RM) $(OBJFILES) $(OUTFILE)
 	@echo "Done."
 	@echo 
 

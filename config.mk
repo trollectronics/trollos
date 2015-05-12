@@ -1,8 +1,10 @@
 # Project: 68kemu
 # Makefile configurations
+MAKEFLAGS	+=	--no-print-directory
 
 TARGETCC	?=	m68k-elf-gcc
 TARGETAS	?=	m68k-elf-as
+TARGETAR	?=	m68k-elf-ar
 TARGETLD	?=	m68k-elf-ld
 
 KERNEL		=	$(TOPDIR)/bin/kernel.elf

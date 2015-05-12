@@ -1,7 +1,7 @@
 #include <errno.h>
+#include "util/log.h"
 #include "kernel.h"
 #include "syscall.h"
-#include "log.h"
 
 int32_t (*syscall_handler[SYSCALLS])(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) = {
 	[SYSCALL_EXIT] = syscall_exit,

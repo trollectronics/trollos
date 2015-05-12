@@ -1,5 +1,5 @@
-#include "string.h"
 #include <mem_addr.h>
+#include "string.h"
 
 uint32_t strnlen(const char *c, uint32_t maxlen) {
 	uint32_t i;

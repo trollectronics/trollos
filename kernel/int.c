@@ -1,9 +1,9 @@
 #include <chipset.h>
 #include <mem_addr.h>
 #include <syscall.h>
-#include "int.h"
-#include "log.h"
+#include "util/log.h"
 #include "kernel.h"
+#include "int.h"
 
 void **int_vector = (void *) MEM_LLRAM;
 

@@ -1,10 +1,10 @@
 #include <limits.h>
 #include <mem_addr.h>
 #include <bios_info.h>
+#include "../../util/log.h"
+#include "../../util/mem.h"
+#include "../../mmu.h"
 #include "elf.h"
-#include "mmu.h"
-#include "mem.h"
-#include "log.h"
 
 static void alloc(void *virt, bool write_protect, void *data, uint32_t size) {
 	uint32_t i;

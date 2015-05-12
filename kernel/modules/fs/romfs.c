@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <errno.h>
-#include "log.h"
-#include "module.h"
+#include "../../util/log.h"
+#include "../module.h"
 
 #define	_ROMFS
 #include "romfs.h"

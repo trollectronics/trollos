@@ -5,6 +5,7 @@ bin/
 *.bin
 *.rom
 *.o
+*.a
 *.ao
 *.so
 *.swp

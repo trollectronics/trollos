@@ -1,7 +1,7 @@
 #include <chipset.h>
+#include "util/mem.h"
+#include "util/log.h"
 #include "mmu.h"
-#include "mem.h"
-#include "log.h"
 #include "kernel.h"
 
 struct {

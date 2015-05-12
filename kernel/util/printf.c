@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include "terminal.h"
+#include "../modules/chardev/terminal.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
