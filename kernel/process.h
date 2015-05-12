@@ -4,20 +4,24 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <mmu.h>
+#include "user.h"
+#include "time.h"
+
+typedef int32_t pid_t;
 
 #define MAX_PROCESS_FILES 64
 #define MAX_PROCESSES 1024
 
 typedef struct Process Process;
 struct Process {
-	uint32_t id;
+	pid_t pid;
 	MmuRegRootPointer page_table;
 	void *program_counter;
 	void *stack_pointer;
 	uint32_t status_reg;
-	uint32_t user;
-	uint32_t group;
-	uint32_t time_started;
+	uid_t user;
+	gid_t group;
+	time_t time_started;
 	uint64_t file_bitmap;
 	uint32_t file[MAX_PROCESS_FILES]; /*each entry contains an index in ye big olde file table*/
 };
