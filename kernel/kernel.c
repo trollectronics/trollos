@@ -1,8 +1,8 @@
 #include <syscall.h>
 #include "kernel.h"
 #include "terminal.h"
-//#include "memdev.h"
-//#include "blockdev.h"
+#include "module.h"
+#include "memblk.h"
 #include "printf.h"
 #include "string.h"
 #include "log.h"
@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_BLUE);
 	terminal_puts("\nTrollOS kernel\n");
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
+
 	terminal_puts("argv = { ");
 	if(argv > 0) {
 		terminal_set_fg(TERMINAL_COLOR_LIGHT_CYAN);
@@ -55,6 +56,8 @@ int main(int argc, char **argv) {
 		}
 	}
 	
+	module_init();
+
 	mmu_init();
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
