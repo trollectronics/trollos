@@ -4,12 +4,12 @@
 #include "terminal.h"
 
 static const char const *logprefix[] = {
-	[LOG_LEVEL_NONE] = "",
-	[LOG_LEVEL_CRITICAL] = "CRITICAL",
-	[LOG_LEVEL_ERROR] = "ERROR",
+	[LOG_LEVEL_NONE] = "NONE",
+	[LOG_LEVEL_CRITICAL] = "CRIT",
+	[LOG_LEVEL_ERROR] = "EROR",
 	[LOG_LEVEL_WARNING] = "WARN",
 	[LOG_LEVEL_INFO] = "INFO",
-	[LOG_LEVEL_DEBUG] = "DEBUG",
+	[LOG_LEVEL_DEBUG] = "DBUG",
 };
 
 static const TerminalColor logcolor[] = {
@@ -45,6 +45,8 @@ int kprintf(LogLevel level, char *format, ...) {
 }
 
 void log_set_level(LogLevel level) {
-	if(level < LOG_LEVELS)
+	if(level < LOG_LEVELS) {
 		loglevel = level;
+		kprintf(LOG_LEVEL_INFO, "Setting loglevel to %s\n", logprefix[loglevel]);
+	}
 }

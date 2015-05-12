@@ -16,6 +16,7 @@ struct MmuFreeFrame {
 void mmu_init();
 void *mmu_alloc(void *virt, bool supervisor, bool write_protected);
 void mmu_print_status();
+void mmu_init_user();
 
 void *mmu_get_physical(void *phys);
 void mmu_set_tc(MmuRegTranslationControl *tc);

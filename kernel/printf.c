@@ -161,6 +161,9 @@ int vprintf(char *format, va_list va) {
 				case 's':
 					terminal_puts(va_arg(va, char *));
 					goto next;
+				case 'c':
+					terminal_putc_simple((char) va_arg(va, int));
+					goto next;
 			}
 		}
 		next:;

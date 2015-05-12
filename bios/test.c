@@ -6,7 +6,7 @@
 
 int test() {
 	struct RomfsFileDescriptor desc;
-	char *argv[] = { "kernel.elf", "arne", "newdev=memdev,addr=0x10000,size=0x70000", NULL};
+	char *argv[] = { "kernel.elf", "loglevel=5", "newdev=memdev,addr=0x10000,size=0x70000", NULL};
 	char init[32];
 	int i;
 	void *go;

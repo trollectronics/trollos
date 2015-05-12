@@ -11,7 +11,7 @@ static void alloc(void *virt, uint32_t count, bool write_protect) {
 	uint32_t base = ((uint32_t) virt) & ~MMU_PAGE_MASK;
 	
 	for(i = 0; i < count; i++) {
-		mmu_alloc(base + i*MMU_PAGE_SIZE, false, write_protect);
+		mmu_alloc((void *) (base + i*MMU_PAGE_SIZE), false, write_protect);
 	}
 }
 
@@ -74,12 +74,12 @@ int (*(elf_load(void *elf)))(int argc, char **argv) {
 		if (section_header->type == ELF_SECTION_HEADER_TYPE_PROGRAM_NOBITS) {
 			/*BSS segment*/
 			alloc((void *) section_header->address, count, false);
-			memset_user(section_header->address, 0, section_header->size);
+			memset_user((void *) section_header->address, 0, section_header->size);
 			continue;
 		}
 		
 		alloc((void *) section_header->address, count, false);
-		memcpy_to_user(section_header->address, elf + section_header->offset, section_header->size);
+		memcpy_to_user((void *) section_header->address, elf + section_header->offset, section_header->size);
 	}
 	
 	entry = (void *) header->entry;

@@ -12,11 +12,9 @@ void *ksbrk(intptr_t increment) {
 	if(increment > 0) {
 		tmp = ((((uint32_t) heap_end) + (MMU_PAGE_SIZE - 1)) & ~MMU_PAGE_MASK);
 		new = ((((uint32_t) heap_end) + increment + (MMU_PAGE_SIZE - 1)) & ~MMU_PAGE_MASK);
-		printf("tmp: 0x%X new: 0x%X\n", tmp, new);
 		pages = (new - tmp)/MMU_PAGE_SIZE;
 		
 		for(i = 0; i < pages; i++) {
-			printf("Allocating one page @ virt 0x%X\n", (new + i*MMU_PAGE_SIZE));
 			mmu_alloc((void *) (tmp + i*MMU_PAGE_SIZE), true, false);
 		}			
 	} else if(increment < 0) {
