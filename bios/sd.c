@@ -3,10 +3,11 @@
 #include "spi.h"
 #include "util.h"
 #include "boot_term.h"
+#include "printf.h"
 
 
 void sd_init_clk() {
-	struct SpiMem spi_mem;
+	//struct SpiMem spi_mem;
 	
 	memset((void *) MEM_SPI_SEND1, 0xFF, 32);
 
@@ -124,7 +125,7 @@ bool sd_read_sector(uint32_t sector, uint8_t *buff) {
 
 
 int sd_init_cmd() {
-	uint32_t count;
+	//uint32_t count;
 	int i, j, k;
 	for (k = 0; k < 7; k++) {
 		j = 5;
@@ -146,7 +147,7 @@ int sd_init_cmd() {
 		MEM_SPI_RECV1[0] = 0xFF;
 		spi_start(true, true, true, false);
 		
-		count = boot_term_get_vsync();
+		//count = boot_term_get_vsync();
 		for (i = 0; (SPI_REG_STATE->send || SPI_REG_STATE->recv) && i < 100000; i++);
 		
 		if (!SPI_REG_STATE->send && !SPI_REG_STATE->recv) {

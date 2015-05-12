@@ -8,7 +8,7 @@ OBJFILES	+=	$(ASMFILES:.S=.S.o)
 .PHONY: all clean
 
 LDFLAGS		=	-nostdlib -Wl,-Ttext=0xC0000000 -static -lgcc
-CFLAGS		=	-m68030 -Wall -O2 -ffreestanding -I../include
+CFLAGS		=	-m68030 -Wall -std=c99 -O2 -ffreestanding -I../include
 ASFLAGS		=	-m68030
 
 all: $(OBJFILES) $(DEPENDS)

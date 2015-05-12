@@ -1,7 +1,7 @@
 # Project: m68k-emu
 include $(TOPDIR)/config.mk
 
-CFLAGS		+=	-m68030 -nostdlib -O3 -ffreestanding -fno-builtin -nostdlib -I../include
+CFLAGS		+=	-Wall -std=c99 -m68030 -nostdlib -O3 -ffreestanding -fno-builtin -nostdlib -I../include
 LDFLAGS		=	-Wl,--oformat=binary,-Tlink.ld
 ASFLAGS		+=	-m68030
 #,-Tdata=0x400
