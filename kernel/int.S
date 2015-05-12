@@ -3,6 +3,7 @@ buss_error_text: .asciz "bus error"
 syscall_text: .asciz "Syscall number %i called\n"
 init_died: .asciz "init has died"
 init_called_exit: .asciz "Init has called exit()\n"
+invalid_trap: .asciz "Caught invalid trap\n"
 
 .align 2
 .global int_stub_bus_error
@@ -65,6 +66,28 @@ int_syscall:
 	jsr.l panic
 
 1:
+	rte
+
+.align 2
+.global int_invalid_trap
+int_invalid_trap:
+	move.l %a0, -(%sp)
+	move.l %a1, -(%sp)
+	move.l %d0, -(%sp)
+	move.l %d1, -(%sp)
+	link %fp, #0
+	
+	pea invalid_trap
+	move.l #3, -(%sp)
+	jsr.l kprintf
+	adda.l #8, %sp
+	
+	
+	unlk %fp
+	move.l (%sp)+, %d1
+	move.l (%sp)+, %d0
+	move.l (%sp)+, %a1
+	move.l (%sp)+, %a0
 	rte
 
 .align 2

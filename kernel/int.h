@@ -5,6 +5,7 @@
 
 void int_stub();
 void int_syscall();
+void int_invalid_trap();
 void int_stub_bus_error();
 void int_init();
 void int_enable();

@@ -69,7 +69,7 @@ void mmu_init() {
 	}
 }
 
-static void *alloc_frame() {
+void *mmu_alloc_frame() {
 	MmuFreeFrame *free;
 	
 	if(!mem_layout.free_frames)
@@ -84,7 +84,7 @@ static void *alloc_frame() {
 	return free;
 }
 
-static void free_frame(void *frame) {
+void mmu_free_frame(void *frame) {
 	MmuFreeFrame *free = (void *) (((uint32_t) frame) & MMU_PAGE_MASK);
 	free->next = mem_layout.free_frame;
 	mem_layout.free_frame = free;
@@ -92,12 +92,12 @@ static void free_frame(void *frame) {
 	mmu_invalidate();
 }
 
-void mmu_init_user() {
+void mmu_init_userspace() {
 	MmuRegRootPointer crp = {};
 	MmuDescriptorShort *dir;
 	
 	kprintf(LOG_LEVEL_INFO, "Setting up empty userspace\n");
-	dir = alloc_frame();
+	dir = mmu_alloc_frame();
 	memset(dir, 0, MMU_PAGE_SIZE);
 	crp.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
 	crp.limit = 0;
@@ -106,7 +106,7 @@ void mmu_init_user() {
 	mmu_set_crp(&crp);
 }
 
-void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
+void *mmu_alloc_at(void *virt, bool supervisor, bool write_protected) {
 	MmuRegRootPointer rp;
 	MmuDescriptorShort *dir;
 	MmuDescriptorShort *page;
@@ -126,8 +126,8 @@ void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
 			/* Already allocated */
 			return NULL;
 		case MMU_DESCRIPTOR_TYPE_INVALID:
-			kprintf(LOG_LEVEL_DEBUG, "Will allocate extra frame for page table\n");
-			if(!(page = alloc_frame()))
+			kprintf(LOG_LEVEL_DEBUG, "MMU: Will allocate extra frame for page table\n");
+			if(!(page = mmu_alloc_frame()))
 				panic("out of memory");
 			memset(page, 0, MMU_PAGE_SIZE);
 			dir[table].whole = 0x0;
@@ -141,8 +141,8 @@ void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
 			page = (void *) (dir[table].table.table_address << 4);
 	}
 	index = (((uint32_t) virt)/MMU_PAGE_SIZE) % 1024U;
-	kprintf(LOG_LEVEL_DEBUG, "0x%X is in table %i with index %i\n", virt, table, index);
-	if(!(ret = alloc_frame()))
+	kprintf(LOG_LEVEL_DEBUG, "MMU: 0x%X is in table %i with index %i\n", virt, table, index);
+	if(!(ret = mmu_alloc_frame()))
 		panic("out of memory");
 	memset(ret, 0, MMU_PAGE_SIZE);
 	page[index].whole = 0x0;
@@ -153,9 +153,8 @@ void *mmu_alloc(void *virt, bool supervisor, bool write_protected) {
 	return ret;
 }
 
-void *mmu_free(void *virt, bool supervisor) {
+void mmu_free_at(void *virt, bool supervisor) {
 	//TODO: implement
-	return NULL;
 }
 
 void mmu_print_status() {
