@@ -26,10 +26,19 @@ int strcmp(const char *s1, const char *s2) {
 	int i;
 	for (i = 0; s1[i] && s2[i] && s1[i] == s2[i]; i++);
 	if (s1[i] != s2[i])
-		return ((signed) s1) - ((signed) s2);
+		return ((signed) s1[i]) - ((signed) s2[i]);
 	return 0;
 }
 
+int strncmp(const char *s1, const char *s2, uint32_t n) {
+	int i;
+	if(!n)
+		return 0;
+	for (i = 0; i < (n - 1) && s1[i] && s2[i] && s1[i] == s2[i]; i++);
+	if (s1[i] != s2[i])
+		return ((signed) s1[i]) - ((signed) s2[i]);
+	return 0;
+}
 
 char *strchr(char *str, char chr) {
 	for (; *str; str++)
@@ -71,8 +80,9 @@ uint32_t str_parse_int(const char *str) {
 		for (i = 0; i < len; i++) {
 			if (str[i] < '0' || str[i] > '9')
 				return ret;
-			len *= 10;
-			len += (str[i] - '0');
+			
+			ret *= 10;
+			ret += (str[i] - '0');
 		}
 
 		return ret;

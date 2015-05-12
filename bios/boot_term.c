@@ -34,10 +34,10 @@ void term_init() {
 	for (i = 0; i < 640*480/4; i++)
 		vgabuff[i] = 0;
 	
-	vgapal[0] = 0;
-	vgapal[1] = 0x14;
-	vgapal[2] = 0x540;
-	vgapal[3] = 0x554;
+	vgapal[0] = 0x0000;
+	vgapal[1] = 0x0014;
+	vgapal[2] = 0x0540;
+	vgapal[3] = 0x0554;
 	vgapal[4] = 0xA000;
 	vgapal[5] = 0xA014;
 	vgapal[6] = 0xA380;
@@ -46,9 +46,9 @@ void term_init() {
 	vgapal[9] = 0x52BF;
 	vgapal[10] = 0x57EA;
 	vgapal[11] = 0x57FF;
-	vgapal[12] = 0xFAAA;
+	vgapal[12] = 0xF800;
 	vgapal[13] = 0xFAAF;
-	vgapal[14] = 0xFFFA;
+	vgapal[14] = 0xFFE0;
 	vgapal[15] = 0xFFFF;
 
 	//BOOT_TERM_VSYNC_ENABLE();

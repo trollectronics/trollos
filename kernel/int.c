@@ -2,7 +2,7 @@
 #include <mem_addr.h>
 #include <syscall.h>
 #include "int.h"
-#include "printf.h"
+#include "log.h"
 #include "kernel.h"
 
 void **int_vector = (void *) MEM_LLRAM;
@@ -11,7 +11,7 @@ void int_init() {
 	int i;
 	
 	int_move_vector((void *) MEM_LLRAM);
-	printf("interrupt vector is now at 0x%X\n", int_vector);
+	kprintf(LOG_LEVEL_INFO, "Interrupt vector is at 0x%X\n", int_vector);
 	
 	for (i = 2; i < 15; i++)
 		int_vector[i] = int_stub_bus_error;
