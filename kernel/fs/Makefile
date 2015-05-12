@@ -5,28 +5,19 @@ ifeq ($(shell readlink -f "$(TOPDIR)"),/)
 endif
 include $(TOPDIR)/config.mk
 
-# Files to build
 ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.c.o)
 OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
-# Flags
-CFLAGS		+=	
-ASFLAGS		+=	
-LDFLAGS		+=	-Wl,-Ttext=0xC0000000
-
 # Sub directories to build
-SUBDIRS	=	fs
+SUBDIRS	=	
 
 .PHONY: all clean
 .PHONY: $(SUBDIRS)
 
 all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
-	@echo " [ LD ] bin/kernel.elf"
-	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) -o $(KERNEL) $(LDFLAGS) $(OSLDFLAGS)
-	@mkdir -p $(TOPDIR)/bin/root/boot
-	@cp $(KERNEL) $(TOPDIR)/bin/root/boot/`basename "$(KERNEL)"`
+	@echo
 	@echo "Done."
 	@echo
 	

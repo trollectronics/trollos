@@ -1,4 +1,4 @@
-# Project: trollos-kernel
+# Project: trollos-init
 TOPDIR	=	$(shell DIR=.; while [ ! "`readlink -f \"$${DIR}\"`" = "/" -a ! -f "$${DIR}/config.mk" ]; do DIR="../$${DIR}"; done; echo "$${DIR}")
 ifeq ($(shell readlink -f "$(TOPDIR)"),/)
 	$(error Could not find the project top directory with config.mk)
@@ -13,27 +13,26 @@ OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
 # Flags
 CFLAGS		+=	
-ASFLAGS		+=	
-LDFLAGS		+=	-Wl,-Ttext=0xC0000000
+ASFLAGS		+=
+LSFLAGS		+=
 
 # Sub directories to build
-SUBDIRS	=	fs
+SUBDIRS		=	init
 
 .PHONY: all clean
 .PHONY: $(SUBDIRS)
 
 all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
-	@echo " [ LD ] bin/kernel.elf"
-	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) -o $(KERNEL) $(LDFLAGS) $(OSLDFLAGS)
-	@mkdir -p $(TOPDIR)/bin/root/boot
-	@cp $(KERNEL) $(TOPDIR)/bin/root/boot/`basename "$(KERNEL)"`
+	@$(MKDIR) $(TOPDIR)/bin/root/sbin
+	@cp $(TOPDIR)/bin/init $(TOPDIR)/bin/root/sbin/init
+	@echo 
 	@echo "Done."
 	@echo
 	
 clean: $(SUBDIRS)
 	@echo
 	@echo " [ RM ] $(OBJFILES)"
-	@$(RM) $(OBJFILES)
+	@$(RM) $(OBJFILES) $(BINFILE)
 	@echo "Done."
 	@echo 
 
@@ -43,8 +42,8 @@ $(SUBDIRS):
 
 %.c.o: %.c
 	@echo " [ CC ] $(CURRENTPATH)$<"
-	@$(TARGETCC) $(CFLAGS) $(OSCFLAGS) -c -o $@ $<
+	@$(TARGETCC) $(CFLAGS) -c -o $@ $<
 	
 %.S.o: %.S
 	@echo " [ AS ] $(CURRENTPATH)$<"
-	@$(TARGETCC) -c $(ASFLAGS) -o $@ $<
+	@$(TARGETAS) $(ASFLAGS) -o $@ $<

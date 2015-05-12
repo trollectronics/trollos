@@ -1,19 +1,30 @@
-# Project: m68k-emu
+# Project: trollos-bios
+TOPDIR	=	$(shell DIR=.; while [ ! "`readlink -f \"$${DIR}\"`" = "/" -a ! -f "$${DIR}/config.mk" ]; do DIR="../$${DIR}"; done; echo "$${DIR}")
+ifeq ($(shell readlink -f "$(TOPDIR)"),/)
+	$(error Could not find the project top directory with config.mk)
+endif
 include $(TOPDIR)/config.mk
 
-CFLAGS		+=	-Wall -std=c99 -m68030 -nostdlib -O3 -ffreestanding -fno-builtin -nostdlib -I../include
-LDFLAGS		=	-Wl,--oformat=binary,-Tlink.ld
-ASFLAGS		+=	-m68030
-#,-Tdata=0x400
+# Files to build
 ASMFILES	=	$(wildcard *.S)
 SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.c.o)
 OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
-.PHONY: all clean
+# Flags
+CFLAGS		+=	-fno-builtin
+LDFLAGS		+=	-Wl,--oformat=binary,-Tlink.ld
+ASFLAGS		+=	
 
-all: $(OBJFILES) $(DEPENDS)
-	@echo " [ LD ] $(BIOS)"
+# Sub directories to build
+SUBDIRS	=	
+
+.PHONY: all clean
+.PHONY: $(SUBDIRS)
+
+all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
+	@echo $(BUILDDIRS)
+	@echo " [ LD ] bin/bios.img"
 	@$(TARGETCC) $(CFLAGS) $(OBJFILES) -o "$(BIOS)" $(LDFLAGS)
 	@echo " [MIMG] $(BOOTIMG)"
 	@dd if=/dev/zero of="$(BOOTIMG)" bs=1024 count=64 2>/dev/null
@@ -21,7 +32,7 @@ all: $(OBJFILES) $(DEPENDS)
 	@echo "Done."
 	@echo
 	
-clean:
+clean: $(SUBDIRS)
 	@echo
 	@echo " [ RM ] $(OBJFILES)"
 	@$(RM) $(OBJFILES)
@@ -30,10 +41,14 @@ clean:
 	@echo "Done."
 	@echo 
 
+$(SUBDIRS):
+	@echo " [ CD ] $(CURRENTPATH)$@/"
+	@+make -C "$@" "CURRENTPATH=$(CURRENTPATH)$@/" $(MAKECMDGOALS)
+
 %.c.o: %.c
-	@echo " [ CC ] bios/$<"
+	@echo " [ CC ] $(CURRENTPATH)$<"
 	@$(TARGETCC) $(CFLAGS) -c -o $@ $<
 
 %.S.o: %.S
-	@echo " [ AS ] bios/$<"
+	@echo " [ AS ] $(CURRENTPATH)$<"
 	@$(TARGETAS) $(ASFLAGS) -o $@ $<

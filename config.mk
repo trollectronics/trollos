@@ -3,20 +3,23 @@
 
 TARGETCC	?=	m68k-elf-gcc
 TARGETAS	?=	m68k-elf-as
+TARGETLD	?=	m68k-elf-ld
+
 KERNEL		=	$(TOPDIR)/bin/kernel.elf
 BOOTIMG		=	$(TOPDIR)/bin/bootimg.img
 BIOS		=	$(TOPDIR)/bin/bios.bin
 OSFS		=	$(TOPDIR)/bin/os.romfs
 
-DBGFLAGS	=	-O0 -g -D__DEBUG__
-#DBGFLAGS	=	-O3 -g
-#General flags
+DBGFLAGS	=	-O2 -g
 
+#General flags
+LDFLAGS		=	-nostdlib -static -lgcc
+CFLAGS		=	-m68030 -Wall -std=c99 -ffreestanding -I"$(TOPDIR)/include" $(DBGFLAGS)
+ASFLAGS		=	-m68030
 
 #Extra install targets
 INSTARG		=	
 
 #Makefile tools
-RM		=	rm -Rf
 MKDIR		=	mkdir -p
 RMDIR		=	rmdir --ignore-fail-on-non-empty

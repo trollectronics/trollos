@@ -1,13 +1,17 @@
 # Project: 68k-emu
+TOPDIR	=	.
 include config.mk
 MAKEFLAGS	+=	--no-print-directory
 
-TOPDIR		=	$(shell pwd)
-export TOPDIR
+# Sub directories to build
+SUBDIRS	=	bios kernel userspace
 
-.PHONY: all clean bios kernel init
+.PHONY: all clean
+.PHONY: $(SUBDIRS)
 
-all: init bios kernel
+all: $(SUBDIRS)
+	@echo " [MKFS] $(OSFS)"
+	@genromfs -f $(OSFS) -d bin/root/ -V TrollOS
 	@cat "$(OSFS)" >> "$(BOOTIMG)"
 	
 	@echo "Build complete."
@@ -17,28 +21,14 @@ bin:
 	@echo " [INIT] bin/"
 	@$(MKDIR) bin/
 
-init: | bin
-	@echo " [ CD ] userspace/init/"
-	+@make -C userspace/init/
-
-kernel: init | bin
-	@echo " [ CD ] kernel/"
-	+@make -C kernel/
-
-bios: | bin
-	@echo " [ CD ] bios/"
-	+@make -C bios/
-
-clean:
+clean: $(SUBDIRS)
 	@echo " [ RM ] bin/"
 	@$(RM) $(BIOS) $(BOOTIMG) $(KERNEL) $(OSFS)
 	@$(RMDIR) bin/
-	@echo " [ CD ] bios/"
-	+@make -C bios/ clean
-	@echo " [ CD ] kernel/"
-	+@make -C kernel/ clean
-	@echo " [ CD ] userspace/init"
-	+@make -C userspace/init/ clean
 	@echo
 	@echo "Source tree cleaned."
 	@echo
+
+$(SUBDIRS): | bin
+	@echo " [ CD ] $(CURRENTPATH)$@/"
+	@+make -C "$@" "CURRENTPATH=$(CURRENTPATH)$@/" $(MAKECMDGOALS)
