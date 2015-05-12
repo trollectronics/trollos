@@ -1,7 +1,7 @@
 #include <syscall.h>
 #include "terminal.h"
-//#include "memdev.h"
-//#include "blockdev.h"
+#include "module.h"
+#include "memblk.h"
 #include "printf.h"
 #include "int.h"
 #include "mmu.h"
@@ -37,7 +37,8 @@ int main(int argc, char **argv) {
 	terminal_puts("}\n");
 	/*if (argc >= 3)
 		memdev_from_arg(argv[2]);*/
-	
+	module_init();
+
 	mmu_init();
 	mmu_print_status();
 	printf("Heap is at 0x%X\n", ksbrk(0));
