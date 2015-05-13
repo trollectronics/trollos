@@ -14,14 +14,15 @@ int romfs_detect(void *ptr) {
 struct RomfsFileDescriptor romfs_locate_step(void *fsptr, struct RomfsFileEntry *entry, char *path) {
 	char name_buff[256];
 	int i, j;
-	struct RomfsFileDescriptor desc;
-
-	desc.filename = NULL;
+	struct RomfsFileDescriptor desc = {};
 
 	while (*path == '/')
 		path++;
-	for (i = 0; i < 255 && *path != '/' && *path; i++)
-		name_buff[i] = *path, path++;
+	for (i = 0; i < 255 && *path != '/' && *path; i++) {
+		name_buff[i] = *path;
+		path++;
+	}
+	name_buff[i] = 0;
 	if (*path == '/')
 		path++;
 	if (!i)		/* No node name */
@@ -30,7 +31,7 @@ struct RomfsFileDescriptor romfs_locate_step(void *fsptr, struct RomfsFileEntry 
 		if (streq(name_buff, ((void *) entry) + sizeof(*entry), 255)) {
 			if ((entry->next_fileheader & 0x7) == 2) {
 				if (*path) {
-					term_puts(path, 15);
+					
 					return desc;
 				} else {
 					desc.filename = ((void *) entry) + sizeof(*entry);
@@ -43,7 +44,7 @@ struct RomfsFileDescriptor romfs_locate_step(void *fsptr, struct RomfsFileEntry 
 					return desc;
 				}
 			} else if ((entry->next_fileheader & 0x7) == 1) {
-				if (!(desc = romfs_locate_step(fsptr, fsptr + entry->special_info, path)).data)
+				if (!(desc = romfs_locate_step(fsptr, fsptr + (entry->special_info & ~0xF), path)).data)
 					continue;
 				return desc;
 			} else {
