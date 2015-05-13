@@ -42,9 +42,11 @@ struct RomfsFileDescriptor romfs_locate_step(void *fsptr, struct RomfsFileEntry 
 					desc.data = ((void *) entry) + j + sizeof(*entry);
 					return desc;
 				}
-			} else if ((entry->next_fileheader & 0x7) == 1)
-				return romfs_locate_step(fsptr, fsptr + entry->special_info, path);
-			else {
+			} else if ((entry->next_fileheader & 0x7) == 1) {
+				if (!(desc = romfs_locate_step(fsptr, fsptr + entry->special_info, path)).data)
+					continue;
+				return desc;
+			} else {
 				term_puts("Bad filetype\n", 12);
 				return desc;
 			}
