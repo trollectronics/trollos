@@ -26,7 +26,11 @@ void int_init() {
 	*CHIPSET_IO(CHIPSET_IO_PORT_INTERRUPT_ENABLE) = 1;
 }
 
-void int_stub_handle() {
+void int_set_handler(uint32_t i, void *handler) {
+	int_vector[i] = handler;
+}
+
+void int_vga_handle() {
 	
 	*CHIPSET_IO(CHIPSET_IO_PORT_IRQ_ACK_VGA) = 0;
 }

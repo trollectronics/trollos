@@ -1,69 +1,117 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "util/mem.h"
+#include "util/log.h"
 #include "process.h"
 #include "mmu.h"
 #include "user.h"
+#include "kernel.h"
 
-uint32_t process_bitmap[MAX_PROCESSES/32];
-Process *process[MAX_PROCESSES];
+static Process *_process[MAX_PROCESSES];
+static pid_t _process_current;
+static pid_t _process_last = -1;
 
 pid_t process_create(uid_t uid, gid_t gid) {
 	Process *proc;
-	pid_t pid;
-	uint32_t entry;
-	int i, j;
+	pid_t pid, tried = _process_last;
+	int i;
 	
-	for(i = 0; i < MAX_PROCESSES/32; i++)
-		if((entry = process_bitmap[i]) != 0xFFFFFFFFUL)
-			goto find_bit;
-	return 0;
+	do {
+		pid = (++_process_last) % MAX_PROCESSES;
+		if(pid == tried)
+			return -1;
+	} while(_process[pid]);
 	
-	find_bit:
-	for(j = 0; (entry & 0x1); entry >>= 1, j++);
-	pid = i*32 + j;
-	process_bitmap[i] |= (1 << j);
+	
 	proc = kmalloc(sizeof(Process));
-	memset(proc, 0, sizeof(Process));
 	
 	proc->pid = pid;
+	proc->state = PROCESS_STATE_RUNNING;
 	proc->user = uid;
 	proc->group = gid;
 	//TODO: system_get_ticks()
 	proc->time_started = 1337;
+	mmu_init_userspace(&proc->page_table);
 	
-	//TODO: allocate segments perhaps? or let caller do it later
-	//TODO: set stdin/out/err? or let caller do later
+	for(i = 0; i < MAX_PROCESS_FILES; i++)
+		proc->file[i] = -1;
 	
-	process[pid] = proc;
+	_process[pid] = proc;
 	return pid;
 }
 
-void process_kill() {
+void process_exit(pid_t pid, int return_value) {
+	pid_t next;
+	int i;
 	
+	if(pid < 0 || pid >= MAX_PROCESSES)
+		return;
+	if(!_process[pid])
+		return;
+	
+	if(pid == 0)
+		panic("Attempted to kill scheduler");
+	if(pid == 1)
+		panic("Attempted to kill init");
+	
+	if(_process_current == pid) {
+		for(next = (pid + 1) % MAX_PROCESSES; !_process[next]; next = (next + 1) % MAX_PROCESSES);
+		process_switch_to(next);
+	}
+	
+	for(i = 0; i < MAX_PROCESS_FILES; i++) {
+		//TODO: close files
+		//file_close(process[pid]->file[i]);
+	}
+	
+	mmu_free_userspace(&_process[pid]->page_table);
+	_process[pid]->return_value = return_value;
+	_process[pid]->state = PROCESS_STATE_ZOMBIE;
+}
+
+int process_wait(pid_t pid) {
+	int return_value;
+	
+	if(pid < 0 || pid >= MAX_PROCESSES)
+		return;
+	if(!_process[pid])
+		return;
+	
+	if(_process[pid]->state == PROCESS_STATE_ZOMBIE) {
+		return_value = _process[pid]->return_value;
+		kfree(_process[pid]);
+		_process[pid] = NULL;
+		return return_value;
+	}
+	
+	//TODO: blocking state
+	return 0;
 }
 
 void process_switch_to(pid_t pid) {
-	mmu_set_crp(&process[pid]->page_table);
-	
+	mmu_set_crp(&_process[pid]->page_table);
+	_process_current = pid;
 }
 
-Process *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter) {
-	static pid_t current_process;
-	uint32_t i, j, bits;
+pid_t process_current() {
+	return _process_current;
+}
+
+Process *process_from_pid(pid_t pid) {
+	if(pid < 0 || pid >= MAX_PROCESSES)
+		return NULL;
+	return _process[pid];
+}
+
+void *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter, void *regs_tmp) {
+	pid_t next;
+	_process[_process_current]->reg.pc = program_counter;
+	_process[_process_current]->reg.stack = stack_pointer;
+	_process[_process_current]->reg.status = status_reg & 0xFFFF;
+	memcpy(_process[_process_current]->reg.general, regs_tmp, 4*15);
 	
-	process[current_process]->status_reg = status_reg;
-	process[current_process]->stack_pointer = stack_pointer;
-	process[current_process]->program_counter = program_counter;
-	
-	for(i = ((current_process + 1) % MAX_PROCESSES)/(MAX_PROCESSES/32); !process_bitmap[i]; i = (i + 1) % (MAX_PROCESSES/32));
-	bits = process_bitmap[i];
-	for(j = 0; !(bits & 0x1); bits >>=1, j++);
-	
-	current_process = i*32 + j;
-	
-	mmu_set_crp(&process[current_process]->page_table);
-	//TODO: set up stack pointers, load registers
-	//TODO: run process
-	return process[current_process];
+	for(next = (_process_current + 1) % MAX_PROCESSES; !_process[next]; next = (next + 1) % MAX_PROCESSES);
+		process_switch_to(next);
+	kprintf(LOG_LEVEL_DEBUG, "Scheduler switching to %i\n", next);
+	return &_process[next]->reg;
 }

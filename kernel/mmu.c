@@ -92,18 +92,88 @@ void mmu_free_frame(void *frame) {
 	mmu_invalidate();
 }
 
-void mmu_init_userspace() {
-	MmuRegRootPointer crp = {};
+void mmu_init_userspace(MmuRegRootPointer *crp) {
 	MmuDescriptorShort *dir;
-	
-	kprintf(LOG_LEVEL_INFO, "Setting up empty userspace\n");
+	memset(crp, 0, sizeof(MmuRegRootPointer));
+	//kprintf(LOG_LEVEL_INFO, "Setting up empty userspace\n");
 	dir = mmu_alloc_frame();
-	memset(dir, 0, MMU_PAGE_SIZE);
-	crp.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
-	crp.limit = 0;
-	crp.lu = true;
-	crp.table_address = (((uint32_t) dir) >> 4);
-	mmu_set_crp(&crp);
+	//memset(dir, 0, MMU_PAGE_SIZE);
+	crp->descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
+	crp->limit = 0;
+	crp->lu = true;
+	crp->table_address = (((uint32_t) dir) >> 4);
+	//mmu_set_crp(&crp);
+}
+
+void mmu_free_userspace(MmuRegRootPointer *crp) {
+	MmuDescriptorShort *dir;
+	MmuDescriptorShort *page;
+	int i, j;
+	
+	if(!crp || crp->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
+		return;
+	
+	dir = (void *) (crp->table_address << 4);
+	for(i = 0; i < 1024; i++) {
+		if(dir[i].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
+			continue;
+		
+		page = (void *) (dir[i].table.table_address << 4);
+		for(j = 0; j < 1024; j++) {
+			if(page[i].page.descriptor_type != MMU_DESCRIPTOR_TYPE_PAGE)
+				continue;
+			
+			//TODO: refcount?
+			mmu_free_frame((void *) (page[i].page.page_address << 8));
+		}
+	}
+}
+
+void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
+	MmuDescriptorShort *from_dir, *to_dir;
+	MmuDescriptorShort *from_page, *to_page;
+	void *p;
+	int i, j;
+	
+	if(!(from && to))
+		return;
+	
+	if(from->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT || to->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
+		return;
+	
+	from_dir = (void *) (from->table_address << 4);
+	to_dir = (void *) (to->table_address << 4);
+	for(i = 0; i < 1024; i++) {
+		if(from_dir[i].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT) {
+			to_dir[i].table.descriptor_type = MMU_DESCRIPTOR_TYPE_INVALID;
+			continue;
+		}
+		
+		from_page = (void *) (from_dir[i].table.table_address << 4);
+		to_page = mmu_alloc_frame();
+		to_dir[i].table.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
+		to_dir[i].table.used = false;
+		to_dir[i].table.write_protected = false;
+		to_dir[i].table.table_address = ((uint32_t) to_page) >> 4;
+		
+		for(j = 0; j < 1024; j++) {
+			if(from_page[i].page.descriptor_type != MMU_DESCRIPTOR_TYPE_PAGE) {
+				to_page[i].page.descriptor_type = MMU_DESCRIPTOR_TYPE_INVALID;
+				continue;
+			}
+			
+			//TODO: refcount, share mappings
+			p = mmu_alloc_frame();
+			memcpy(p, (void *) (from_page[i].page.page_address << 8), MMU_PAGE_SIZE);
+			
+			to_page[i].page.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
+			to_page[i].page.cache_inhibit = false;			
+			to_page[i].page.modified = false;			
+			to_page[i].page.used = false;			
+			to_page[i].page.write_protected = from_page[i].page.write_protected;
+			to_page[i].page.page_address = ((uint32_t) p) >> 8;
+		}
+	}
 }
 
 void *mmu_alloc_at(void *virt, bool supervisor, bool write_protected) {

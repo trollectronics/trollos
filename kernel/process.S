@@ -1,34 +1,42 @@
+
+.align 2
+regs_tmp:
+	.space 256
+
+.align 2
 .global process_isr
 process_isr:
+	movem.l %a0-%a6/%d0-%d7, (regs_tmp)
 	link %fp, #0
-	moves.l %a0, -(%sp)
-	moves.l %a1, -(%sp)
-	moves.l %d0, -(%sp)
-	moves.l %d1, -(%sp)
-	
-	
 	
 	#set up userspace stack frame with stack pointer, return address, etc
 	
-	move.l %usp, %a0
+	pea regs_tmp
+	
 	move.l 6(%fp), -(%sp)
-	move.l %d0, -(%sp)
-	move.w 4(%fp), -(%sp)
+	
+	move.l %usp, %a0
+	move.l %a0, -(%sp)
+	
+	move.w 4(%fp), %d0
+	andi.l #0xFFFF, %d0
+	move.l %a0, -(%sp)
+	
 	jsr.l scheduler
 	addq.l #6, %sp
 	addq.l #6, %sp
 	
-	move.l 12(%d0), %a0
+	
+	move.l (%d0), %a0
+	move.w %a0, 4(%fp)
+	move.l 4(%d0), 6(%fp)
+	
+	move.l 8(%d0), %a0
 	move.l %a0, %usp
 	
-	move.w 18(%a0), (%sp)
-	move.l 8(%a0), -2(%sp)
-	
-	moves.l (%sp)+, %d1
-	moves.l (%sp)+, %d0
-	moves.l (%sp)+, %a1
-	moves.l (%sp)+, %a0
 	unlk %fp
+	move.l #1, (0x200014)
+	movem.l 12(%d0), %a0-%a6/%d0-%d7
 	rte
 
 arnetext:	.asciz "dest=0x%X"

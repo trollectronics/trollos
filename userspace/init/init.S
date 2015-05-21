@@ -7,6 +7,11 @@ _start:
 	#try invalid trap
 	trap #5
 	
+	move.l #0xFFFF, %d0
+1:
+	subi.l #1, %d0
+	bne 1b
+
 	#exit
 	move.l #5, %a4
 	move.l #4, %a3

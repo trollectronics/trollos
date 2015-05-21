@@ -32,7 +32,7 @@ int_stub:
 	move.l %d0, -(%sp)
 	move.l %d1, -(%sp)
 	
-	jsr.l int_stub_handle
+	jsr.l int_vga_handle
 	
 	move.l (%sp)+, %d1
 	move.l (%sp)+, %d0
@@ -40,11 +40,28 @@ int_stub:
 	move.l (%sp)+, %a0
 	rte
 
+.align 2
+.global int_vga
+int_vga:
+	move.l %a0, -(%sp)
+	move.l %a1, -(%sp)
+	move.l %d0, -(%sp)
+	move.l %d1, -(%sp)
+	
+	#jsr.l int_vga_handle
+	
+	move.l (%sp)+, %d1
+	move.l (%sp)+, %d0
+	move.l (%sp)+, %a1
+	move.l (%sp)+, %a0
+	jmp process_isr
+
 arne: .asciz "syscall %u with %u %u %u %u %u\n"
 
 .align 2
 .global int_syscall
 int_syscall:
+	or.w #0x0700, %sr
 	move.l %a4, -(%sp)
 	move.l %a3, -(%sp)
 	move.l %a2, -(%sp)
@@ -58,6 +75,7 @@ int_syscall:
 .align 2
 .global int_invalid_trap
 int_invalid_trap:
+	or.w #0x0700, %sr
 	move.l %a0, -(%sp)
 	move.l %a1, -(%sp)
 	move.l %d0, -(%sp)
@@ -69,6 +87,7 @@ int_invalid_trap:
 	jsr.l kprintf
 	adda.l #8, %sp
 	
+	#jsr.l breakpoint
 	
 	unlk %fp
 	move.l (%sp)+, %d1

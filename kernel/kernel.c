@@ -1,4 +1,5 @@
 #include <syscall.h>
+#include <chipset.h>
 #include "modules/binformat/elf.h"
 #include "modules/blockdev/memblk.h"
 #include "modules/chardev/terminal.h"
@@ -11,6 +12,7 @@
 #include "mmu.h"
 #include "process.h"
 #include "kernel.h"
+#include "debug.h"
 
 FileModuleMap filetable[MAX_TOTAL_FILES];
 
@@ -63,17 +65,16 @@ int main(int argc, char **argv) {
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
 	
-	mmu_init_userspace();
+	set_debug_traps();
+	breakpoint();
+	
+	process_switch_to(process_create(0, 0));
 	init = elf_load(argv[3]);
 	
 	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
+	int_set_handler(CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC, process_isr);
 	process_jump(init);
-	//generate bus error
-	terminal_set_fg(TERMINAL_COLOR_YELLOW);
-	printf("I will now generate a buss error.");
-	i = *((int *) 0xDEADBEEF);
-	printf("lalala %i\n", i);
-	for (;;);
-
-	return 42;
+	
+	panic("kernel main() has returned");
+	return 1;
 }

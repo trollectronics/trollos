@@ -33,6 +33,7 @@ enum ChipsetIoPort {
 	CHIPSET_IO_PORT_VGA_SPRITE_X,
 	CHIPSET_IO_PORT_VGA_SPRITE_Y,
 	
+	CHIPSET_IO_PORT_DEBUG = 0x60,
 };
 
 #endif
