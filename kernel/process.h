@@ -22,6 +22,7 @@ enum ProcessState {
 typedef struct Process Process;
 struct Process {
 	pid_t pid;
+	pid_t parent;
 	ProcessState state;
 	int return_value;
 	MmuRegRootPointer page_table;
@@ -46,6 +47,7 @@ void process_exit(pid_t pid, int return_value);
 pid_t process_create(uid_t uid, gid_t gid);
 pid_t process_current();
 Process *process_from_pid(pid_t pid);
-void *process_isr();
+void process_isr();
+void process_set_pc(pid_t pid, void *pc);
 
 #endif

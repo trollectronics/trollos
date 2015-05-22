@@ -5,7 +5,12 @@ init_text: .asciz "I am init\n"
 .global _start
 _start:
 	#try invalid trap
-	trap #5
+	#trap #5
+	
+	move.l #1, %d0
+	trap #10
+	cmp #0, %d0
+1:	beq 1b
 	
 	move.l #0xFFFF, %d0
 1:

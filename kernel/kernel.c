@@ -68,8 +68,10 @@ int main(int argc, char **argv) {
 	set_debug_traps();
 	breakpoint();
 	
-	process_switch_to(process_create(0, 0));
-	init = elf_load(argv[3]);
+	pid_t pid;
+	pid = process_create(0, 0);
+	process_switch_to(pid);
+	process_set_pc(pid, init = elf_load(argv[3]));
 	
 	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
 	int_set_handler(CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC, process_isr);

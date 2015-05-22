@@ -150,6 +150,7 @@ void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
 		}
 		
 		from_page = (void *) (from_dir[i].table.table_address << 4);
+		kprintf(LOG_LEVEL_DEBUG, "clone: table at 0x%X\n", MMU_PAGE_SIZE*1024*i);
 		to_page = mmu_alloc_frame();
 		to_dir[i].table.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
 		to_dir[i].table.used = false;
@@ -157,21 +158,21 @@ void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
 		to_dir[i].table.table_address = ((uint32_t) to_page) >> 4;
 		
 		for(j = 0; j < 1024; j++) {
-			if(from_page[i].page.descriptor_type != MMU_DESCRIPTOR_TYPE_PAGE) {
-				to_page[i].page.descriptor_type = MMU_DESCRIPTOR_TYPE_INVALID;
+			if(from_page[j].page.descriptor_type != MMU_DESCRIPTOR_TYPE_PAGE) {
+				to_page[j].page.descriptor_type = MMU_DESCRIPTOR_TYPE_INVALID;
 				continue;
 			}
 			
 			//TODO: refcount, share mappings
 			p = mmu_alloc_frame();
-			memcpy(p, (void *) (from_page[i].page.page_address << 8), MMU_PAGE_SIZE);
+			memcpy(p, (void *) (from_page[j].page.page_address << 8), MMU_PAGE_SIZE);
 			
-			to_page[i].page.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
-			to_page[i].page.cache_inhibit = false;			
-			to_page[i].page.modified = false;			
-			to_page[i].page.used = false;			
-			to_page[i].page.write_protected = from_page[i].page.write_protected;
-			to_page[i].page.page_address = ((uint32_t) p) >> 8;
+			to_page[j].page.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
+			to_page[j].page.cache_inhibit = false;			
+			to_page[j].page.modified = false;			
+			to_page[j].page.used = false;			
+			to_page[j].page.write_protected = from_page[j].page.write_protected;
+			to_page[j].page.page_address = ((uint32_t) p) >> 8;
 		}
 	}
 }

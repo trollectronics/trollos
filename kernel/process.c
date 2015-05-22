@@ -69,6 +69,15 @@ void process_exit(pid_t pid, int return_value) {
 	_process[pid]->state = PROCESS_STATE_ZOMBIE;
 }
 
+void process_set_pc(pid_t pid, void *pc) {
+	if(pid < 0 || pid >= MAX_PROCESSES)
+		return;
+	if(!_process[pid])
+		return;
+	
+	_process[pid]->reg.pc = pc;
+}
+
 int process_wait(pid_t pid) {
 	int return_value;
 	
@@ -90,6 +99,7 @@ int process_wait(pid_t pid) {
 
 void process_switch_to(pid_t pid) {
 	mmu_set_crp(&_process[pid]->page_table);
+	mmu_invalidate();
 	_process_current = pid;
 }
 
@@ -111,7 +121,10 @@ void *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter,
 	memcpy(_process[_process_current]->reg.general, regs_tmp, 4*15);
 	
 	for(next = (_process_current + 1) % MAX_PROCESSES; !_process[next]; next = (next + 1) % MAX_PROCESSES);
-		process_switch_to(next);
+	process_switch_to(next);
 	kprintf(LOG_LEVEL_DEBUG, "Scheduler switching to %i\n", next);
+	/*kprintf(LOG_LEVEL_DEBUG, " - PC = 0x%x\n", _process[_process_current]->reg.pc);
+	kprintf(LOG_LEVEL_DEBUG, " - FL = 0x%x\n", _process[_process_current]->reg.status);
+	kprintf(LOG_LEVEL_DEBUG, " - SP = 0x%x\n", _process[_process_current]->reg.stack);*/
 	return &_process[next]->reg;
 }
