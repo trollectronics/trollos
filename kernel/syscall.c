@@ -16,6 +16,13 @@ int32_t (*syscall_handler[SYSCALLS])(uint32_t arg0, uint32_t arg1, uint32_t arg2
 	[SYSCALL_UNLINK] = syscall_unlink,
 	[SYSCALL_EXECVE] = syscall_execve,
 	[SYSCALL_CHDIR] = syscall_chdir,
+	[SYSCALL_TIME] = syscall_time,
+	[SYSCALL_MKNOD] = syscall_mknod,
+	[SYSCALL_CHMOD] = syscall_chmod,
+	[SYSCALL_LCHOWN] = syscall_lchown,
+	[SYSCALL_STAT] = syscall_stat,
+	[SYSCALL_LSEEK] = syscall_lseek,
+	[SYSCALL_GETPID] = syscall_getpid,
 };
 
 int32_t syscall_stub(uint32_t syscall, uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
@@ -67,5 +74,29 @@ int32_t syscall_execve(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 }
 
 int32_t syscall_chdir(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
+	return 0;
+}
+
+int32_t syscall_time(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
+	return 0;
+}
+
+int32_t syscall_mknod(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
+	return 0;
+}
+
+int32_t syscall_chmod(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
+	return 0;
+}
+
+int32_t syscall_lchown(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
+	return 0;
+}
+
+int32_t syscall_stat(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
+	return 0;
+}
+
+int32_t syscall_lseek(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
 	return 0;
 }

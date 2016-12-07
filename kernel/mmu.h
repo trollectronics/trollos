@@ -20,9 +20,9 @@ void mmu_free_frame(void *frame);
 void *mmu_alloc_at(void *virt, bool supervisor, bool write_protected);
 void mmu_free_at(void *virt, bool supervisor);
 void mmu_print_status();
-void mmu_init_userspace(MmuRegRootPointer *crp);
+int mmu_init_userspace(MmuRegRootPointer *crp);
 void mmu_free_userspace(MmuRegRootPointer *crp);
-void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to);
+int mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to);
 
 void *mmu_get_physical(void *phys);
 void mmu_set_tc(MmuRegTranslationControl *tc);

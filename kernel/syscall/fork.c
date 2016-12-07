@@ -1,3 +1,4 @@
+#include <errno.h>
 #include "../util/mem.h"
 #include "../util/log.h"
 #include "../process.h"
@@ -5,13 +6,22 @@
 
 static pid_t _fork(void) {
 	Process *current, *new;
+	pid_t pid;
 	
-	current = process_from_pid(process_current());
-	if(!(new = process_from_pid(process_create(current->user, current->group))))
-		return -1;
+	if(!(current = process_from_pid(process_current())))
+		return -EAGAIN;
+	if((pid = process_create(current->user, current->group)) < 0)
+		return -EAGAIN;
+	if(!(new = process_from_pid(pid)))
+		return -EAGAIN;
 	
 	kprintf(LOG_LEVEL_DEBUG, "fork: created process %i\n", new->pid);
-	mmu_clone_userspace(&current->page_table, &new->page_table);
+	if(mmu_clone_userspace(&current->page_table, &new->page_table) < 0) {
+		process_exit(pid, 1);
+		new->state = PROCESS_STATE_ZOMBIE;
+		process_wait(pid);
+		return -ENOMEM;
+	}
 	kprintf(LOG_LEVEL_DEBUG, "fork: cloned userspace\n");
 	new->reg.pc = current->reg.pc + 2;
 	new->reg.stack = current->reg.stack;

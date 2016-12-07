@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <chipset.h>
 #include "util/mem.h"
 #include "util/log.h"
@@ -92,17 +93,24 @@ void mmu_free_frame(void *frame) {
 	mmu_invalidate();
 }
 
-void mmu_init_userspace(MmuRegRootPointer *crp) {
+int mmu_init_userspace(MmuRegRootPointer *crp) {
 	MmuDescriptorShort *dir;
+	
+	if(!crp)
+		return -EINVAL;
+	
 	memset(crp, 0, sizeof(MmuRegRootPointer));
 	//kprintf(LOG_LEVEL_INFO, "Setting up empty userspace\n");
-	dir = mmu_alloc_frame();
+	if(!(dir = mmu_alloc_frame()))
+		return -ENOMEM;
 	//memset(dir, 0, MMU_PAGE_SIZE);
 	crp->descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
 	crp->limit = 0;
 	crp->lu = true;
 	crp->table_address = (((uint32_t) dir) >> 4);
 	//mmu_set_crp(&crp);
+	
+	return 0;
 }
 
 void mmu_free_userspace(MmuRegRootPointer *crp) {
@@ -129,17 +137,17 @@ void mmu_free_userspace(MmuRegRootPointer *crp) {
 	}
 }
 
-void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
+int mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
 	MmuDescriptorShort *from_dir, *to_dir;
 	MmuDescriptorShort *from_page, *to_page;
 	void *p;
 	int i, j;
 	
 	if(!(from && to))
-		return;
+		return -EINVAL;
 	
 	if(from->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT || to->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
-		return;
+		return -EFAULT;
 	
 	from_dir = (void *) (from->table_address << 4);
 	to_dir = (void *) (to->table_address << 4);
@@ -151,7 +159,8 @@ void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
 		
 		from_page = (void *) (from_dir[i].table.table_address << 4);
 		kprintf(LOG_LEVEL_DEBUG, "clone: table at 0x%X\n", MMU_PAGE_SIZE*1024*i);
-		to_page = mmu_alloc_frame();
+		if(!(to_page = mmu_alloc_frame()))
+			return -ENOMEM;
 		to_dir[i].table.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
 		to_dir[i].table.used = false;
 		to_dir[i].table.write_protected = false;
@@ -164,7 +173,8 @@ void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
 			}
 			
 			//TODO: refcount, share mappings
-			p = mmu_alloc_frame();
+			if(!(p = mmu_alloc_frame()))
+				return -ENOMEM;
 			memcpy(p, (void *) (from_page[j].page.page_address << 8), MMU_PAGE_SIZE);
 			
 			to_page[j].page.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
@@ -175,6 +185,7 @@ void mmu_clone_userspace(MmuRegRootPointer *from, MmuRegRootPointer *to) {
 			to_page[j].page.page_address = ((uint32_t) p) >> 8;
 		}
 	}
+	return 0;
 }
 
 void *mmu_alloc_at(void *virt, bool supervisor, bool write_protected) {

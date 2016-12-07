@@ -196,7 +196,7 @@ int superStack;
 
 #define STACKSIZE 10000
 int remcomStack[STACKSIZE/sizeof(int)];
-static int* stackPtr = &remcomStack[STACKSIZE/sizeof(int) - 1];
+int* stackPtr = &remcomStack[STACKSIZE/sizeof(int) - 1];
 
 /*
  * In many cases, the system will want to continue exception processing

@@ -19,11 +19,20 @@ enum ProcessState {
 	PROCESS_STATE_ZOMBIE,
 };
 
+typedef struct ProcessCallback ProcessCallback ;
+struct ProcessCallback {
+	bool (*func)(pid_t owner, void *args);
+	pid_t owner;
+	void *args;
+	ProcessCallback *next;
+};
+
 typedef struct Process Process;
 struct Process {
 	pid_t pid;
 	pid_t parent;
 	ProcessState state;
+	ProcessCallback *callback;
 	int return_value;
 	MmuRegRootPointer page_table;
 	uid_t user;

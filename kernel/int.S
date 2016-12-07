@@ -59,20 +59,6 @@ int_vga:
 arne: .asciz "syscall %u with %u %u %u %u %u\n"
 
 .align 2
-.global int_syscall
-int_syscall:
-	or.w #0x0700, %sr
-	move.l %a4, -(%sp)
-	move.l %a3, -(%sp)
-	move.l %a2, -(%sp)
-	move.l %a1, -(%sp)
-	move.l %a0, -(%sp)
-	move.l %d0, -(%sp)
-	jsr.l syscall_stub
-	adda.l #24, %sp
-	rte
-
-.align 2
 .global int_invalid_trap
 int_invalid_trap:
 	or.w #0x0700, %sr

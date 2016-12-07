@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "util/mem.h"
@@ -11,6 +12,12 @@ static Process *_process[MAX_PROCESSES];
 static pid_t _process_current;
 static pid_t _process_last = -1;
 
+static bool kill_callback(pid_t owner, void *args) {
+	Process *p = args;
+	_process[owner]->state = PROCESS_STATE_RUNNING;
+	return true;
+}
+
 pid_t process_create(uid_t uid, gid_t gid) {
 	Process *proc;
 	pid_t pid, tried = _process_last;
@@ -19,11 +26,12 @@ pid_t process_create(uid_t uid, gid_t gid) {
 	do {
 		pid = (++_process_last) % MAX_PROCESSES;
 		if(pid == tried)
-			return -1;
+			return -EAGAIN;
 	} while(_process[pid]);
 	
 	
-	proc = kmalloc(sizeof(Process));
+	if(!(proc = kmalloc(sizeof(Process))))
+		return -ENOMEM;
 	
 	proc->pid = pid;
 	proc->state = PROCESS_STATE_RUNNING;
@@ -41,6 +49,8 @@ pid_t process_create(uid_t uid, gid_t gid) {
 }
 
 void process_exit(pid_t pid, int return_value) {
+	ProcessCallback **callback, *tmp;
+	Process *proc;
 	pid_t next;
 	int i;
 	
@@ -53,6 +63,15 @@ void process_exit(pid_t pid, int return_value) {
 		panic("Attempted to kill scheduler");
 	if(pid == 1)
 		panic("Attempted to kill init");
+	
+	proc = _process[pid];
+	for(callback = &proc->callback; *callback; callback = &((*callback)->next)) {
+		if((*callback)->func((*callback)->owner, proc)) {
+			tmp = *callback;
+			*callback = tmp->next;
+			kfree(tmp);
+		}
+	}
 	
 	if(_process_current == pid) {
 		for(next = (pid + 1) % MAX_PROCESSES; !_process[next]; next = (next + 1) % MAX_PROCESSES);
@@ -79,12 +98,13 @@ void process_set_pc(pid_t pid, void *pc) {
 }
 
 int process_wait(pid_t pid) {
+	ProcessCallback *callback;
 	int return_value;
 	
 	if(pid < 0 || pid >= MAX_PROCESSES)
-		return;
+		return -EINVAL;
 	if(!_process[pid])
-		return;
+		return -ESRCH;
 	
 	if(_process[pid]->state == PROCESS_STATE_ZOMBIE) {
 		return_value = _process[pid]->return_value;
@@ -93,8 +113,15 @@ int process_wait(pid_t pid) {
 		return return_value;
 	}
 	
-	//TODO: blocking state
-	return 0;
+	callback = kmalloc(sizeof(ProcessCallback));
+	callback->func = kill_callback;
+	callback->owner = _process_current;
+	callback->args = NULL;
+	callback->next = _process[pid]->callback;
+	_process[pid]->callback = callback;
+	_process[_process_current]->state = PROCESS_STATE_BLOCKED;
+	
+	return -1000;
 }
 
 void process_switch_to(pid_t pid) {
