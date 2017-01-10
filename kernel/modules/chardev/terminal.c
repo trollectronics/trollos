@@ -8,6 +8,14 @@
 
 /* TODO: Implement cursor */
 
+void terminal_clear() {
+	volatile unsigned char *vgabuff = MEM_VGA_RAM;
+	int i;
+	for(i = 0; i < 800*480; i++) {
+		vgabuff[i] = 0;
+	}
+}
+
 void terminal_scroll() {
 	volatile unsigned int *vgabuff = MEM_VGA_RAM;
 	int i, j;

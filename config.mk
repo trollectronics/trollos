@@ -16,8 +16,8 @@ DBGFLAGS	=	-O2 -g
 
 #General flags
 LDFLAGS		=	-nostdlib -static -lgcc
-CFLAGS		=	-m68030 -Wall -std=c99 -ffreestanding -I"$(TOPDIR)/include" $(DBGFLAGS)
-ASFLAGS		=	-m68030
+CFLAGS		=	-m68040 -Wall -std=c99 -ffreestanding -I"$(TOPDIR)/include" $(DBGFLAGS)
+ASFLAGS		=	-m68040
 
 #Extra install targets
 INSTARG		=	

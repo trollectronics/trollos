@@ -126,7 +126,7 @@ int process_wait(pid_t pid) {
 
 void process_switch_to(pid_t pid) {
 	mmu_set_crp(&_process[pid]->page_table);
-	mmu_invalidate();
+	mmu_invalidate_all();
 	_process_current = pid;
 }
 

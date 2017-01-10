@@ -1,9 +1,9 @@
 #include <errno.h>
 #include <chipset.h>
-#include "util/mem.h"
-#include "util/log.h"
-#include "mmu.h"
-#include "kernel.h"
+#include "../util/mem.h"
+#include "../util/log.h"
+#include "../mmu.h"
+#include "../kernel.h"
 
 struct {
 	uint32_t free_frames;

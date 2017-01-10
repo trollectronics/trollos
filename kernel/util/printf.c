@@ -166,6 +166,7 @@ int vprintf(char *format, va_list va) {
 		next:;
 	}
 	end:
+	
 	return i;
 }
 

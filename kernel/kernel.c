@@ -30,13 +30,15 @@ int main(int argc, char **argv) {
 	int (*init)(int argc, char **argv);
 	int i;
 	
+	terminal_clear();
 	terminal_set_bg(TERMINAL_COLOR_BLACK);
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_BLUE);
 	terminal_puts("\nTrollOS kernel\n");
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
-
+	
+#if 0	
 	terminal_puts("argv = { ");
-	if(argv > 0) {
+	if(argc > 0) {
 		terminal_set_fg(TERMINAL_COLOR_LIGHT_CYAN);
 		printf("%s", argv[0]);
 	}
@@ -50,16 +52,22 @@ int main(int argc, char **argv) {
 	terminal_puts(" }\n");
 	/*if (argc >= 3)
 		memdev_from_arg(argv[2]);*/
-	
+
 	for(i = 1; i < argc; i++) {
 		if(!strncmp(argv[i], "loglevel=", 9)) {
 			log_set_level(str_parse_int(argv[i] + 9));
 			break;
 		}
 	}
-	
+#else
+	int_init();
+	//kprintf(LOG_LEVEL_INFO, "arne\n");
+	//printf("arne\n");
+	for(;;);
+	log_set_level(LOG_LEVEL_DEBUG);
+#endif
 	module_init();
-
+	
 	mmu_init();
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));

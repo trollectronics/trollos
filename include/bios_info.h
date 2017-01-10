@@ -3,9 +3,7 @@
 
 #include "mem_addr.h"
 
-#define	BIOS_INFO_ADDR		((volatile void *) ((256*4) + MEM_LLRAM))
-
-
+typedef struct BiosInfo BiosInfo;
 struct BiosInfo {
 	unsigned char		*font;
 	int			term_x;
@@ -16,5 +14,6 @@ struct BiosInfo {
 	int			vsync_clock;
 };
 
+#define	BIOS_INFO_ADDR		((volatile BiosInfo *) 0xDDC00)
 
 #endif

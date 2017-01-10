@@ -17,7 +17,7 @@ ASFLAGS		+=
 LDFLAGS		+=	-Wl,-Ttext=0xC0000000
 
 # Sub directories to build
-SUBDIRS	=	modules util syscall
+SUBDIRS	=	modules util syscall mmu
 
 LIBS		=	$(addsuffix /out.a,$(SUBDIRS))
 
