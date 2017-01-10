@@ -14,7 +14,7 @@ OBJFILES	+=	$(ASMFILES:.S=.S.o)
 # Flags
 CFLAGS		+=	
 ASFLAGS		+=	
-LDFLAGS		+=	-Wl,-Ttext=0xC0000000
+LDFLAGS		+=	-Tlink.ld
 
 # Sub directories to build
 SUBDIRS	=	modules util syscall mmu

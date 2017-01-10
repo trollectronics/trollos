@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 #else
 	int_init();
 	//kprintf(LOG_LEVEL_INFO, "arne\n");
-	//printf("arne\n");
+	printf("arne\n");
 	for(;;);
 	log_set_level(LOG_LEVEL_DEBUG);
 #endif
