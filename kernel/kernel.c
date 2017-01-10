@@ -63,8 +63,8 @@ int main(int argc, char **argv) {
 	mmu_init();
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
-	for(;;);
 	int_init();
+	for(;;);
 	
 	pid_t pid;
 	pid = process_create(0, 0);

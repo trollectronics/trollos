@@ -39,6 +39,8 @@
 #define UDT_IS_RESIDENT(x) ((x) == MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_RESIDENT || (x) == MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_RESIDENT_ALT)
 #define PDT_IS_RESIDENT(x) ((x) == MMU040_PAGE_DESCRIPTOR_TYPE_RESIDENT || (x) == MMU040_PAGE_DESCRIPTOR_TYPE_RESIDENT_ALT)
 
+//Replace the base part of an address (a) with a new base (b)
+#define REPAGE(a, b) ((((uint32_t) (b)) & ~MMU_PAGE_MASK) + (((uint32_t) (a)) & (MMU_PAGE_MASK)))
 
 #define MAPPER_PAGES 4
 
@@ -80,7 +82,7 @@ static void *_mapping_push(uint32_t physical_address) {
 	_mapper.page_descriptor[mapping] = desc;
 	mmu040_invalidate_page(_mapper.page[mapping]);
 	_mapper.mapping++;
-	return _mapper.page;
+	return _mapper.page[mapping];
 }
 
 static void _mapping_pop() {
@@ -123,6 +125,7 @@ static PhysicalAddress _build_free_frame_list() {
 	Mmu040PageTableDescriptor *page_table;
 	
 	uint32_t i, j, k;
+	PhysicalAddress ph;
 	
 	PhysicalAddress free_frame = (PhysicalAddress) MMU_DRAM_START;
 	
@@ -130,20 +133,28 @@ static PhysicalAddress _build_free_frame_list() {
 		if(!UDT_IS_RESIDENT(_root_td[i].table.upper_level_descriptor_type))
 			continue;
 		
-		pointer_table = _mapping_push(ROOT_LEVEL_FIELD_ADDR(_root_td[i].table.table_address));
+		ph = ROOT_LEVEL_FIELD_ADDR(_root_td[i].table.table_address);
+		pointer_table = (void *) REPAGE(ph, _mapping_push(ph));
+		kprintf(LOG_LEVEL_DEBUG, "[%u] pointer table 0x%X -> 0x%X (0x%X)\n", i, (uint32_t) pointer_table, mmu040_test_read(pointer_table), ROOT_LEVEL_FIELD_ADDR(_root_td[i].table.table_address));
 		
 		for(j = 0; j < POINTER_LEVEL_DESCRIPTORS; j++) {
 			if(!UDT_IS_RESIDENT(pointer_table[j].table.upper_level_descriptor_type))
 				continue;
 			
-			page_table = _mapping_push(POINTER_LEVEL_FIELD_ADDR(pointer_table[j].table.table_address));
+			ph = POINTER_LEVEL_FIELD_ADDR(pointer_table[j].table.table_address);
+			page_table = (void *) REPAGE(ph, _mapping_push(ph));
+			kprintf(LOG_LEVEL_DEBUG, "    [%u] page table 0x%X -> 0x%X (0x%X)\n", j, (uint32_t) page_table, mmu040_test_read(page_table), POINTER_LEVEL_FIELD_ADDR(pointer_table[j].table.table_address));
+			
 			
 			for(k = 0; k < PAGE_DESCRIPTORS; k++) {
 				if(!PDT_IS_RESIDENT(page_table[k].page.page_descriptor_type))
 					continue;
 				
-				if(PAGE_LEVEL_FIELD_ADDR(page_table[k].page.physical_address) >= free_frame) {
-					free_frame = (page_table[k].page.physical_address << PAGE_LEVEL_DESCRIPTOR_BITS) + MMU_PAGE_SIZE;
+				ph = PAGE_LEVEL_FIELD_ADDR(page_table[k].page.physical_address);
+				kprintf(LOG_LEVEL_DEBUG, "        [%u] page 0x%X\n", k, (uint32_t) ph);
+				
+				if(ph >= free_frame) {
+					free_frame = ph + MMU_PAGE_SIZE;
 					_mem_layout.free_frames--;
 				}
 			}
