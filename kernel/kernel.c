@@ -64,10 +64,13 @@ int main(int argc, char **argv) {
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
+	
+	ksbrk(4096);
 	for(;;);
 	
 	pid_t pid;
 	pid = process_create(0, 0);
+	kprintf(LOG_LEVEL_DEBUG, "process created\n");
 	process_switch_to(pid);
 	process_set_pc(pid, init = elf_load(argv[3]));
 	

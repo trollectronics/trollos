@@ -166,7 +166,6 @@ static PhysicalAddress _build_free_frame_list() {
 	}
 	
 	PhysicalAddress free, *frame;
-	
 	for(free = free_frame; free < (MMU_DRAM_START + _mem_layout.total_frames*MMU_PAGE_SIZE); free += MMU_PAGE_SIZE) {
 		frame = _mapping_push(free);
 		*frame = _mem_layout.free_frame;
@@ -210,7 +209,7 @@ void mmu040_init() {
 		_mapper.page[i] = (void *) (MEM_MMU_TABLE_AREA + PAGE_SIZE*2 + PAGE_SIZE*i);
 	}
 	
-	_mem_layout.total_frames = (64*1024*1024) / MMU_PAGE_SIZE;
+	_mem_layout.total_frames = (64UL*1024UL*1024UL) / MMU_PAGE_SIZE;
 	_mem_layout.free_frames = _mem_layout.total_frames;
 	_mem_layout.free_frame = (PhysicalAddress) NULL;
 	
@@ -348,7 +347,7 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	Mmu040RootTableDescriptor *root_table;
 	Mmu040PointerTableDescriptor *pointer_table;
 	Mmu040PageTableDescriptor *page_table;
-	PhysicalAddress frame;
+	PhysicalAddress frame, ph;
 	
 	if(supervisor)
 		mmu040_get_srp(&rp);
@@ -357,13 +356,14 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	
 	_get_table_indices(virt, &root_table_index, &pointer_table_index, &page_table_index);
 	
-	root_table = _mapping_push(rp.root_pointer << 9);
-	//root_
+	ph = rp.root_pointer << SRP_URP_DESCRIPTOR_BITS;
+	root_table = REPAGE(ph, _mapping_push(ph));
 	
 	if(UDT_IS_RESIDENT(root_table[root_table_index].table.upper_level_descriptor_type)) {
-		pointer_table = _mapping_push(ROOT_LEVEL_FIELD_ADDR(root_table[root_table_index].table.table_address));
+		ph = ROOT_LEVEL_FIELD_ADDR(root_table[root_table_index].table.table_address);
+		pointer_table = (void *) REPAGE(ph, _mapping_push(ph));
 	} else {
-		PhysicalAddress ph = _alloc_frame();
+		ph = _alloc_frame();
 		pointer_table = _mapping_push(ph);
 		
 		root_table[root_table_index].table.table_address = ROOT_LEVEL_ADDR_FIELD(ph);
@@ -371,9 +371,10 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	}
 	
 	if(UDT_IS_RESIDENT(pointer_table[pointer_table_index].table.upper_level_descriptor_type)) {
-		page_table = _mapping_push(POINTER_LEVEL_FIELD_ADDR(pointer_table[pointer_table_index].table.table_address));
+		ph = POINTER_LEVEL_FIELD_ADDR(pointer_table[pointer_table_index].table.table_address);
+		page_table = (void *) REPAGE(ph, _mapping_push(ph));
 	} else {
-		PhysicalAddress ph = _alloc_frame();
+		ph = _alloc_frame();
 		page_table = _mapping_push(ph);
 		
 		pointer_table[pointer_table_index].table.table_address = POINTER_LEVEL_ADDR_FIELD(ph);
@@ -386,6 +387,7 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	}
 	
 	frame = _alloc_frame();
+	for(;;);
 	
 	page_table[page_table_index].page.physical_address = PAGE_LEVEL_ADDR_FIELD(frame);
 	page_table[page_table_index].page.supervisor = supervisor;

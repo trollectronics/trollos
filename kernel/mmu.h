@@ -6,7 +6,7 @@
 typedef uint32_t PhysicalAddress;
 #define MMU_PAGE_MASK 0x00000FFFUL
 #define MMU_PAGE_SIZE 4096U
-#define MMU_DRAM_START (16*1024*1024)
+#define MMU_DRAM_START 0x80000000UL
 
 #define mmu_init mmu040_init
 #define mmu_print_status mmu040_print_status
