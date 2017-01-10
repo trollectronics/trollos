@@ -145,7 +145,7 @@ union Mmu040PageTableDescriptor {
 void mmu040_init();
 void *mmu040_allocate_frame(uint32_t virtual_address, bool write_protected);
 void mmu_bus_error();
-uint32_t mmu_test_read(void *addr);
+uint32_t mmu040_test_read(void *addr);
 void *mmu040_get_physical_manual(uint32_t virtual_address);
 //void *mmu_get_physical(void *phys);
 void mmu040_zero_4k(void *addr);

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <limits.h>
 #include <mem_addr.h>
 #include <chipset.h>
 #include <errno.h>
@@ -13,12 +14,24 @@
 
 #define SRP_URP_DESCRIPTOR_BITS 9
 
-#define ROOT_LEVEL_DESCRIPTOR_BITS 9
+#define ROOT_LEVEL_DESCRIPTOR_BITS 7
 #define ROOT_LEVEL_DESCRIPTORS (1 << ROOT_LEVEL_DESCRIPTOR_BITS)
 #define POINTER_LEVEL_DESCRIPTOR_BITS 7
 #define POINTER_LEVEL_DESCRIPTORS (1 << POINTER_LEVEL_DESCRIPTOR_BITS)
 #define PAGE_LEVEL_DESCRIPTOR_BITS 6
 #define PAGE_LEVEL_DESCRIPTORS (1 << PAGE_LEVEL_DESCRIPTOR_BITS)
+
+#define ROOT_LEVEL_ADDR_FIELD(a) ((a) >> (POINTER_LEVEL_DESCRIPTOR_BITS + 2))
+#define ROOT_LEVEL_FIELD_ADDR(f) ((f) << (POINTER_LEVEL_DESCRIPTOR_BITS + 2))
+#if PAGE_SIZE == 4096
+#define POINTER_LEVEL_ADDR_FIELD(a) ((a) >> (PAGE_LEVEL_DESCRIPTOR_BITS + 1))
+#define POINTER_LEVEL_FIELD_ADDR(f) ((f) << (PAGE_LEVEL_DESCRIPTOR_BITS + 1))
+#else
+#define POINTER_LEVEL_ADDR_FIELD(a) ((a) >> (PAGE_LEVEL_DESCRIPTOR_BITS + 2))
+#define POINTER_LEVEL_FIELD_ADDR(f) ((f) << (PAGE_LEVEL_DESCRIPTOR_BITS + 2))
+#endif
+#define PAGE_LEVEL_ADDR_FIELD(a) ((a) >> (PAGE_OFFSET_BITS))
+#define PAGE_LEVEL_FIELD_ADDR(f) ((f) << (PAGE_OFFSET_BITS))
 
 #define PAGE_DESCRIPTORS_8K 32
 #define PAGE_DESCRIPTORS_4K 64
@@ -55,7 +68,7 @@ static void *_mapping_push(uint32_t physical_address) {
 	int mapping = _mapper.mapping;
 	Mmu040PageTableDescriptor desc = {
 		.page = {
-			.physical_address = ((physical_address) >> PAGE_OFFSET_BITS),
+			.physical_address = PAGE_LEVEL_ADDR_FIELD(physical_address),
 			.supervisor = true,
 			.page_descriptor_type = MMU040_PAGE_DESCRIPTOR_TYPE_RESIDENT,
 		},
@@ -117,19 +130,19 @@ static PhysicalAddress _build_free_frame_list() {
 		if(!UDT_IS_RESIDENT(_root_td[i].table.upper_level_descriptor_type))
 			continue;
 		
-		pointer_table = _mapping_push(_root_td[i].table.table_address << ROOT_LEVEL_DESCRIPTOR_BITS);
+		pointer_table = _mapping_push(ROOT_LEVEL_FIELD_ADDR(_root_td[i].table.table_address));
 		
 		for(j = 0; j < POINTER_LEVEL_DESCRIPTORS; j++) {
 			if(!UDT_IS_RESIDENT(pointer_table[j].table.upper_level_descriptor_type))
 				continue;
 			
-			page_table = _mapping_push(pointer_table[j].table.table_address << POINTER_LEVEL_DESCRIPTOR_BITS);
+			page_table = _mapping_push(POINTER_LEVEL_FIELD_ADDR(pointer_table[j].table.table_address));
 			
 			for(k = 0; k < PAGE_DESCRIPTORS; k++) {
 				if(!PDT_IS_RESIDENT(page_table[k].page.page_descriptor_type))
 					continue;
 				
-				if((page_table[k].page.physical_address << PAGE_LEVEL_DESCRIPTOR_BITS) >= free_frame) {
+				if(PAGE_LEVEL_FIELD_ADDR(page_table[k].page.physical_address) >= free_frame) {
 					free_frame = (page_table[k].page.physical_address << PAGE_LEVEL_DESCRIPTOR_BITS) + MMU_PAGE_SIZE;
 					_mem_layout.free_frames--;
 				}
@@ -155,8 +168,8 @@ static PhysicalAddress _build_free_frame_list() {
 
 static void _get_table_indices(void *virtual_address, uint32_t *root_table_index, uint32_t *pointer_table_index, uint32_t *page_table_index) {
 	uint32_t virtual = (uint32_t) virtual_address;
-	*root_table_index = (virtual >> (32 - (ROOT_LEVEL_DESCRIPTOR_BITS - 2))) & (ROOT_LEVEL_DESCRIPTORS - 1);
-	*pointer_table_index = (virtual >> (32 - (ROOT_LEVEL_DESCRIPTOR_BITS - 2) - (POINTER_LEVEL_DESCRIPTOR_BITS - 2))) & (POINTER_LEVEL_DESCRIPTORS - 1);
+	*root_table_index = (virtual >> (32 - ROOT_LEVEL_DESCRIPTOR_BITS)) & (ROOT_LEVEL_DESCRIPTORS - 1);
+	*pointer_table_index = (virtual >> (32 - ROOT_LEVEL_DESCRIPTOR_BITS - POINTER_LEVEL_DESCRIPTOR_BITS)) & (POINTER_LEVEL_DESCRIPTORS - 1);
 	*page_table_index = (virtual >> PAGE_OFFSET_BITS) & (PAGE_LEVEL_DESCRIPTORS - 1);
 }
 
@@ -186,7 +199,7 @@ void mmu040_init() {
 		_mapper.page[i] = (void *) (MEM_MMU_TABLE_AREA + PAGE_SIZE*2 + PAGE_SIZE*i);
 	}
 	
-	_mem_layout.total_frames = *CHIPSET_IO(CHIPSET_IO_PORT_GET_RAM_SIZE) / MMU_PAGE_SIZE;
+	_mem_layout.total_frames = (64*1024*1024) / MMU_PAGE_SIZE;
 	_mem_layout.free_frames = _mem_layout.total_frames;
 	_mem_layout.free_frame = (PhysicalAddress) NULL;
 	
@@ -337,33 +350,33 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	//root_
 	
 	if(UDT_IS_RESIDENT(root_table[root_table_index].table.upper_level_descriptor_type)) {
-		pointer_table = _mapping_push(root_table[root_table_index].table.table_address << ROOT_LEVEL_DESCRIPTOR_BITS);
+		pointer_table = _mapping_push(ROOT_LEVEL_FIELD_ADDR(root_table[root_table_index].table.table_address));
 	} else {
 		PhysicalAddress ph = _alloc_frame();
 		pointer_table = _mapping_push(ph);
 		
-		root_table[root_table_index].table.table_address = (ph >> ROOT_LEVEL_DESCRIPTOR_BITS);
+		root_table[root_table_index].table.table_address = ROOT_LEVEL_ADDR_FIELD(ph);
 		root_table[root_table_index].table.upper_level_descriptor_type = MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_RESIDENT;
 	}
 	
 	if(UDT_IS_RESIDENT(pointer_table[pointer_table_index].table.upper_level_descriptor_type)) {
-		page_table = _mapping_push(pointer_table[pointer_table_index].table.table_address << POINTER_LEVEL_DESCRIPTOR_BITS);
+		page_table = _mapping_push(POINTER_LEVEL_FIELD_ADDR(pointer_table[pointer_table_index].table.table_address));
 	} else {
 		PhysicalAddress ph = _alloc_frame();
 		page_table = _mapping_push(ph);
 		
-		pointer_table[pointer_table_index].table.table_address = (ph >> POINTER_LEVEL_DESCRIPTOR_BITS);
+		pointer_table[pointer_table_index].table.table_address = POINTER_LEVEL_ADDR_FIELD(ph);
 		pointer_table[pointer_table_index].table.upper_level_descriptor_type = MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_RESIDENT;
 	}
 	
 	if(PDT_IS_RESIDENT(page_table[page_table_index].page.page_descriptor_type)) {
 		page_table[page_table_index].page.write_protected = write_protected;
-		_free_frame(page_table[page_table_index].page.physical_address << PAGE_OFFSET_BITS);
+		_free_frame(PAGE_LEVEL_FIELD_ADDR(page_table[page_table_index].page.physical_address));
 	}
 	
 	frame = _alloc_frame();
 	
-	page_table[page_table_index].page.physical_address =  (frame >> PAGE_OFFSET_BITS);
+	page_table[page_table_index].page.physical_address = PAGE_LEVEL_ADDR_FIELD(frame);
 	page_table[page_table_index].page.supervisor = supervisor;
 	page_table[page_table_index].page.cache_mode = MMU040_CACHE_MODE_CACHE_COPY_BACK;
 	page_table[page_table_index].page.write_protected = write_protected;

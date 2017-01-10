@@ -36,7 +36,6 @@ int main(int argc, char **argv) {
 	terminal_puts("\nTrollOS kernel\n");
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
 	
-#if 0	
 	terminal_puts("argv = { ");
 	if(argc > 0) {
 		terminal_set_fg(TERMINAL_COLOR_LIGHT_CYAN);
@@ -59,22 +58,13 @@ int main(int argc, char **argv) {
 			break;
 		}
 	}
-#else
-	int_init();
-	//kprintf(LOG_LEVEL_INFO, "arne\n");
-	printf("arne\n");
-	for(;;);
-	log_set_level(LOG_LEVEL_DEBUG);
-#endif
-	module_init();
 	
+	module_init();
 	mmu_init();
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
+	for(;;);
 	int_init();
-	
-	set_debug_traps();
-	breakpoint();
 	
 	pid_t pid;
 	pid = process_create(0, 0);
