@@ -18,6 +18,7 @@
 FileModuleMap filetable[MAX_TOTAL_FILES];
 
 void panic(const char *message) {
+	int_disable();
 	terminal_set_bg(TERMINAL_COLOR_BLACK);
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_RED);
 	terminal_set_pos(0, 29);
@@ -73,7 +74,9 @@ int main(int argc, char **argv) {
 	process_set_pc(pid, init = elf_load(bin_init));
 	
 	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
-	//int_set_handler(CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC, process_isr);
+	int_set_handler(CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC, process_isr);
+	int_disable();
+	int_perihperal_enable(CHIPSET_INT_NUM_VGA_VSYNC);
 	process_jump(init);
 	
 	panic("kernel main() has returned");

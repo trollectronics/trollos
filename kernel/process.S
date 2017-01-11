@@ -1,15 +1,19 @@
-
+.section .bss
 .align 2
+.global regs_tmp
 regs_tmp:
 	.space 256
 
+.section .text
 .align 2
 .global process_isr
 process_isr:
 	movem.l %a0-%a6/%d0-%d7, (regs_tmp)
 	link %fp, #0
-	
+
 	#set up userspace stack frame with stack pointer, return address, etc
+	
+	jsr.l int_vga_handle
 	
 	pea regs_tmp
 	
@@ -35,7 +39,6 @@ process_isr:
 	move.l %a0, %usp
 	
 	unlk %fp
-	move.l #1, (0x200014)
 	movem.l 12(%d0), %a0-%a6/%d0-%d7
 	rte
 

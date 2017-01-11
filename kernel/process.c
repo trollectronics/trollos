@@ -45,6 +45,9 @@ pid_t process_create(uid_t uid, gid_t gid) {
 		proc->file[i] = -1;
 	
 	_process[pid] = proc;
+	
+	kprintf(LOG_LEVEL_INFO, "Created process %i\n", pid);
+	
 	return pid;
 }
 
@@ -142,6 +145,7 @@ Process *process_from_pid(pid_t pid) {
 
 void *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter, void *regs_tmp) {
 	pid_t next;
+	
 	_process[_process_current]->reg.pc = program_counter;
 	_process[_process_current]->reg.stack = stack_pointer;
 	_process[_process_current]->reg.status = status_reg & 0xFFFF;

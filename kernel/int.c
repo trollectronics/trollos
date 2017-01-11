@@ -33,7 +33,10 @@ void int_set_handler(uint32_t i, void *handler) {
 	int_vector[i] = handler;
 }
 
+void int_perihperal_enable(uint32_t n) {
+	*CHIPSET_IO(CHIPSET_IO_PORT_INTERRUPT_ENABLE) = (1 << n);
+}
+
 void int_vga_handle() {
-	
-	*CHIPSET_IO(CHIPSET_IO_PORT_IRQ_ACK_VGA) = 0;
+	*CHIPSET_IO(CHIPSET_IO_PORT_INTERRUPT_ACK) = (1 << CHIPSET_INT_NUM_VGA_VSYNC);
 }

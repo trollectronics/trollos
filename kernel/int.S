@@ -49,13 +49,13 @@ int_vga:
 	move.l %d0, -(%sp)
 	move.l %d1, -(%sp)
 	
-	#jsr.l int_vga_handle
+	jsr.l int_vga_handle
 	
 	move.l (%sp)+, %d1
 	move.l (%sp)+, %d0
 	move.l (%sp)+, %a1
 	move.l (%sp)+, %a0
-	jmp process_isr
+	rte
 
 arne: .asciz "syscall %u with %u %u %u %u %u\n"
 
