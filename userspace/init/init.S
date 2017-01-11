@@ -10,7 +10,7 @@ _start:
 	move.l #1, %d0
 	trap #10
 	cmp #0, %d0
-1:	beq 1b
+1:	bne 1b
 	
 	move.l #0xFFFF, %d0
 1:
