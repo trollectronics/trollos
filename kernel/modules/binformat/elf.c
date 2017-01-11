@@ -11,12 +11,15 @@ static void alloc(void *virt, bool write_protect, void *data, uint32_t size) {
 	uint32_t base = ((uint32_t) virt) & ~MMU_PAGE_MASK;
 	uint32_t count = (size + (MMU_PAGE_SIZE - 1))/MMU_PAGE_SIZE;
 	uint32_t offset = ((uint32_t) virt) & MMU_PAGE_MASK;
-	void *frame;
+	PhysicalAddress frame;
+	void *p;
 	
 	for(i = 0; i < count; i++) {
-		frame = mmu_alloc_at((void *) (base + i*MMU_PAGE_SIZE), false, write_protect);
+		p = (void *) (base + i*MMU_PAGE_SIZE);
+		frame = mmu_alloc_at(p, false, write_protect);
+		
 		if(data) {
-			memcpy(frame + offset, data, size & MMU_PAGE_MASK);
+			mmu040_fill_frame(frame, offset, data, size & MMU_PAGE_MASK);
 			data = (void *) ((((uint32_t) data) & ~MMU_PAGE_MASK) + MMU_PAGE_SIZE);
 			size -= MMU_PAGE_SIZE - offset;
 			offset = 0;

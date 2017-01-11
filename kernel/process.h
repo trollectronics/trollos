@@ -34,7 +34,7 @@ struct Process {
 	ProcessState state;
 	ProcessCallback *callback;
 	int return_value;
-	MmuRegRootPointer page_table;
+	MmuUserspaceHandle userspace;
 	uid_t user;
 	gid_t group;
 	time_t time_started;

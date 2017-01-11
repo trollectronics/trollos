@@ -99,6 +99,7 @@ static PhysicalAddress _alloc_frame() {
 	
 	_mem_layout.free_frames--;
 	free = _mem_layout.free_frame;
+	kprintf(LOG_LEVEL_DEBUG, "alloc frame 0x%X\n", free);
 	
 	frame = _mapping_push(free);
 	
@@ -248,11 +249,14 @@ void mmu040_init() {
 //}
 
 
-int mmu_init_userspace(Mmu040RegRootPointer *urp) {
+int mmu040_init_userspace(MmuUserspaceHandle *userspace) {
 	PhysicalAddress directory;
+	Mmu040RegRootPointer *urp;
 	
-	if(!urp)
+	if(!userspace)
 		return -EINVAL;
+	
+	urp = (void *) userspace;
 	
 	memset(urp, 0, sizeof(Mmu040RegRootPointer));
 	//kprintf(LOG_LEVEL_INFO, "Setting up empty userspace\n");
@@ -260,13 +264,13 @@ int mmu_init_userspace(Mmu040RegRootPointer *urp) {
 		return -ENOMEM;
 	//memset(dir, 0, MMU_PAGE_SIZE);
 	
-	urp->root_pointer = directory >> 9;
-	//mmu_set_crp(&crp);
+	urp->root_pointer = directory >> SRP_URP_DESCRIPTOR_BITS;
+	mmu040_set_urp(urp);
 	
 	return 0;
 }
 
-void mmu_free_userspace(Mmu040RegRootPointer *crp) {
+void mmu040_free_userspace(MmuUserspaceHandle *userspace) {
 	//MmuDescriptorShort *dir;
 	//MmuDescriptorShort *page;
 	//int i, j;
@@ -290,7 +294,7 @@ void mmu_free_userspace(Mmu040RegRootPointer *crp) {
 	//}
 }
 
-int mmu_clone_userspace(Mmu040RegRootPointer *from, Mmu040RegRootPointer *to) {
+int mmu040_clone_userspace(MmuUserspaceHandle *from, MmuUserspaceHandle *to) {
 	/*MmuDescriptorShort *from_dir, *to_dir;
 	MmuDescriptorShort *from_page, *to_page;
 	void *p;
@@ -341,6 +345,15 @@ int mmu_clone_userspace(Mmu040RegRootPointer *from, Mmu040RegRootPointer *to) {
 	return 0;
 }
 
+int mmu040_switch_userspace(MmuUserspaceHandle *userspace) {
+	if(!userspace)
+		return -EINVAL;
+	
+	mmu040_set_urp((void *) userspace);
+	
+	return 0;
+}
+
 PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) {
 	Mmu040RegRootPointer rp;
 	uint32_t root_table_index, pointer_table_index, page_table_index;
@@ -357,7 +370,7 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	_get_table_indices(virt, &root_table_index, &pointer_table_index, &page_table_index);
 	
 	ph = rp.root_pointer << SRP_URP_DESCRIPTOR_BITS;
-	root_table = REPAGE(ph, _mapping_push(ph));
+	root_table = REPAGE(ph, _mapping_push(ph));;
 	
 	if(UDT_IS_RESIDENT(root_table[root_table_index].table.upper_level_descriptor_type)) {
 		ph = ROOT_LEVEL_FIELD_ADDR(root_table[root_table_index].table.table_address);
@@ -387,7 +400,6 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	}
 	
 	frame = _alloc_frame();
-	for(;;);
 	
 	page_table[page_table_index].page.physical_address = PAGE_LEVEL_ADDR_FIELD(frame);
 	page_table[page_table_index].page.supervisor = supervisor;
@@ -404,6 +416,20 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 
 void mmu_free_at(void *virt, bool supervisor) {
 	//TODO: implement
+}
+
+void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned int size) {
+	uint8_t *map;
+	uint8_t *src_byte = src;
+	int i;
+	
+	map = _mapping_push(frame);
+	
+	for(i = 0; i < size; i++) {
+		map[i + offset] = src_byte[i];
+	}
+	
+	_mapping_pop();
 }
 
 void mmu_print_status() {

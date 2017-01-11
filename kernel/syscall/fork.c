@@ -16,7 +16,7 @@ static pid_t _fork(void) {
 		return -EAGAIN;
 	
 	kprintf(LOG_LEVEL_DEBUG, "fork: created process %i\n", new->pid);
-	if(mmu_clone_userspace(&current->page_table, &new->page_table) < 0) {
+	if(mmu_clone_userspace(&current->userspace, &new->userspace) < 0) {
 		process_exit(pid, 1);
 		new->state = PROCESS_STATE_ZOMBIE;
 		process_wait(pid);

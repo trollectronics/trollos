@@ -3,7 +3,7 @@ TOPDIR	=	.
 include config.mk
 
 # Sub directories to build
-SUBDIRS	=	 kernel userspace
+SUBDIRS	=	 userspace kernel
 
 .PHONY: all clean
 .PHONY: $(SUBDIRS)

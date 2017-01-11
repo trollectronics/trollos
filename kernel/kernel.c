@@ -13,6 +13,7 @@
 #include "process.h"
 #include "kernel.h"
 #include "debug.h"
+#include "init.h"
 
 FileModuleMap filetable[MAX_TOTAL_FILES];
 
@@ -65,17 +66,14 @@ int main(int argc, char **argv) {
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
 	
-	ksbrk(4096);
-	for(;;);
-	
 	pid_t pid;
 	pid = process_create(0, 0);
 	kprintf(LOG_LEVEL_DEBUG, "process created\n");
 	process_switch_to(pid);
-	process_set_pc(pid, init = elf_load(argv[3]));
+	process_set_pc(pid, init = elf_load(bin_init));
 	
 	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
-	int_set_handler(CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC, process_isr);
+	//int_set_handler(CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC, process_isr);
 	process_jump(init);
 	
 	panic("kernel main() has returned");

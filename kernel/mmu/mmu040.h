@@ -4,12 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/* Use 4k pages */
-#define PAGE_DESCRIPTORS PAGE_DESCRIPTORS_4K
-#define PAGE_OFFSET_BITS 12
-#define PAGE_SIZE (1 << PAGE_OFFSET_BITS)
-
-#define MEM_MMU_TABLE_AREA (16UL*1024UL*1024UL)
+#include <mmu.h>
 
 typedef enum Mmu040PageSize Mmu040PageSize;
 enum Mmu040PageSize {
@@ -148,6 +143,14 @@ void mmu_bus_error();
 uint32_t mmu040_test_read(void *addr);
 void *mmu040_get_physical_manual(uint32_t virtual_address);
 //void *mmu_get_physical(void *phys);
+
+int mmu040_init_userspace(MmuUserspaceHandle *userspace);
+void mmu040_free_userspace(MmuUserspaceHandle *userspace);
+int mmu040_clone_userspace(MmuUserspaceHandle *from, MmuUserspaceHandle *to);
+int mmu040_switch_userspace(MmuUserspaceHandle *userspace);
+
+void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned int size);
+
 void mmu040_zero_4k(void *addr);
 void mmu040_set_tc(Mmu040RegTranslationControl *tc);
 void mmu040_get_tc(Mmu040RegTranslationControl *tc);

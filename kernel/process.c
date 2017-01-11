@@ -39,7 +39,7 @@ pid_t process_create(uid_t uid, gid_t gid) {
 	proc->group = gid;
 	//TODO: system_get_ticks()
 	proc->time_started = 1337;
-	mmu_init_userspace(&proc->page_table);
+	mmu_init_userspace(&proc->userspace);
 	
 	for(i = 0; i < MAX_PROCESS_FILES; i++)
 		proc->file[i] = -1;
@@ -83,7 +83,7 @@ void process_exit(pid_t pid, int return_value) {
 		//file_close(process[pid]->file[i]);
 	}
 	
-	mmu_free_userspace(&_process[pid]->page_table);
+	mmu_free_userspace(&_process[pid]->userspace);
 	_process[pid]->return_value = return_value;
 	_process[pid]->state = PROCESS_STATE_ZOMBIE;
 }
@@ -125,7 +125,7 @@ int process_wait(pid_t pid) {
 }
 
 void process_switch_to(pid_t pid) {
-	mmu_set_crp(&_process[pid]->page_table);
+	mmu_switch_userspace(&_process[pid]->userspace);
 	mmu_invalidate_all();
 	_process_current = pid;
 }
