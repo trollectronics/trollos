@@ -271,6 +271,7 @@ int mmu040_init_userspace(MmuUserspaceHandle *userspace) {
 }
 
 void mmu040_free_userspace(MmuUserspaceHandle *userspace) {
+	kprintf(LOG_LEVEL_ERROR, "mmu040_free_userspace not implemented\n");
 	//MmuDescriptorShort *dir;
 	//MmuDescriptorShort *page;
 	//int i, j;
