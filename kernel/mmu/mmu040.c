@@ -42,7 +42,7 @@
 //Replace the base part of an address (a) with a new base (b)
 #define REPAGE(a, b) ((((uint32_t) (b)) & ~MMU_PAGE_MASK) + (((uint32_t) (a)) & (MMU_PAGE_MASK)))
 
-#define MAPPER_PAGES 4
+#define MAPPER_PAGES 10
 
 struct {
 	uint32_t free_frames;
@@ -295,53 +295,106 @@ void mmu040_free_userspace(MmuUserspaceHandle *userspace) {
 }
 
 int mmu040_clone_userspace(MmuUserspaceHandle *from, MmuUserspaceHandle *to) {
-	/*MmuDescriptorShort *from_dir, *to_dir;
-	MmuDescriptorShort *from_page, *to_page;
-	void *p;
-	int i, j;
+	Mmu040RegRootPointer *urp_from, *urp_to;
+	Mmu040RootTableDescriptor *root_table_from, *root_table_to;
+	Mmu040PointerTableDescriptor *pointer_table_from, *pointer_table_to;
+	Mmu040PageTableDescriptor *page_table_from, *page_table_to;
+	PhysicalAddress ph;
+	uint32_t i, j, k;
+	uint8_t *page_from, *page_to;
 	
 	if(!(from && to))
 		return -EINVAL;
 	
-	if(from->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT || to->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
-		return -EFAULT;
+	urp_from = (void *) from;
+	urp_to = (void *) to;
 	
-	from_dir = (void *) (from->table_address << 4);
-	to_dir = (void *) (to->table_address << 4);
-	for(i = 0; i < 1024; i++) {
-		if(from_dir[i].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT) {
-			to_dir[i].table.descriptor_type = MMU_DESCRIPTOR_TYPE_INVALID;
+	ph = urp_from->root_pointer << SRP_URP_DESCRIPTOR_BITS;
+	root_table_from = (void *) REPAGE(ph, _mapping_push(ph));
+	
+	ph = urp_to->root_pointer << SRP_URP_DESCRIPTOR_BITS;
+	root_table_to = (void *) REPAGE(ph, _mapping_push(ph));
+	
+	for(i = 0; i < ROOT_LEVEL_DESCRIPTORS; i++) {
+		if(!UDT_IS_RESIDENT(root_table_from[i].table.upper_level_descriptor_type)) {
+			root_table_to[i].table.upper_level_descriptor_type = MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_INVALID;
 			continue;
 		}
 		
-		from_page = (void *) (from_dir[i].table.table_address << 4);
-		kprintf(LOG_LEVEL_DEBUG, "clone: table at 0x%X\n", MMU_PAGE_SIZE*1024*i);
-		if(!(to_page = mmu_alloc_frame()))
+		if(!(ph = _alloc_frame())) {
+			_mapping_pop();
+			_mapping_pop();
 			return -ENOMEM;
-		to_dir[i].table.descriptor_type = MMU_DESCRIPTOR_TYPE_TABLE_SHORT;
-		to_dir[i].table.used = false;
-		to_dir[i].table.write_protected = false;
-		to_dir[i].table.table_address = ((uint32_t) to_page) >> 4;
+		}
 		
-		for(j = 0; j < 1024; j++) {
-			if(from_page[j].page.descriptor_type != MMU_DESCRIPTOR_TYPE_PAGE) {
-				to_page[j].page.descriptor_type = MMU_DESCRIPTOR_TYPE_INVALID;
+		pointer_table_to = _mapping_push(ph);
+		root_table_to[i].table.table_address = ROOT_LEVEL_ADDR_FIELD(ph);
+		root_table_to[i].table.upper_level_descriptor_type = MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_RESIDENT;
+		
+		ph = ROOT_LEVEL_FIELD_ADDR(root_table_from[i].table.table_address);
+		pointer_table_from = (void *) REPAGE(ph, _mapping_push(ph));
+		
+		for(j = 0; j < POINTER_LEVEL_DESCRIPTORS; j++) {
+			if(!UDT_IS_RESIDENT(pointer_table_from[j].table.upper_level_descriptor_type)) {
+				pointer_table_to[j].table.upper_level_descriptor_type = MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_INVALID;
 				continue;
 			}
 			
-			//TODO: refcount, share mappings
-			if(!(p = mmu_alloc_frame()))
+			if(!(ph = _alloc_frame())) {
+				_mapping_pop();
+				_mapping_pop();
+				_mapping_pop();
+				_mapping_pop();
 				return -ENOMEM;
-			memcpy(p, (void *) (from_page[j].page.page_address << 8), MMU_PAGE_SIZE);
+			}
 			
-			to_page[j].page.descriptor_type = MMU_DESCRIPTOR_TYPE_PAGE;
-			to_page[j].page.cache_inhibit = false;			
-			to_page[j].page.modified = false;			
-			to_page[j].page.used = false;			
-			to_page[j].page.write_protected = from_page[j].page.write_protected;
-			to_page[j].page.page_address = ((uint32_t) p) >> 8;
+			page_table_to = _mapping_push(ph);
+			pointer_table_to[j].table.table_address = POINTER_LEVEL_ADDR_FIELD(ph);
+			pointer_table_to[j].table.upper_level_descriptor_type = MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_RESIDENT;
+			
+			ph = POINTER_LEVEL_FIELD_ADDR(pointer_table_from[j].table.table_address);
+			page_table_from = (void *) REPAGE(ph, _mapping_push(ph));
+			
+			for(k = 0; k < PAGE_DESCRIPTORS; k++) {
+				if(!PDT_IS_RESIDENT(page_table_from[k].page.page_descriptor_type)) {
+					page_table_to[k].page.page_descriptor_type = MMU040_PAGE_DESCRIPTOR_TYPE_INVALID;
+					continue;
+				}
+				
+				if(!(ph = _alloc_frame())) {
+					_mapping_pop();
+					_mapping_pop();
+					_mapping_pop();
+					_mapping_pop();
+					_mapping_pop();
+					_mapping_pop();
+					return -ENOMEM;
+				}
+				
+				page_to = _mapping_push(ph);
+				page_table_to[k].whole = page_table_from[k].whole;
+				page_table_to[k].page.physical_address = PAGE_LEVEL_ADDR_FIELD(ph);
+				
+				ph = PAGE_LEVEL_FIELD_ADDR(page_table_from[k].page.physical_address);
+				page_from = _mapping_push(ph);
+				
+				memcpy(page_to, page_from, MMU_PAGE_SIZE);
+				
+				_mapping_pop();
+				_mapping_pop();
+			}
+			
+			_mapping_pop();
+			_mapping_pop();
 		}
-	}*/
+		
+		_mapping_pop();
+		_mapping_pop();
+	}
+	
+	_mapping_pop();
+	_mapping_pop();
+	
 	return 0;
 }
 
@@ -370,7 +423,7 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	_get_table_indices(virt, &root_table_index, &pointer_table_index, &page_table_index);
 	
 	ph = rp.root_pointer << SRP_URP_DESCRIPTOR_BITS;
-	root_table = REPAGE(ph, _mapping_push(ph));;
+	root_table = (void *) REPAGE(ph, _mapping_push(ph));
 	
 	if(UDT_IS_RESIDENT(root_table[root_table_index].table.upper_level_descriptor_type)) {
 		ph = ROOT_LEVEL_FIELD_ADDR(root_table[root_table_index].table.table_address);
