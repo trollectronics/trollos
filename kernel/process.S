@@ -16,19 +16,15 @@ process_isr:
 	jsr.l int_vga_handle
 	
 	pea regs_tmp
-	
 	move.l 6(%fp), -(%sp)
-	
 	move.l %usp, %a0
 	move.l %a0, -(%sp)
-	
 	move.w 4(%fp), %d0
 	andi.l #0xFFFF, %d0
 	move.l %a0, -(%sp)
 	
 	jsr.l scheduler
-	addq.l #6, %sp
-	addq.l #6, %sp
+	adda.l #16, %sp
 	
 	
 	move.l (%d0), %a0
