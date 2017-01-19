@@ -24,7 +24,7 @@ void int_init() {
 	
 	int_vector[SYSCALL_TRAP + INT_OFFSET_TRAP] = int_syscall;
 	
-	int_vector[CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC] = int_stub;
+	int_vector[CHIPSET_INT_BASE + 1] = int_stub;
 	int_enable();
 	//*CHIPSET_IO(CHIPSET_IO_PORT_INTERRUPT_ENABLE) = 1;
 }
@@ -34,9 +34,10 @@ void int_set_handler(uint32_t i, void *handler) {
 }
 
 void int_perihperal_enable(uint32_t n) {
-	*CHIPSET_IO(CHIPSET_IO_PORT_INTERRUPT_ENABLE) = (1 << n);
+	*CHIPSET_IO(32 + n) = 0x0;
+	*CHIPSET_IO(n) = 0x1; //priority
 }
 
 void int_vga_handle() {
-	*CHIPSET_IO(CHIPSET_IO_PORT_INTERRUPT_ACK) = (1 << CHIPSET_INT_NUM_VGA_VSYNC);
+	*CHIPSET_IO(32 + CHIPSET_INT_NUM_VGA) = 0x0;
 }

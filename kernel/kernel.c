@@ -38,6 +38,8 @@ int main(int argc, char **argv) {
 	terminal_puts("\nTrollOS kernel\n");
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
 	
+	log_set_level(LOG_LEVEL_INFO);
+	
 	terminal_puts("argv = { ");
 	if(argc > 0) {
 		terminal_set_fg(TERMINAL_COLOR_LIGHT_CYAN);
@@ -74,9 +76,10 @@ int main(int argc, char **argv) {
 	process_set_pc(pid, init = elf_load(bin_init));
 	
 	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
-	int_set_handler(CHIPSET_INT_BASE + CHIPSET_INT_NUM_VGA_VSYNC, process_isr);
+	int_set_handler(CHIPSET_INT_BASE + 1, process_isr);
 	int_disable();
-	int_perihperal_enable(CHIPSET_INT_NUM_VGA_VSYNC);
+	int_perihperal_enable(CHIPSET_INT_NUM_VGA);
+	
 	process_jump(init);
 	
 	panic("kernel main() has returned");
