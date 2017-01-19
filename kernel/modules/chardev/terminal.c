@@ -7,17 +7,23 @@ struct {
 	uint32_t h_pixels;
 	uint32_t w_chars;
 	uint32_t h_chars;
-} static _terminal;
-
-#define	TERM_W			71
-#define	TERM_H			30
+	uint32_t w_font;
+	uint32_t h_font;
+} static _terminal = {
+	.w_pixels = 800,
+	.h_pixels = 480,
+	.w_chars = 100,
+	.h_chars = 30,
+	.w_font = 8,
+	.h_font = 16,
+};
 
 /* TODO: Implement cursor */
 
 void terminal_clear() {
 	volatile unsigned char *vgabuff = MEM_VGA_RAM;
 	int i;
-	for(i = 0; i < 800*480; i++) {
+	for(i = 0; i < _terminal.w_pixels*_terminal.h_pixels; i++) {
 		vgabuff[i] = 0;
 	}
 }
@@ -26,12 +32,12 @@ void terminal_scroll() {
 	volatile unsigned int *vgabuff = MEM_VGA_RAM;
 	int i, j;
 
-	for (i = 0; i < (TERM_H - 1) * 16; i++)
-		for (j = 0; j < 800/4; j++)
-			vgabuff[i * 800/4 + j] = vgabuff[(i + 16) * 800/4 + j];
-	for (i = (TERM_H - 1) * 16; i < TERM_H * 16; i++)
-		for (j = 0; j < 800/4; j++)
-			vgabuff[i * 800/4 + j] = 0;
+	for (i = 0; i < (_terminal.h_chars - 1) * _terminal.h_font; i++)
+		for (j = 0; j < _terminal.w_pixels/4; j++)
+			vgabuff[i * _terminal.w_pixels/4 + j] = vgabuff[(i + _terminal.h_font) * _terminal.w_pixels/4 + j];
+	for (i = (_terminal.h_chars - 1) * _terminal.h_font; i < _terminal.h_chars * _terminal.h_font; i++)
+		for (j = 0; j < _terminal.w_pixels/4; j++)
+			vgabuff[i * _terminal.w_pixels/4 + j] = 0;
 	return;
 }
 
@@ -41,23 +47,23 @@ void terminal_putc(int c, int fg, int bg) {
 	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	volatile unsigned char *vgabuff = MEM_VGA_RAM;
 
-	col = bi->term_x * 9;
-	row = bi->term_y * 16;
+	col = bi->term_x * _terminal.w_font;
+	row = bi->term_y * _terminal.h_font;
 	
-	for (i = 0; i < 16; i++) {
-		data = bi->font[c * 16 + i];
-		for (j = 0; j < 9; j++) {
-			vgabuff[(row + i) * 800 + col + j] = (data & 1) ? fg : bg;
+	for (i = 0; i < _terminal.h_font; i++) {
+		data = bi->font[c * _terminal.h_font + i];
+		for (j = 0; j < _terminal.w_font; j++) {
+			vgabuff[(row + i) * _terminal.w_pixels + col + j] = (data & 1) ? fg : bg;
 			data >>= 1;
 		}
 
 	}
 
 	bi->term_x++;
-	if (bi->term_x >= TERM_W)
+	if (bi->term_x >= _terminal.w_chars)
 		bi->term_y++, bi->term_x = 0;
-	if (bi->term_y >= TERM_H)
-		terminal_scroll(), bi->term_y = TERM_H - 1;
+	if (bi->term_y >= _terminal.h_chars)
+		terminal_scroll(), bi->term_y = _terminal.h_chars - 1;
 	return;
 }
 
@@ -67,7 +73,7 @@ void terminal_putc_ctrl(int c, int fg, int bg) {
 	
 	if (c == '\n') {
 		bi->term_x = 0, bi->term_y++;
-		if (bi->term_y == TERM_H)
+		if (bi->term_y == _terminal.h_chars)
 			terminal_scroll(), bi->term_y--;
 		return;
 	}
@@ -100,8 +106,8 @@ void terminal_set_bg(enum TerminalColor color) {
 void terminal_set_pos(int x, int y) {
 	volatile struct BiosInfo *bi = BIOS_INFO_ADDR;
 	
-	bi->term_x = x % (TERM_W + 1);
-	bi->term_y = y % (TERM_H + 1);
+	bi->term_x = x % (_terminal.w_chars + 1);
+	bi->term_y = y % (_terminal.h_chars + 1);
 }
 
 
