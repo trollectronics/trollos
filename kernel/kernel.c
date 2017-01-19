@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 	terminal_puts("\nTrollOS kernel\n");
 	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
 	
-	log_set_level(LOG_LEVEL_INFO);
+	//log_set_level(LOG_LEVEL_INFO);
 	
 	terminal_puts("argv = { ");
 	if(argc > 0) {
