@@ -2,6 +2,12 @@
 #include <bios_info.h>
 #include <mem_addr.h>
 
+struct {
+	uint32_t w_pixels;
+	uint32_t h_pixels;
+	uint32_t w_chars;
+	uint32_t h_chars;
+} static _terminal;
 
 #define	TERM_W			71
 #define	TERM_H			30
@@ -123,4 +129,8 @@ void terminal_puts(const char *str) {
 
 	for (; *ustr; terminal_putc_ctrl(*ustr, bi->def_fg, bi->def_bg), ustr++);
 	return;
+}
+
+int terminal_write(int pid, int id, void *ptr, uint32_t count) {
+	terminal_put_counted(ptr, count);
 }
