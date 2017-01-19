@@ -1,10 +1,10 @@
-#ifndef __FCNTL_H__
-#define	__FCNTL_H__
+#ifndef _FCNTL_H
+#define _FCNTL_H
 
-
-#define	SEEK_SET	0
-#define	SEEK_CUR	1
-#define	SEEK_END	2
-
+enum {
+	SEEK_SET,
+	SEEK_CUR,
+	SEEK_END,
+};
 
 #endif
