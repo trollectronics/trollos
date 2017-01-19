@@ -1,6 +1,8 @@
 #ifndef __TERMINAL_H__
 #define	__TERMINAL_H__
 
+#include <stdint.h>
+
 typedef enum TerminalColor TerminalColor;
 enum TerminalColor {
 	TERMINAL_COLOR_BLACK,

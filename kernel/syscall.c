@@ -41,9 +41,6 @@ int32_t syscall_read(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3,
 	return 0;
 }
 
-int32_t syscall_write(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
-	return 0;
-}
 
 int32_t syscall_open(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
 	return 0;
