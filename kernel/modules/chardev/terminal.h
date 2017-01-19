@@ -29,4 +29,6 @@ void terminal_set_fg(enum TerminalColor color);
 void terminal_set_bg(enum TerminalColor color);
 void terminal_set_pos(int x, int y);
 
+int terminal_write(int pid, int id, void *ptr, uint32_t count);
+
 #endif

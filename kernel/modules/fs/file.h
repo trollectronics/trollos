@@ -12,6 +12,11 @@ struct FileDescriptor {
 
 	uint32_t			flags;
 	int64_t				pos;
+	uint32_t			ref;
 };
+
+extern struct FileDescriptor vfs_file_descriptor[MAX_GLOBAL_FILES];
+
+int fd_write(int uid, int fd, const void *buf, uint32_t count);
 
 #endif

@@ -69,12 +69,12 @@ int module_open_device(uint32_t mod_major, int pid, void *aux, uint32_t major, u
 }
 
 
-int module_seek(uint32_t major, int pid, int fd, int64_t offset) {
+off_t module_seek(uint32_t major, int pid, int fd, off_t offset, uint32_t whence) {
 	if (major >= MAX_MODULES)
 		return -EINVAL;
 	if (!mcarr[major].seek)
 		return -EPERM;
-	return mcarr[major].seek(pid, fd, offset);
+	return mcarr[major].seek(pid, fd, offset, whence);
 }
 
 

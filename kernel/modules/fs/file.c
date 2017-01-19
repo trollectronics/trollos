@@ -45,7 +45,16 @@ int fd_open(int uid, const char *path, uint32_t flags) {
 
 
 int fd_write(int uid, int fd, const void *buf, uint32_t count) {
-	return count?-ENOSPC:0;
+	uint8_t buff[512];
+	int i, j, cnt;
+
+	for (j = 0; (j<<9) < count; j++) {
+		cnt = (count-(j<<9)>512?512:count);
+		memcpy_from_user(buff, buf, cnt);
+		terminal_write(0, fd, buff, cnt);
+	}
+
+	return count;
 }
 
 

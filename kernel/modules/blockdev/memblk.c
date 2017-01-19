@@ -1,6 +1,8 @@
 #include <limits.h>
 #include <errno.h>
 #include <stdint.h>
+#include <fcntl.h>
+#include <sys/types.h>
 #include "../../util/mem.h"
 #include "../../util/log.h"
 
@@ -52,11 +54,13 @@ int memblk_open(int uid, void *ptr, uint32_t length) {
 }
 
 
-int64_t memblk_seek(int uid, int blk, int64_t offset) {
+off_t memblk_seek(int uid, int blk, off_t offset, uint32_t whence) {
 	if (uid < 0 || uid >= MAX_MEMBLK)
 		return -EINVAL;
 	if (memblk[blk].len < 0)
 		return -EBADF;
+	if (whence != SEEK_SET)
+		return -EINVAL;
 	if (offset < 0 || (offset & 0x1FF))
 		return -EINVAL;
 	if (offset > memblk[blk].len)

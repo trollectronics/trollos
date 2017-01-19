@@ -40,6 +40,9 @@ struct RomfsDescriptor {
 		uint32_t	major;
 		uint32_t	minor;
 	} blockdev;
+
+	uint32_t		inode_offset;
+	uint32_t		cur_inode;
 };
 
 
