@@ -1,6 +1,6 @@
 #include "file.h"
 #include <errno.h>
-
+#include "../../util/mem.h"
 
 static struct FileDescriptor fd_global[MAX_GLOBAL_FILES];
 

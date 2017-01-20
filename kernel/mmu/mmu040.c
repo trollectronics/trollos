@@ -470,6 +470,7 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 
 void mmu_free_at(void *virt, bool supervisor) {
 	//TODO: implement
+	kprintf(LOG_LEVEL_ERROR, "mmu_free_at not implemented\n");
 }
 
 void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned int size) {
@@ -483,6 +484,62 @@ void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned in
 		map[i + offset] = src_byte[i];
 	}
 	
+	_mapping_pop();
+}
+
+void mmu040_copy_from_userspace(void *dst, void *src, size_t size) {
+	PhysicalAddress phys;
+	uint8_t *src_addr, *dst_addr = dst;
+	
+	if(!size)
+		return;
+	
+	phys = mmu040_get_physical(src, false);
+	src_addr = (void *) ((uint32_t) _mapping_push(phys) | (phys & MMU_PAGE_MASK));
+	
+	for(;;) {
+		*dst_addr++ = *src_addr;
+		src++;
+		
+		if(!(--size))
+			break;
+		
+		if(!(((uint32_t) src) & MMU_PAGE_MASK)) {
+			_mapping_pop();
+			phys = mmu040_get_physical(src, false);
+			src_addr = (void *) ((uint32_t) _mapping_push(phys) | (phys & MMU_PAGE_MASK));
+		} else {
+			src_addr++;
+		}
+	}
+	_mapping_pop();
+}
+
+void mmu040_copy_to_userspace(void *dst, void *src, size_t size) {
+	PhysicalAddress phys;
+	uint8_t *src_addr = src, *dst_addr;
+	
+	if(!size)
+		return;
+	
+	phys = mmu040_get_physical(dst, false);
+	dst_addr = (void *) ((uint32_t) _mapping_push(phys) | (phys & MMU_PAGE_MASK));
+	
+	for(;;) {
+		*dst_addr = *src_addr++;
+		dst++;
+		
+		if(!(--size))
+			break;
+		
+		if(!(((uint32_t) dst) & MMU_PAGE_MASK)) {
+			_mapping_pop();
+			phys = mmu040_get_physical(dst, false);
+			dst_addr = (void *) ((uint32_t) _mapping_push(phys) | (phys & MMU_PAGE_MASK));
+		} else {
+			dst_addr++;
+		}
+	}
 	_mapping_pop();
 }
 

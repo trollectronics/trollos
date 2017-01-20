@@ -2,6 +2,7 @@
 #define __MMU040_H__
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 #include <mmu.h>
@@ -142,7 +143,7 @@ void *mmu040_allocate_frame(uint32_t virtual_address, bool write_protected);
 void mmu_bus_error();
 uint32_t mmu040_test_read(void *addr);
 void *mmu040_get_physical_manual(uint32_t virtual_address);
-//void *mmu_get_physical(void *phys);
+PhysicalAddress mmu040_get_physical(void *phys, bool supervisor);
 
 int mmu040_init_userspace(MmuUserspaceHandle *userspace);
 void mmu040_free_userspace(MmuUserspaceHandle *userspace);
@@ -150,6 +151,8 @@ int mmu040_clone_userspace(MmuUserspaceHandle *from, MmuUserspaceHandle *to);
 int mmu040_switch_userspace(MmuUserspaceHandle *userspace);
 
 void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned int size);
+void mmu040_copy_from_userspace(void *dst, void *src, size_t size);
+void mmu040_copy_to_userspace(void *dst, void *src, size_t size);
 
 void mmu040_zero_4k(void *addr);
 void mmu040_set_tc(Mmu040RegTranslationControl *tc);
