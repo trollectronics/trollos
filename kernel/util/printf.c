@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include "../modules/chardev/terminal.h"
+#include "kconsole.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -39,7 +39,7 @@ int vprintf(char *format, va_list va) {
 	
 	for(i=0; (c = *format++); i++) {
 		if(c != '%') {
-			terminal_putc_simple(c);
+			kconsole_write(&c, 1);
 			continue;
 		}
 		length = LENGTH_INT;
@@ -53,7 +53,7 @@ int vprintf(char *format, va_list va) {
 				case 0:
 					goto end;
 				case '%':
-					terminal_putc_simple(c);
+					kconsole_write(&c, 1);
 					goto next;
 				case '#':
 					prefix = 1;
@@ -85,7 +85,8 @@ int vprintf(char *format, va_list va) {
 				case 'o':
 					base = 8;
 					if(prefix)
-						terminal_putc_simple('0');
+						kconsole_write(&"0", 1);
+					
 					goto baseconv;
 				case 'p':
 					length = sizeof(void *);
@@ -94,7 +95,7 @@ int vprintf(char *format, va_list va) {
 				case 'X':
 					base = 16;
 					if(prefix)
-						terminal_puts("0x");
+						kconsole_write(&"0x", 2);
 				case 'u':
 					baseconv:
 					switch(length) {
@@ -139,16 +140,18 @@ int vprintf(char *format, va_list va) {
 							break;
 					}
 					if(signum < 0) {
-						terminal_putc_simple('-');
+						kconsole_write(&"-", 1);
 						num = -signum;
 					} else
 						num = signum;
 					goto print_num;
 				case 's':
-					terminal_puts(va_arg(va, char *));
+					s = va_arg(va, char *);
+					kconsole_write(s, strlen(s));
 					goto next;
 				case 'c':
-					terminal_putc_simple((char) va_arg(va, int));
+					buf[0] = (char) va_arg(va, int);
+					kconsole_write(buf, 1);
 					goto next;
 			}
 		}
@@ -159,10 +162,10 @@ int vprintf(char *format, va_list va) {
 			width = j;
 		else
 			while(width > j)  {
-				terminal_putc_simple(pad);
+				kconsole_write(&pad, 1);
 				width--;
 			}
-		terminal_put_counted(s, width);
+		kconsole_write(s, width);
 		next:;
 	}
 	end:

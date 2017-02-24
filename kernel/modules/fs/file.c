@@ -1,6 +1,7 @@
 #include "file.h"
 #include <errno.h>
 #include "../../util/mem.h"
+#include "../../util/kconsole.h"
 
 static struct FileDescriptor fd_global[MAX_GLOBAL_FILES];
 
@@ -51,7 +52,7 @@ int fd_write(int uid, int fd, const void *buf, uint32_t count) {
 	for (j = 0; (j<<9) < count; j++) {
 		cnt = (count-(j<<9)>512?512:count);
 		memcpy_from_user(buff, buf, cnt);
-		terminal_write(0, fd, buff, cnt);
+		kconsole_write(buff, cnt);
 	}
 
 	return count;
