@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include "../modules/chardev/terminal.h"
+#include "../modules/chardev/console.h"
 #include "log.h"
 #include "printf.h"
 
@@ -13,12 +13,12 @@ static const char const *logprefix[] = {
 };
 
 static const TerminalColor logcolor[] = {
-	[LOG_LEVEL_NONE] = TERMINAL_COLOR_LIGHT_GRAY,
-	[LOG_LEVEL_CRITICAL] = TERMINAL_COLOR_RED,
-	[LOG_LEVEL_ERROR] = TERMINAL_COLOR_LIGHT_RED,
-	[LOG_LEVEL_WARNING] = TERMINAL_COLOR_YELLOW,
-	[LOG_LEVEL_INFO] = TERMINAL_COLOR_WHITE,
-	[LOG_LEVEL_DEBUG] = TERMINAL_COLOR_LIGHT_GRAY,
+	[LOG_LEVEL_NONE] = CONSOLE_COLOR_LIGHT_GRAY,
+	[LOG_LEVEL_CRITICAL] = CONSOLE_COLOR_RED,
+	[LOG_LEVEL_ERROR] = CONSOLE_COLOR_LIGHT_RED,
+	[LOG_LEVEL_WARNING] = CONSOLE_COLOR_YELLOW,
+	[LOG_LEVEL_INFO] = CONSOLE_COLOR_WHITE,
+	[LOG_LEVEL_DEBUG] = CONSOLE_COLOR_LIGHT_GRAY,
 };
 
 static LogLevel loglevel = LOG_LEVEL_DEBUG;
@@ -32,11 +32,11 @@ int kprintf(LogLevel level, char *format, ...) {
 	
 	va_start(va, format);
 	if(level < LOG_LEVELS) {
-		terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
+		//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
 		printf("[");
-		terminal_set_fg(logcolor[level]);
+		//terminal_set_fg(logcolor[level]);
 		printf("%s", logprefix[level]);
-		terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
+		//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
 		printf("] ");
 	}
 	ret = vprintf(format, va);

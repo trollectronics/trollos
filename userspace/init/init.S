@@ -7,6 +7,11 @@ _start:
 	#try invalid trap
 	trap #5
 	
+	addq.l #1, %d1
+	ori.l #1, %d1
+	andi.l #1, %d1
+	or.l %d1, %d2
+	
 	move.l #1, %d0
 	trap #10
 	cmp #0, %d0

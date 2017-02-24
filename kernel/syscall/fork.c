@@ -23,10 +23,10 @@ static pid_t _fork(void) {
 		return -ENOMEM;
 	}
 	kprintf(LOG_LEVEL_DEBUG, "fork: cloned userspace\n");
-	new->reg.pc = current->reg.pc + 2;
+	new->reg.pc = current->reg.pc;
 	new->reg.stack = current->reg.stack;
 	memcpy(new->reg.general, current->reg.general, sizeof(new->reg.general));
-	new->reg.general[14] = 0; /* Fork returns 0 for child */
+	new->reg.general[0] = 0; /* Fork returns 0 for child */
 	new->parent = current->pid;
 	
 	return new->pid;

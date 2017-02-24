@@ -1,13 +1,33 @@
+#include <stddef.h>
 #include <mem_addr.h>
 #include "string.h"
 
-uint32_t strnlen(const char *c, uint32_t maxlen) {
-	uint32_t i;
+size_t strlen(const char *c) {
+	size_t i = 0;
+
+	while(*c++)
+		i++;
+	return i;
+}
+
+size_t strnlen(const char *c, size_t maxlen) {
+	size_t i;
 
 	for (i = 0; i < maxlen && c[i]; i++);
 	return i;
 }
 
+int isalpha(int c) {
+	if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+		return 1;
+	return 0;
+}
+
+int isdigit(int c) {
+	if((c >= '0' && c <= '9'))
+		return 1;
+	return 0;
+}
 
 char *strncpy(char *dest, const char *src, uint32_t max) {
 	uint32_t i;

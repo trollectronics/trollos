@@ -2,9 +2,9 @@
 #include <chipset.h>
 #include "modules/binformat/elf.h"
 #include "modules/blockdev/memblk.h"
-#include "modules/chardev/terminal.h"
 #include "modules/module.h"
 #include "util/log.h"
+#include "util/kconsole.h"
 #include "util/mem.h"
 #include "util/printf.h"
 #include "util/string.h"
@@ -19,12 +19,12 @@ FileModuleMap filetable[MAX_TOTAL_FILES];
 
 void panic(const char *message) {
 	int_disable();
-	terminal_set_bg(TERMINAL_COLOR_BLACK);
-	terminal_set_fg(TERMINAL_COLOR_LIGHT_RED);
-	terminal_set_pos(0, 29);
-	terminal_puts("*** KERNEL PANIC: ");
-	terminal_puts(message);
-	terminal_puts(" ***");
+	//terminal_set_bg(CONSOLE_COLOR_BLACK);
+	//terminal_set_fg(CONSOLE_COLOR_LIGHT_RED);
+	//terminal_set_pos(0, 29);
+	kconsole_write("*** KERNEL PANIC: ", 18);
+	kconsole_write(message, strlen(message));
+	kconsole_write(" ***", 4);
 	for(;;);
 }
 
@@ -32,27 +32,29 @@ int main(int argc, char **argv) {
 	int (*init)(int argc, char **argv);
 	int i;
 	
-	terminal_clear();
-	terminal_set_bg(TERMINAL_COLOR_BLACK);
-	terminal_set_fg(TERMINAL_COLOR_LIGHT_BLUE);
-	terminal_puts("\nTrollOS kernel\n");
-	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
+	early_init();
+	
+	//terminal_clear();
+	//terminal_set_bg(CONSOLE_COLOR_BLACK);
+	//terminal_set_fg(CONSOLE_COLOR_LIGHT_BLUE);
+	kprintf(LOG_LEVEL_NONE, "TrollOS kernel\n");
+	//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
 	
 	//log_set_level(LOG_LEVEL_INFO);
 	
-	terminal_puts("argv = { ");
+	kprintf(LOG_LEVEL_NONE, "argv = { ");
 	if(argc > 0) {
-		terminal_set_fg(TERMINAL_COLOR_LIGHT_CYAN);
-		printf("%s", argv[0]);
+		//terminal_set_fg(CONSOLE_COLOR_LIGHT_CYAN);
+		kprintf(LOG_LEVEL_NONE, "%s", argv[0]);
 	}
 	for(i = 1; i < argc; i++) {
-		terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
-		printf(", ");
-		terminal_set_fg(TERMINAL_COLOR_LIGHT_CYAN);
-		printf("%s", argv[i]);
+		//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
+		kprintf(LOG_LEVEL_NONE, ", ");
+		//terminal_set_fg(CONSOLE_COLOR_LIGHT_CYAN);
+		kprintf(LOG_LEVEL_NONE, "%s", argv[i]);
 	}
-	terminal_set_fg(TERMINAL_COLOR_LIGHT_GRAY);
-	terminal_puts(" }\n");
+	//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
+	kprintf(LOG_LEVEL_NONE, " }\n");
 	/*if (argc >= 3)
 		memdev_from_arg(argv[2]);*/
 

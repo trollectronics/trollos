@@ -42,27 +42,47 @@ mmu040_test_read:
 	unlk %fp
 	rts
 
-| .global mmu040_get_physical
-| mmu040_get_physical:
-| 	link %fp, #-4
-| 	movec %tc, %d0
-| 	ori.l #0x80000000, %d0
-| 	movec %d0, %tc
-| 	mov.l 8(%fp), %a1
-| 	
-| 	move.l #6, %d0
-| 	movec %d0, %dfc
-| 	ptestr #6, (%a1), #7, %a0
-| 	
-| 	andi.l #0x7FFFFFFF, %d0
-| 	movec %d0, %tc
-| 	mov.l (%a0), %d0
-| 	andi.l #0xFFFFFF00, %d0
-| 	mov.l 8(%fp), %d1
-| 	andi.l #0xFFF, %d1
-| 	or.l %d1, %d0
-| 	unlk %fp
-| 	rts
+.global mmu040_test_read_user
+mmu040_test_read_user:
+	link %fp, #0
+	move.l 8(%fp), %a0
+	
+	move.l #0x1, %d0
+	movec.l %d0, %sfc
+	movec.l %d0, %dfc
+	
+	ptestr (%a0)
+	
+	movec.l %mmusr, %d0
+	unlk %fp
+	rts
+
+.global mmu040_get_physical
+mmu040_get_physical:
+	link %fp, #0
+	
+	move.l 8(%fp), %a0
+	move.l 12(%fp), %d1
+	beq.b 1f
+
+	move.l #5, %d0
+	bra.b 2f
+1:
+	move.l #1, %d0
+2:
+	movec.l %d0, %sfc
+	movec.l %d0, %dfc
+	ptestr (%a0)
+	movec.l %mmusr, %d0
+	
+	andi.l #0xFFFFF000, %d0
+	move.l %a0, %d1
+	andi.l #0x00000FFF, %d1
+	or.l %d1, %d0
+	
+	unlk %fp
+	rts
+
 
 .global mmu040_zero_4k
 mmu040_zero_4k:
