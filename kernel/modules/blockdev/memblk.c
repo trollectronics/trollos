@@ -39,7 +39,7 @@ int memblk_init() {
 }
 
 
-int memblk_open(int uid, void *ptr, uint32_t length) {
+int memblk_open(void *ptr, uint32_t length) {
 	int d;
 
 	if (length >= INT_MAX)
@@ -54,7 +54,7 @@ int memblk_open(int uid, void *ptr, uint32_t length) {
 }
 
 
-off_t memblk_seek(int uid, int blk, off_t offset, uint32_t whence) {
+off_t memblk_seek(int blk, off_t offset, uint32_t whence) {
 	if (blk < 0 || blk >= MAX_MEMBLK)
 		return -EINVAL;
 	if (memblk[blk].len < 0)
@@ -75,22 +75,24 @@ int memblk_write(int uid, int blk, void *buf, uint32_t count) {
 }
 
 
-int memblk_read(int uid, int blk, void *buf, uint32_t count) {
+off_t memblk_read(int blk, void *buf, off_t count) {
 	if (blk < 0 || blk >= MAX_MEMBLK)
 		return -EINVAL;
 	if (memblk[blk].len < 0)
 		return -EBADF;
-	if (((uint32_t) memblk[blk].pos) + count < memblk[blk].pos || ((uint32_t) memblk[blk].pos + count > memblk[blk].len))
+	if (((off_t) memblk[blk].pos) + count < memblk[blk].pos || ((off_t) memblk[blk].pos + count > memblk[blk].len))
 		return -EIO;
-	if (uid)
-		memcpy_to_user(buf, memblk[blk].addr + memblk[blk].pos, count);
-	else
-		memcpy(buf, memblk[blk].addr + memblk[blk].pos, count);
+	memcpy(buf, memblk[blk].addr + memblk[blk].pos, count);
 
 	return count;
 }
 
 
-int32_t memblk_blksize(int uid, int id) {
+int32_t memblk_blksize(int blk) {
 	return 512;
+}
+
+
+int64_t memblk_devsize(int blk) {
+	return memblk[blk].len;
 }
