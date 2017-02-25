@@ -55,7 +55,7 @@ int memblk_open(int uid, void *ptr, uint32_t length) {
 
 
 off_t memblk_seek(int uid, int blk, off_t offset, uint32_t whence) {
-	if (uid < 0 || uid >= MAX_MEMBLK)
+	if (blk < 0 || blk >= MAX_MEMBLK)
 		return -EINVAL;
 	if (memblk[blk].len < 0)
 		return -EBADF;
