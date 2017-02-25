@@ -2,6 +2,7 @@
 #define	__INCLUDE_STAT_H__
 
 #include <sys/types.h>
+#include <time.h>
 
 struct stat {
 	dev_t			st_dev;

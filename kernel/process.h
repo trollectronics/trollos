@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/types.h>
 #include <mmu.h>
-#include "user.h"
 #include "time.h"
 
 typedef int32_t pid_t;

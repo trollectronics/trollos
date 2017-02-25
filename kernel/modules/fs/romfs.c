@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include "../../util/log.h"
 #include "../../util/mem.h"
 #include "../../util/string.h"
@@ -14,12 +15,11 @@
 static struct RomfsDescriptor romfs[MAX_ROMFS];
 /* TODO: Rewrite to be endianess independent */
 
-#if 0
 
 static void romfs_return(int d) {
 	if (d < 0 || d >= MAX_ROMFS)
 		return;
-	romfs[d].blockdev.fd = -1;
+	romfs[d].blkcache.major = -1;
 }
 
 
@@ -27,7 +27,7 @@ static int romfs_alloc() {
 	int i;
 
 	for (i = 0; i < MAX_ROMFS; i++)
-		if (romfs[i].blockdev.fd < 0)
+		if (romfs[i].blkcache.major < 0)
 			return i;
 	return -ENOENT;
 }
@@ -75,7 +75,7 @@ int romfs_open_device(void *aux, uint32_t major, uint32_t minor, uint32_t flags,
 fail:
 	/* TODO: De-init our blkcache */
 	romfs_return(fs);
-
+	return -EINVAL;
 
 end_found:
 	if (i & 0xF)
@@ -88,23 +88,65 @@ end_found:
 }
 
 
-int64_t romfs_inode_lookup(int context, int64_t inode, const char *name) {
-	int i, t;
+int romfs_inode_stat(int context, int64_t inode, const char *name, struct stat *st_s) {
+	int i, t, link = 0;
 	uint8_t buff[256];
+	struct RomfsFileEntry *fe;
+	struct stat st;
 	inode += romfs[context].inode_offset;
 	inode <<= 4;
 	
+	restart:
+	if (link >= 16)
+		return -EMLINK;
+
 	if ((t = module_seek(romfs[context].blkcache.major, romfs[context].blkcache.minor, inode, 0)) < 0)
 		return t;
 	if ((i = module_read(romfs[context].blkcache.major, romfs[context].blkcache.minor, buff, 256)) < 0)
 		return i;
-	if ((buff[(inode & 0x1FF) + 3] & 0x7) != 1)
+	fe = (void *) buff;
+	if ((buff[3] & 0x7) == 0) { // hard link
+		link++;
+		inode = fe->next_fileheader & (~0xF);
+		goto restart;
+	} else if ((buff[3] & 0x7) != 1) // directory
 		return -ENOTDIR;
 	
-	return -ENOTDIR;
+	for (inode = fe->next_fileheader; inode; inode = (fe->next_fileheader & (~0xF))) {
+		if ((t = module_seek(romfs[context].blkcache.major, romfs[context].blkcache.minor, inode, 0)) < 0)
+			return t;
+		if ((i = module_read(romfs[context].blkcache.major, romfs[context].blkcache.minor, buff, 256)) < 0)
+			return i;
+		
+		if (!(strncmp((char *) buff + 16, (char *) name, 256-16)))
+			continue;
+		goto found_it;
+	}
+
+	return -ENOENT;
+found_it:
+	st.st_dev = ~0; // We don't really know, it'll have to be handled a layer up
+	st.st_ino = (inode >> 4) - romfs[context].inode_offset;
+	if ((fe->next_fileheader & 0x7) == 4 || (fe->next_fileheader & 0x7) == 5) {
+		st.st_mode = 0500;
+		st.st_rdev = fe->special_info;
+	} else {
+		st.st_mode = (fe->next_fileheader & 0x7) ? 0555 : 0444;
+		st.st_rdev = 0;
+	}
+
+	st.st_nlink = 1;
+	st.st_uid = st.st_gid = 0;
+	st.st_size = fe->size;
+	st.st_blksize = module_blksize(romfs[context].blkcache.major, romfs[context].blkcache.minor);
+	st.st_blocks = fe->size / 512 + !!(fe->size & 0x1FF);
+	st.st_mtime = 0;
+
+	*st_s = st;
+	return 0;
 }
 
-
+#if 0
 int romfs_read(int fs, void *buf, uint32_t count) {
 	int i, t;
 	uint32_t seek, c;
@@ -144,5 +186,4 @@ int romfs_read(int fs, void *buf, uint32_t count) {
 
 	return c;
 }
-
 #endif
