@@ -1,3 +1,4 @@
+#include <syslimits.h>
 #include <limits.h>
 #include <errno.h>
 #include <stddef.h>

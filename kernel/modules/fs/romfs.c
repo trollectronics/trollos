@@ -56,8 +56,8 @@ int romfs_open_device(int pid, void *aux, uint32_t major, uint32_t minor, uint32
 	romfs[fs].blockdev.major = major;
 	romfs[fs].blockdev.minor = minor;
 	
-	module_seek(major, pid, minor, 0, SEEK_SET);
-	module_read(major, pid, minor, buff, 512);
+	module_seek(major, minor, 0, SEEK_SET);
+	module_read(major, minor, buff, 512);
 
 	//TODO: memcmp
 	if (strncmp(buff, "-rom1fs-", 8)) {
@@ -91,9 +91,9 @@ int64_t romfs_inode_lookup(int context, int64_t inode, const char *name) {
 	inode += romfs[context].inode_offset;
 	inode <<= 4;
 	
-	if ((t = module_seek(romfs[context].blockdev.major, 0, romfs[context].blockdev.minor, inode & (~0x1FF), 0)) < 0)
+	if ((t = module_seek(romfs[context].blockdev.major, romfs[context].blockdev.minor, inode & (~0x1FF), 0)) < 0)
 		return t;
-	if ((i = module_read(romfs[context].blockdev.major, 0, romfs[context].blockdev.minor, buff, 512)) < 0)
+	if ((i = module_read(romfs[context].blockdev.major, romfs[context].blockdev.minor, buff, 512)) < 0)
 		return i;
 	if ((buff[(inode & 0x1FF) + 3] & 0x7) != 1)
 		return -ENOTDIR;
@@ -116,8 +116,8 @@ int romfs_read(int pid, int fs, void *buf, uint32_t count) {
 	
 	seek = (romfs[fs].cur_inode + romfs[fs].inode_offset) << 4;
 	// We're in luck, romfs is always aligned on 16-byte boundary, and file entries are 16 bytes
-	module_seek(romfs[fs].blockdev.major, pid, romfs[fs].blockdev.minor, seek & (~0x1FF), 0);
-	module_read(romfs[fs].blockdev.major, pid, romfs[fs].blockdev.minor, buff, 512);
+	module_seek(romfs[fs].blockdev.major, romfs[fs].blockdev.minor, seek & (~0x1FF), 0);
+	module_read(romfs[fs].blockdev.major, romfs[fs].blockdev.minor, buff, 512);
 	fe = (void *) buff + (seek & 0x1F0);
 	
 	if (vfs_file_descriptor[romfs[fs].blockdev.fd].pos >= fe->size)
@@ -129,9 +129,9 @@ int romfs_read(int pid, int fs, void *buf, uint32_t count) {
 		/* TODO: Buffer this better */
 		seek = (16 + vfs_file_descriptor[romfs[fs].blockdev.fd].pos + c + (romfs[fs].cur_inode + romfs[fs].inode_offset) * 16);
 		i = 512 - (seek & 0x1FF);
-		if ((t = module_seek(romfs[fs].blockdev.major, pid, romfs[fs].blockdev.minor, seek & (~0x1FF), 0)) < 0)
+		if ((t = module_seek(romfs[fs].blockdev.major, romfs[fs].blockdev.minor, seek & (~0x1FF), 0)) < 0)
 			return t;
-		if ((i = module_read(romfs[fs].blockdev.major, pid, romfs[fs].blockdev.minor, buff, 512)) < 0)
+		if ((i = module_read(romfs[fs].blockdev.major, romfs[fs].blockdev.minor, buff, 512)) < 0)
 			return i;
 		if (!c)
 			memcpy_to_user(buf, buff + 512 - i, i);

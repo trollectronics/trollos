@@ -1,10 +1,10 @@
 #ifndef __VFS_H__
 #define	__VFS_H__
 
+#include <limits.h>
 #include <stdint.h>
 #include "../module.h"
 
-#define	PATH_MAX		(1024)
 #define	MOUNT_PATH_MAX		64
 #define	VFS_MOUNT_MAX		16
 #define	VFS_FOLLOW_MAX		32
