@@ -50,7 +50,7 @@ int fd_write(int uid, int fd, const void *buf, uint32_t count) {
 	int i, j, cnt;
 
 	for (j = 0; (j<<9) < count; j++) {
-		cnt = (count-(j<<9)>512?512:(count-(j<<9));
+		cnt = (count-(j<<9)>512)?512:(count-(j<<9));
 		memcpy_from_user(buff, buf, cnt);
 		kconsole_write(buff, cnt);
 	}
