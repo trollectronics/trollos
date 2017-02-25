@@ -36,13 +36,11 @@ struct RomfsFileDescriptor {
 
 struct RomfsDescriptor {
 	struct {
-		int		fd;
-		uint32_t	major;
-		uint32_t	minor;
-	} blockdev;
+		int32_t		major;
+		int		minor;
+	} blkcache;
 
 	uint32_t		inode_offset;
-	uint32_t		cur_inode;
 };
 
 

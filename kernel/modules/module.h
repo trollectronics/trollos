@@ -20,6 +20,7 @@ struct ModuleCall {
 
 int module_load(struct ModuleCall mc);
 int module_init();
+int module_locate(const char *module);
 
 int module_open(uint32_t major, void *ptr, uint32_t length);
 int module_open_device(uint32_t mod_major, void *aux, uint32_t major, uint32_t minor, uint32_t flags);

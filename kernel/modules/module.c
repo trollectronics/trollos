@@ -112,3 +112,13 @@ int64_t module_devsize(uint32_t major, int pid) {
 		return -EPERM;
 	return mcarr[major].devsize(pid);
 }
+
+
+int module_locate(const char *module) {
+	int i;
+
+	for (i = 0; i < MAX_MODULES; i++)
+		if (mcarr[i].init && strcmp(module, mcarr[i].name))
+			return i;
+	return -EINVAL;
+}
