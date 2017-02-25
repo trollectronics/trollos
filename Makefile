@@ -11,6 +11,7 @@ SUBDIRS	=	 userspace kernel
 all: $(SUBDIRS)
 	@echo " [MKFS] $(OSFS)"
 	@genromfs -f $(OSFS) -d bin/root/ -V TrollOS
+	@xxd -i $(OSFS) kernel/root.c
 	@cat "$(OSFS)" >> "$(BOOTIMG)"
 	@dd if=/dev/zero of=bin/sd.img bs=1M count=32
 	@mkfs.msdos bin/sd.img
