@@ -34,11 +34,7 @@ int main(int argc, char **argv) {
 	
 	early_init();
 	
-	//terminal_clear();
-	//terminal_set_bg(CONSOLE_COLOR_BLACK);
-	//terminal_set_fg(CONSOLE_COLOR_LIGHT_BLUE);
-	kprintf(LOG_LEVEL_NONE, "TrollOS kernel\n");
-	//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
+	kprintf(LOG_LEVEL_NONE, "\x1b[2J\x1b[1;1H\x1b[0mTrollOS kernel\n");
 	
 	//log_set_level(LOG_LEVEL_INFO);
 	
