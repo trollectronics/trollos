@@ -12,13 +12,13 @@ static const char const *logprefix[] = {
 	[LOG_LEVEL_DEBUG] = "DBUG",
 };
 
-static const TerminalColor logcolor[] = {
-	[LOG_LEVEL_NONE] = CONSOLE_COLOR_LIGHT_GRAY,
-	[LOG_LEVEL_CRITICAL] = CONSOLE_COLOR_RED,
-	[LOG_LEVEL_ERROR] = CONSOLE_COLOR_LIGHT_RED,
-	[LOG_LEVEL_WARNING] = CONSOLE_COLOR_YELLOW,
-	[LOG_LEVEL_INFO] = CONSOLE_COLOR_WHITE,
-	[LOG_LEVEL_DEBUG] = CONSOLE_COLOR_LIGHT_GRAY,
+static const char const *logcolor[] = {
+	[LOG_LEVEL_NONE] = "\x1b[0m",
+	[LOG_LEVEL_CRITICAL] = "\x1b[31m",
+	[LOG_LEVEL_ERROR] = "\x1b[1;31m",
+	[LOG_LEVEL_WARNING] = "\x1b[1;33m",
+	[LOG_LEVEL_INFO] = "\x1b[1;37m",
+	[LOG_LEVEL_DEBUG] = "\x1b[37m",
 };
 
 static LogLevel loglevel = LOG_LEVEL_DEBUG;
@@ -31,13 +31,8 @@ int kprintf(LogLevel level, char *format, ...) {
 		return -1;
 	
 	va_start(va, format);
-	if(level < LOG_LEVELS) {
-		//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
-		printf("[");
-		//terminal_set_fg(logcolor[level]);
-		printf("%s", logprefix[level]);
-		//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
-		printf("] ");
+	if(level < LOG_LEVELS && level != LOG_LEVEL_NONE) {
+		printf("\x1b[0m" "[" "%s%s" "\x1b[0m" "] ", logcolor[level], logprefix[level]);
 	}
 	ret = vprintf(format, va);
 	va_end(va);
