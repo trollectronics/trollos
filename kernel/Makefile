@@ -28,7 +28,7 @@ all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
 	@echo " [ LD ] bin/kernel.elf"
 	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) $(LIBS) -o $(KERNEL) $(LDFLAGS)
 	@mkdir -p $(TOPDIR)/bin/root/boot
-	@cp $(KERNEL) $(TOPDIR)/bin/root/boot/`basename "$(KERNEL)"`
+#	@cp $(KERNEL) $(TOPDIR)/bin/root/boot/`basename "$(KERNEL)"`
 	@echo "Done."
 	@echo
 	
