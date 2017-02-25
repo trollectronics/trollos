@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <stdbool.h>
+#include "../util/string.h"
 #include "module.h"
 #include "init_modules.h"
 

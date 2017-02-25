@@ -5,7 +5,6 @@
 #include "util/log.h"
 #include "process.h"
 #include "mmu.h"
-#include "user.h"
 #include "kernel.h"
 
 static Process *_process[MAX_PROCESSES];
