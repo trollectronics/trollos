@@ -146,8 +146,7 @@ found_it:
 	return 0;
 }
 
-#if 0
-int romfs_read(int fs, void *buf, uint32_t count) {
+int romfs_read(int fs, int64_t inode, off_t offset, void *buf, uint32_t count) {
 	int i, t;
 	uint32_t seek, c;
 	uint8_t buff[512];
@@ -155,35 +154,35 @@ int romfs_read(int fs, void *buf, uint32_t count) {
 
 	if (fs < 0 || fs >= MAX_ROMFS)
 		return -EINVAL;
-	if (romfs[fs].blockdev.fd < 0)
-		return -EBADF;
-
 	
-	seek = (romfs[fs]. + romfs[fs].inode_offset) << 4;
-	// We're in luck, romfs is always aligned on 16-byte boundary, and file entries are 16 bytes
-	module_seek(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, seek & (~0x1FF), 0);
+	seek = ((romfs[fs].inode_offset + inode) << 4);
+	
+	module_seek(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, seek, 0);
 	module_read(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, buff, 512);
-	fe = (void *) buff + (seek & 0x1F0);
+	fe = (void *) buff;
 	
-	if (vfs_file_descriptor[romfs[fs].blockdev.fd].pos >= fe->size)
+	if (offset >= fe->size)
 		return 0;
-	if (vfs_file_descriptor[romfs[fs].blockdev.fd].pos + c >= fe->size)
-		c = fe->size - vfs_file_descriptor[romfs[fs].blockdev.fd].pos;
+	if (offset + count >= fe->size)
+		count = fe->size - offset;
+	
+	for (i = 16; i < 256; i++)
+		if (!buff[i])
+			goto end_of_fname;
+	return -EIO;
+end_of_fname:
+	offset += (i & (~0xF)) + ((i & 0xF) ? 0x10 : 0);
+	offset += inode;
 
 	for (c = 0; c < count; c += i) {
 		/* TODO: Buffer this better */
-		seek = (16 + vfs_file_descriptor[romfs[fs].blockdev.fd].pos + c + (romfs[fs].cur_inode + romfs[fs].inode_offset) * 16);
-		i = 512 - (seek & 0x1FF);
-		if ((t = module_seek(romfs[fs].blockdev.major, romfs[fs].blockdev.minor, seek & (~0x1FF), 0)) < 0)
+		seek = offset + c;
+		if ((t = module_seek(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, seek, 0)) < 0)
 			return t;
-		if ((i = module_read(romfs[fs].blockdev.major, romfs[fs].blockdev.minor, buff, 512)) < 0)
+		if ((i = module_read(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, buff, 512)) < 0)
 			return i;
-		if (!c)
-			memcpy_to_user(buf, buff + 512 - i, i);
-		else
-			memcpy_to_user(buf, buff, i);
+		memcpy(buf + c, buff, i);
 	}
 
 	return c;
 }
-#endif
