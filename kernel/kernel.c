@@ -35,7 +35,6 @@ int main(int argc, char **argv) {
 	early_init();
 	
 	kprintf(LOG_LEVEL_NONE, "\x1b[2J\x1b[1;1H\x1b[0mTrollOS kernel\n");
-	
 	//log_set_level(LOG_LEVEL_INFO);
 	
 	kprintf(LOG_LEVEL_NONE, "argv = { ");

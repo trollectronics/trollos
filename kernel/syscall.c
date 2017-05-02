@@ -66,10 +66,6 @@ int32_t syscall_unlink(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg
 	return 0;
 }
 
-int32_t syscall_execve(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
-	return 0;
-}
-
 int32_t syscall_chdir(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
 	return 0;
 }
