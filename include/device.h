@@ -3,6 +3,13 @@
 
 #include "sys/types.h"
 
+typedef enum DeviceType DeviceType;
+enum DeviceType {
+	DEVICE_TYPE_INVALID = -1,
+	DEVICE_TYPE_CHAR,
+	DEVICE_TYPE_BLOCK,
+};
+
 typedef struct CharDev CharDev;
 struct CharDev {
 	ssize_t (*read)(void *buf, size_t count);
@@ -17,6 +24,15 @@ struct BlockDev {
 	ssize_t (*ioctl)(unsigned long request, ...);
 };
 
-int device_register_char(const char *name, CharDev *dev);
-int device_register_block(const char *name, BlockDev *dev);
+typedef struct Device Device;
+struct Device {
+	DeviceType type;
+	union {
+		CharDev chardev;
+		BlockDev blockdev;
+	};
+};
+
+int device_register(const char *name, Device *device, dev_t *device_number);
+
 #endif
