@@ -34,5 +34,9 @@ struct Device {
 };
 
 int device_register(const char *name, Device *device, dev_t *device_number);
+Device *device_lookup(dev_t device_number);
+
+#define major(x) (((x) >> 16) & 0xFFFF)
+#define minor(x) ((x) & 0xFFFF)
 
 #endif
