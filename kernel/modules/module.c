@@ -8,48 +8,6 @@
 struct ModuleCall	mcarr[MAX_MODULES];
 
 
-static int module_alloc() {
-	int i;
-
-	for (i = 0; i < MAX_MODULES; i++)
-		if (!mcarr[i].init)
-			return i;
-	return -ENFILE;
-}
-
-
-static void module_release(int mod, bool deinit) {
-	if (mod < 0 || mod >= MAX_MODULES)
-		return;
-	/* TODO: Call de-init */
-	mcarr[mod].name = 0;
-}
-
-
-int module_load(struct ModuleCall mc) {
-	int mod, ret;
-
-	if ((mod = module_alloc()) < 0)
-		return mod;
-	mcarr[mod] = mc;
-	if ((ret = mcarr[mod].init()) < 0)
-		module_release(mod, false);
-
-	return ret;
-}
-
-
-int module_init() {
-	int i;
-
-	for (i = 0; i < MAX_MODULES; i++)
-		module_release(i, false);
-
-	for (i = 0; module_init_list[i].name; i++)
-		if (module_init_list[i].init)
-			module_init_list[i].init();
-	return 0;
-}
 
 
 int module_open(uint32_t major, void *ptr, uint32_t length) {
@@ -112,14 +70,4 @@ int64_t module_devsize(uint32_t major, int pid) {
 	if (!mcarr[major].devsize)
 		return -EPERM;
 	return mcarr[major].devsize(pid);
-}
-
-
-int module_locate(const char *module) {
-	int i;
-
-	for (i = 0; i < MAX_MODULES; i++)
-		if (mcarr[i].init && strcmp(module, mcarr[i].name))
-			return i;
-	return -EINVAL;
 }

@@ -1,8 +1,7 @@
 #include <syscall.h>
 #include <chipset.h>
+#include <module.h>
 #include "modules/binformat/elf.h"
-#include "modules/blockdev/memblk.h"
-#include "modules/module.h"
 #include "util/log.h"
 #include "util/kconsole.h"
 #include "util/mem.h"
@@ -35,7 +34,7 @@ int main(int argc, char **argv) {
 	early_init();
 	
 	kprintf(LOG_LEVEL_NONE, "\x1b[2J\x1b[1;1H\x1b[0mTrollOS kernel\n");
-	//log_set_level(LOG_LEVEL_INFO);
+	log_set_level(LOG_LEVEL_INFO);
 	
 	kprintf(LOG_LEVEL_NONE, "argv = { ");
 	if(argc > 0) {
@@ -50,8 +49,6 @@ int main(int argc, char **argv) {
 	}
 	//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
 	kprintf(LOG_LEVEL_NONE, " }\n");
-	/*if (argc >= 3)
-		memdev_from_arg(argv[2]);*/
 
 	for(i = 1; i < argc; i++) {
 		if(!strncmp(argv[i], "loglevel=", 9)) {
@@ -60,7 +57,6 @@ int main(int argc, char **argv) {
 		}
 	}
 	
-	module_init();
 	mmu_init();
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
