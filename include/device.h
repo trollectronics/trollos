@@ -19,8 +19,10 @@ struct CharDev {
 
 typedef struct BlockDev BlockDev;
 struct BlockDev {
-	ssize_t (*read)(void *buf, size_t count);
+	ssize_t (*read)(dev_t device, off_t pos, void *buf, size_t count);
 	ssize_t (*write)(const void *buf, size_t count);
+	ssize_t (*size)(dev_t device);
+	ssize_t (*blksize)(dev_t device);
 	ssize_t (*ioctl)(unsigned long request, ...);
 };
 
@@ -35,8 +37,6 @@ struct Device {
 
 int device_register(const char *name, Device *device, dev_t *device_number);
 Device *device_lookup(dev_t device_number);
-
-#define major(x) (((x) >> 16) & 0xFFFF)
-#define minor(x) ((x) & 0xFFFF)
+Device *device_lookup_name(const char *name);
 
 #endif

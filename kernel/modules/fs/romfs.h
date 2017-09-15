@@ -1,13 +1,12 @@
 #ifndef __ROMFS_H__
 #define	__ROMFS_H__
 
-#define	ROMFS_MAGIC1		0x2D726F6D
-#define	ROMFS_MAGIC2		0x3166732D
 #define	MAX_ROMFS		2
 
 /* http://lxr.free-electrons.com/source/Documentation/filesystems/romfs.txt */
 #include <stdint.h>
 #include <stdbool.h>
+#include "blkcache.h"
 
 struct RomfsMainStruct {
 	uint32_t		magic1;
@@ -35,16 +34,16 @@ struct RomfsFileDescriptor {
 
 
 struct RomfsDescriptor {
-	struct {
-		int32_t		major;
-		int		minor;
-	} blkcache;
+	struct BlkCacheEntry blkcache;
 
 	uint32_t		inode_offset;
 };
 
 
-int romfs_detect(void *ptr);
-struct RomfsFileDescriptor romfs_locate(void *ptr, char *fname);
+int romfs_init();
+int romfs_open_device(void *aux, uint32_t major, uint32_t minor, uint32_t flags, uint64_t *root_inode);
+int romfs_inode_stat(int context, int64_t inode, const char *name, struct stat *st_s);
+int romfs_read(int fs, int64_t inode, off_t offset, void *buf, uint32_t count);
+
 
 #endif

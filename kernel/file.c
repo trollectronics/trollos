@@ -1,7 +1,9 @@
 #include "file.h"
 #include <errno.h>
-#include "../../util/mem.h"
-#include "../../util/kconsole.h"
+#include <sys/stat.h>
+#include "util/mem.h"
+#include "util/kconsole.h"
+//#include "../fs/romfs.h"
 
 static struct FileDescriptor fd_global[MAX_GLOBAL_FILES];
 
@@ -40,6 +42,12 @@ int fd_open(int uid, const char *path, uint32_t flags) {
 
 	if ((fd = fd_alloc()) < 0)
 		return fd;
+	//if ((vfs_file_descriptor[fd].ino = _path_to_inode(0, path)) < 0)
+	//	goto fail;
+	//vfs_file_descriptor[fd].pos = 0;
+	//vfs_file_descriptor[fd].
+
+fail:
 	fd_return(fd);
 	return -ENOENT;
 }

@@ -23,6 +23,8 @@ int device_register(const char *name, Device *device, dev_t *device_number) {
 	*device_number = (major_free << 16) | 0x1;
 	
 	for(i = 0; i < DEVICE_MAX; i++) {
+		if(!_device_registered[major(*device_number)])
+			continue;
 		if(!strcmp(_device_registered[i]->name, name)) {
 			kprintf(LOG_LEVEL_ERROR, "Device name '%s' already taken\n", name);
 			return -1;
@@ -53,4 +55,15 @@ Device *device_lookup(dev_t device_number) {
 	if(!_device_registered[major(device_number)])
 		return NULL;
 	return _device_registered[major(device_number)]->device;
+}
+
+
+// TODO: Fix, will probably crash or malfunction if an invalid or free entry is encountered
+Device *device_lookup_name(const char *name) {
+	int i;
+	for (i = 0; i < DEVICE_MAX; i++)
+		if (_device_registered[i])
+			if (!strcmp(_device_registered[i]->name, name))
+				return _device_registered[i]->device;
+	return NULL;
 }

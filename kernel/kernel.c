@@ -2,6 +2,7 @@
 #include <chipset.h>
 #include <module.h>
 #include "modules/binformat/elf.h"
+#include "modules/blockdev/memblk.h"
 #include "util/log.h"
 #include "util/kconsole.h"
 #include "util/mem.h"
@@ -61,7 +62,10 @@ int main(int argc, char **argv) {
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
-	
+
+	memblk_init();
+	//memblk_open(
+
 	pid_t pid;
 	pid = process_create(0, 0);
 	kprintf(LOG_LEVEL_DEBUG, "process created\n");

@@ -2,12 +2,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include "../../util/log.h"
 #include "../../util/mem.h"
 #include "../../util/string.h"
-#include "../module.h"
-#include "../blockdev/blkcache.h"
-#include "file.h"
+#include "blkcache.h"
+#include "../../file.h"
 
 #define	_ROMFS
 #include "romfs.h"
@@ -55,13 +55,11 @@ int romfs_open_device(void *aux, uint32_t major, uint32_t minor, uint32_t flags,
 
 	if ((fs = romfs_alloc()) < 0)
 		return fs;
-	if ((romfs[fs].blkcache.major = module_locate("blkcache")) < 0)
-		return romfs_return(fs), romfs[fs].blkcache.major;
-	if ((romfs[fs].blkcache.minor = module_open_device(romfs[fs].blkcache.major, NULL, major, minor, 0)) < 0)
-		return romfs_return(fs), romfs[fs].blkcache.minor;
+	romfs[fs].blkcache = romfs_blkcache_open(major, minor);
 	
-	module_seek(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, 0, SEEK_SET);
-	module_read(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, buff, 256);
+
+	romfs_blkcache_seek(&romfs[fs].blkcache, 0, SEEK_SET);
+	romfs_blkcache_read(&romfs[fs].blkcache, buff, 256);
 
 	if (strncmp(buff, "-rom1fs-", 8))
 		goto fail;
@@ -73,7 +71,6 @@ int romfs_open_device(void *aux, uint32_t major, uint32_t minor, uint32_t flags,
 
 	return -EINVAL;
 fail:
-	/* TODO: De-init our blkcache */
 	romfs_return(fs);
 	return -EINVAL;
 
@@ -93,6 +90,7 @@ int romfs_inode_stat(int context, int64_t inode, const char *name, struct stat *
 	uint8_t buff[256];
 	struct RomfsFileEntry *fe;
 	struct stat st;
+
 	inode += romfs[context].inode_offset;
 	inode <<= 4;
 	
@@ -100,9 +98,9 @@ int romfs_inode_stat(int context, int64_t inode, const char *name, struct stat *
 	if (link >= 16)
 		return -EMLINK;
 
-	if ((t = module_seek(romfs[context].blkcache.major, romfs[context].blkcache.minor, inode, 0)) < 0)
+	if ((t = romfs_blkcache_seek(&romfs[context].blkcache, inode, 0)) < 0)
 		return t;
-	if ((i = module_read(romfs[context].blkcache.major, romfs[context].blkcache.minor, buff, 256)) < 0)
+	if ((i = romfs_blkcache_read(&romfs[context].blkcache, buff, 256)) < 0)
 		return i;
 	fe = (void *) buff;
 	if ((buff[3] & 0x7) == 0) { // hard link
@@ -113,9 +111,9 @@ int romfs_inode_stat(int context, int64_t inode, const char *name, struct stat *
 		return -ENOTDIR;
 	
 	for (inode = fe->next_fileheader; inode; inode = (fe->next_fileheader & (~0xF))) {
-		if ((t = module_seek(romfs[context].blkcache.major, romfs[context].blkcache.minor, inode, 0)) < 0)
+		if ((t = romfs_blkcache_seek(&romfs[context].blkcache, inode, 0)) < 0)
 			return t;
-		if ((i = module_read(romfs[context].blkcache.major, romfs[context].blkcache.minor, buff, 256)) < 0)
+		if ((i = romfs_blkcache_read(&romfs[context].blkcache, buff, 256)) < 0)
 			return i;
 		
 		if (!(strncmp((char *) buff + 16, (char *) name, 256-16)))
@@ -125,7 +123,8 @@ int romfs_inode_stat(int context, int64_t inode, const char *name, struct stat *
 
 	return -ENOENT;
 found_it:
-	st.st_dev = ~0; // We don't really know, it'll have to be handled a layer up
+	// TODO: Replace this with a proper macro
+	st.st_dev = makedev(romfs[context].blkcache.major, romfs[context].blkcache.minor);
 	st.st_ino = (inode >> 4) - romfs[context].inode_offset;
 	if ((fe->next_fileheader & 0x7) == 4 || (fe->next_fileheader & 0x7) == 5) {
 		st.st_mode = 0500;
@@ -157,8 +156,8 @@ int romfs_read(int fs, int64_t inode, off_t offset, void *buf, uint32_t count) {
 	
 	seek = ((romfs[fs].inode_offset + inode) << 4);
 	
-	module_seek(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, seek, 0);
-	module_read(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, buff, 512);
+	romfs_blkcache_seek(&romfs[fs].blkcache, seek, 0);
+	romfs_blkcache_read(&romfs[fs].blkcache, buff, 512);
 	fe = (void *) buff;
 	
 	if (offset >= fe->size)
@@ -177,9 +176,9 @@ end_of_fname:
 	for (c = 0; c < count; c += i) {
 		/* TODO: Buffer this better */
 		seek = offset + c;
-		if ((t = module_seek(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, seek, 0)) < 0)
+		if ((t = romfs_blkcache_seek(&romfs[fs].blkcache, seek, 0)) < 0)
 			return t;
-		if ((i = module_read(romfs[fs].blkcache.major, romfs[fs].blkcache.minor, buff, 512)) < 0)
+		if ((i = romfs_blkcache_read(&romfs[fs].blkcache, buff, 512)) <= 0)
 			return i;
 		memcpy(buf + c, buff, i);
 	}

@@ -1,9 +1,9 @@
 #ifndef __VFS_H__
 #define	__VFS_H__
 
+#include <sys/types.h>
 #include <limits.h>
 #include <stdint.h>
-#include "../module.h"
 
 #define	MOUNT_PATH_MAX		64
 #define	VFS_MOUNT_MAX		16

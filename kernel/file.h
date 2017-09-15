@@ -12,6 +12,8 @@ struct FileDescriptor {
 
 	uint32_t			flags;
 	int64_t				pos;
+	int64_t				ino;
+	int				size;
 	uint32_t			ref;
 };
 

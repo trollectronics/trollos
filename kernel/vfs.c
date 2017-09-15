@@ -3,8 +3,8 @@
 #include <errno.h>
 #include <stddef.h>
 #include "vfs.h"
-#include "../../util/mem.h"
-#include "../../util/string.h"
+#include "util/mem.h"
+#include "util/string.h"
 
 struct Vfs vfs_state;
 
@@ -37,7 +37,7 @@ static int _path_lookup(char path[PATH_MAX], struct VfsInode *ret) {
 
 	path[PATH_MAX - 1] = 0;
 	if (path[0] != '/') {
-		if (!merge_path("", path, tmp_path))
+		if (!_merge_path("", path, tmp_path))
 			return -ENOENT;
 		tmp_path[PATH_MAX - 1] = 0;
 	}

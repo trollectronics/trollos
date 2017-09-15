@@ -76,10 +76,18 @@ char *strchr(char *str, char chr) {
 
 char *strtok_r(char *buff, const char *delim, char **next) {
 	char *search, *ret, *new;
-	
+	int i;
+
 	if (!(search = buff?buff:(*next)))
 		return NULL;
 	
+	do {
+		ret = search;
+		for (i = 0; delim[i] && *search; i++)
+			if (*search == delim[i])
+				search++;
+	} while (ret != search);
+
 	ret = NULL;
 	
 	for (; *delim; delim++) {
