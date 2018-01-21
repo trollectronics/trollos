@@ -62,19 +62,24 @@ int main(int argc, char **argv) {
 	
 	dev_t console_devnum;
 	device_register("console", console, &console_devnum);
-	//Open stdin, stdout, stderr
-	vfs_open_device(console_devnum, 0);
-	vfs_open_device(console_devnum, 0);
+	//stdin, stdout, stderr
 	vfs_open_device(console_devnum, 0);
 	
 	memblk_init();
 	//memblk_open(
 
 	pid_t pid;
+	Process *proc;
 	pid = process_create(0, 0);
 	kprintf(LOG_LEVEL_DEBUG, "process created\n");
 	process_switch_to(pid);
 	process_set_pc(pid, init = elf_load(bin_init));
+	proc = process_from_pid(pid);
+	
+	//stdin, stdout, stderr
+	proc->file[0] = 0;
+	proc->file[1] = 0;
+	proc->file[2] = 0;
 	
 	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
 	int_set_handler(CHIPSET_INT_BASE + 1, process_isr);
