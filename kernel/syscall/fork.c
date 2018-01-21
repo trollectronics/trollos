@@ -1,7 +1,8 @@
+#include <stdint.h>
 #include <errno.h>
 #include "../util/mem.h"
 #include "../util/log.h"
-#include "../process.h"
+#include <trollos/process.h>
 #include "../mmu.h"
 
 static pid_t _fork(void) {
@@ -26,6 +27,7 @@ static pid_t _fork(void) {
 	new->reg.pc = current->reg.pc;
 	new->reg.stack = current->reg.stack;
 	memcpy(new->reg.general, current->reg.general, sizeof(new->reg.general));
+	memcpy(new->file, current->file, sizeof(int32_t)*MAX_PROCESS_FILES);
 	new->reg.general[0] = 0; /* Fork returns 0 for child */
 	new->parent = current->pid;
 	

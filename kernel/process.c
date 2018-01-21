@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "util/mem.h"
 #include "util/log.h"
-#include "process.h"
+#include <trollos/process.h>
 #include "mmu.h"
 #include "kernel.h"
 

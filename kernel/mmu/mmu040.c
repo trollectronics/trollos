@@ -184,25 +184,6 @@ static void _get_table_indices(void *virtual_address, uint32_t *root_table_index
 	*page_table_index = (virtual >> PAGE_OFFSET_BITS) & (PAGE_LEVEL_DESCRIPTORS - 1);
 }
 
-//static Mmu040PointerTableDescriptor *_allocate_pointer_level_table() {
-	//pointer_td += POINTER_LEVEL_DESCRIPTORS;
-	
-	//if(!(((uint32_t) pointer_td) & (POINTER_LEVEL_DESCRIPTORS - 1))) {
-		//pointer_td = _alloc_frame();
-	//}
-	
-	//return pointer_td;
-//}
-
-//static Mmu040PageTableDescriptor *_allocate_page_table() {
-	//page_td += PAGE_DESCRIPTORS;
-	
-	//if(!(((uint32_t) page_td) & (PAGE_DESCRIPTORS - 1))) {
-		//page_td = _alloc_frame();
-	//}
-	
-	//return page_td;
-//}
 
 void mmu040_init() {
 	int i;
@@ -216,37 +197,6 @@ void mmu040_init() {
 	
 	_build_free_frame_list();
 }
-
-//void *mmu040_get_physical_manual(uint32_t virtual_address) {
-	//uint32_t root_table_index, pointer_table_index, page_table_index;
-	//Mmu040PointerTableDescriptor *pointer_table;
-	//Mmu040PageTableDescriptor *page_table;
-	//void *frame;
-	
-	//_get_table_indices(virtual_address, &root_table_index, &pointer_table_index, &page_table_index);
-	
-	//if(UDT_IS_RESIDENT(root_td[root_table_index].table.upper_level_descriptor_type)) {
-		//pointer_table = (void *) (root_td[root_table_index].table.table_address << ROOT_LEVEL_DESCRIPTOR_BITS);
-	//} else {
-		//printf("Failed root table lookup\n");
-		//return NULL;
-	//}
-	
-	//if(UDT_IS_RESIDENT(pointer_table[pointer_table_index].table.upper_level_descriptor_type)) {
-		//page_table = (void *) (pointer_table[pointer_table_index].table.table_address << POINTER_LEVEL_DESCRIPTOR_BITS);
-	//} else {
-		//printf("Failed pointer table lookup\n");
-		//return NULL;
-	//}
-	
-	//if(PDT_IS_RESIDENT(page_table[page_table_index].page.page_descriptor_type)) {
-		//frame = (void *) (page_table[page_table_index].page.physical_address << PAGE_OFFSET_BITS);
-	//} else {
-		//printf("Failed page table lookup\n");
-		//return NULL;
-	//}
-	//return frame;
-//}
 
 
 int mmu040_init_userspace(MmuUserspaceHandle *userspace) {

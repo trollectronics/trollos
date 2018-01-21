@@ -10,7 +10,7 @@
 #include "util/string.h"
 #include "int.h"
 #include "mmu.h"
-#include "process.h"
+#include <trollos/process.h>
 #include "kernel.h"
 #include "debug.h"
 #include "init.h"
@@ -36,20 +36,16 @@ int main(int argc, char **argv) {
 	console = early_init();
 	
 	kprintf(LOG_LEVEL_NONE, "\x1b[2J\x1b[1;1H\x1b[0mTrollOS kernel\n");
-	log_set_level(LOG_LEVEL_DEBUG);
+	log_set_level(LOG_LEVEL_INFO);
 	
 	kprintf(LOG_LEVEL_NONE, "argv = { ");
 	if(argc > 0) {
-		//terminal_set_fg(CONSOLE_COLOR_LIGHT_CYAN);
 		kprintf(LOG_LEVEL_NONE, "%s", argv[0]);
 	}
 	for(i = 1; i < argc; i++) {
-		//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
 		kprintf(LOG_LEVEL_NONE, ", ");
-		//terminal_set_fg(CONSOLE_COLOR_LIGHT_CYAN);
 		kprintf(LOG_LEVEL_NONE, "%s", argv[i]);
 	}
-	//terminal_set_fg(CONSOLE_COLOR_LIGHT_GRAY);
 	kprintf(LOG_LEVEL_NONE, " }\n");
 
 	for(i = 1; i < argc; i++) {
