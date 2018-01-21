@@ -129,6 +129,7 @@ int process_wait(pid_t pid) {
 void process_switch_to(pid_t pid) {
 	mmu_switch_userspace(&_process[pid]->userspace);
 	mmu_invalidate_all();
+	mmu_map_current_userspace();
 	_process_current = pid;
 }
 
@@ -156,7 +157,7 @@ void *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter,
 	
 	for(next = (_process_current + 1) % MAX_PROCESSES; !_process[next]; next = (next + 1) % MAX_PROCESSES);
 	process_switch_to(next);
-	kprintf(LOG_LEVEL_DEBUG, "Scheduler switching to %i PC=%X\n", next, _process[next]->reg.pc);
+	//kprintf(LOG_LEVEL_DEBUG, "Scheduler switching to %i PC=%X\n", next, _process[next]->reg.pc);
 	/*kprintf(LOG_LEVEL_DEBUG, " - PC = 0x%x\n", _process[_process_current]->reg.pc);
 	kprintf(LOG_LEVEL_DEBUG, " - FL = 0x%x\n", _process[_process_current]->reg.status);
 	kprintf(LOG_LEVEL_DEBUG, " - SP = 0x%x\n", _process[_process_current]->reg.stack);*/

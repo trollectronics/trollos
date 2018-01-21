@@ -153,6 +153,7 @@ int mmu040_switch_userspace(MmuUserspaceHandle *userspace);
 void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned int size);
 void mmu040_copy_from_userspace(void *dst, void *src, size_t size);
 void mmu040_copy_to_userspace(void *dst, void *src, size_t size);
+void mmu040_map_current_userspace();
 
 void mmu040_zero_4k(void *addr);
 void mmu040_set_tc(Mmu040RegTranslationControl *tc);

@@ -31,11 +31,12 @@ void panic(const char *message) {
 int main(int argc, char **argv) {
 	int (*init)(int argc, char **argv);
 	int i;
+	Device *console;
 	
-	early_init();
+	console = early_init();
 	
 	kprintf(LOG_LEVEL_NONE, "\x1b[2J\x1b[1;1H\x1b[0mTrollOS kernel\n");
-	log_set_level(LOG_LEVEL_INFO);
+	log_set_level(LOG_LEVEL_DEBUG);
 	
 	kprintf(LOG_LEVEL_NONE, "argv = { ");
 	if(argc > 0) {
@@ -62,6 +63,13 @@ int main(int argc, char **argv) {
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
+	
+	dev_t console_devnum;
+	device_register("console", console, &console_devnum);
+	//Open stdin, stdout, stderr
+	vfs_open_device(console_devnum, 0);
+	vfs_open_device(console_devnum, 0);
+	vfs_open_device(console_devnum, 0);
 	
 	memblk_init();
 	//memblk_open(

@@ -11,5 +11,6 @@
 #define mmu_alloc_at mmu040_alloc_at
 #define mmu_invalidate_all mmu040_invalidate_all
 #define mmu_switch_userspace mmu040_switch_userspace
+#define mmu_map_current_userspace mmu040_map_current_userspace
 
 #endif

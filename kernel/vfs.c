@@ -27,6 +27,8 @@ freely, subject to the following restrictions:
 #include <errno.h>
 #include <sys/stat.h>
 #include <trollos/vfs.h>
+#include "util/log.h"
+#include "util/printf.h"
 
 static struct VFSFileEntry vfs_file[MAX_GLOBAL_FILES];
 
@@ -131,9 +133,12 @@ off_t vfs_seek(int fd, off_t offset, int whence) {
 ssize_t vfs_write(int fd, void *buf, size_t count) {
 	struct Device *dev;
 	
+	kprintf(LOG_LEVEL_DEBUG, "Write to file %i from 0x%X (%lu)\n", fd, buf, count);
+	
 	if (!vfs_file[fd].is_device)
 		return -EPERM;
 	dev = device_lookup(vfs_file[fd].data.dev.dev);
+	kprintf(LOG_LEVEL_DEBUG, "Device %u (0x%X)\n", vfs_file[fd].data.dev.dev, dev);
 	if (dev->type == DEVICE_TYPE_BLOCK) {
 		if (dev->blockdev.write) {
 			return dev->blockdev.write(buf, count);
@@ -142,6 +147,7 @@ ssize_t vfs_write(int fd, void *buf, size_t count) {
 		}
 	} else if (dev->type == DEVICE_TYPE_CHAR) {
 		if (dev->chardev.write) {
+			kprintf(LOG_LEVEL_DEBUG, "is chardev\n");
 			return dev->chardev.write(buf, count);
 		} else {
 			return -ENOSYS;
@@ -241,6 +247,31 @@ int vfs_open(const char *path, int flags) {
 	vfs_file[err].ref = 1;
 	
 	return err;
+}
+
+
+int vfs_open_device(dev_t device, int flags) {
+	int fd;
+	
+	if ((fd = _alloc_file()) < 0)
+		return fd;
+
+	vfs_file[fd].mode = 0;
+	vfs_file[fd].read = true;
+	vfs_file[fd].unsupported = false;
+	vfs_file[fd].directory = false;
+	vfs_file[fd].pos = 0;
+	vfs_file[fd].data.fs.inode = -1;
+
+	vfs_file[fd].is_device = true;
+	vfs_file[fd].data.dev.dev = device;
+	vfs_file[fd].write = true;
+
+	vfs_file[fd].ref = 1;
+	
+	kprintf(LOG_LEVEL_DEBUG, "Opened file %i as device %lu\n", fd, device);
+	
+	return fd;
 }
 
 

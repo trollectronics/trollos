@@ -543,6 +543,30 @@ void mmu040_copy_to_userspace(void *dst, void *src, size_t size) {
 	_mapping_pop();
 }
 
+void mmu040_map_current_userspace() {
+	Mmu040RegRootPointer srp, urp;
+	Mmu040RootTableDescriptor *supervisor_root_table, *user_root_table;
+	PhysicalAddress ph;
+	uint32_t userspace_descriptors = (ROOT_LEVEL_DESCRIPTORS / 4) * 3;
+	uint32_t i;
+	
+	mmu040_get_srp(&srp);
+	mmu040_get_urp(&urp);
+	
+	ph = srp.root_pointer << SRP_URP_DESCRIPTOR_BITS;
+	supervisor_root_table = (void *) REPAGE(ph, _mapping_push(ph));
+	
+	ph = urp.root_pointer << SRP_URP_DESCRIPTOR_BITS;
+	user_root_table = (void *) REPAGE(ph, _mapping_push(ph));
+	
+	for(i = 0; i < userspace_descriptors; i++) {
+		supervisor_root_table[i] = user_root_table[i];
+	}
+	
+	_mapping_pop();
+	_mapping_pop();
+}
+
 void mmu_print_status() {
 	kprintf(LOG_LEVEL_INFO, "%lu kB of %lu kB RAM used\n", (_mem_layout.total_frames - _mem_layout.free_frames)*(MMU_PAGE_SIZE/1024), _mem_layout.total_frames*(MMU_PAGE_SIZE/1024));
 }

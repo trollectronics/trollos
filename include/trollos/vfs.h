@@ -62,6 +62,7 @@ struct VFSFileEntry {
 };
 
 int vfs_open(const char *path, int flags);
+int vfs_open_device(dev_t device, int flags);
 int vfs_read_directory(int fd, struct dirent *de, int dirs);
 ssize_t vfs_read(int fd, void *buf, size_t count);
 ssize_t vfs_write(int fd, void *buf, size_t count);
