@@ -358,7 +358,7 @@ int mmu040_switch_userspace(MmuUserspaceHandle *userspace) {
 	return 0;
 }
 
-PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) {
+PhysicalAddress mmu040_alloc_at(void *virt, bool supervisor, bool write_protected) {
 	Mmu040RegRootPointer rp;
 	uint32_t root_table_index, pointer_table_index, page_table_index;
 	Mmu040RootTableDescriptor *root_table;
@@ -418,7 +418,7 @@ PhysicalAddress mmu_alloc_at(void *virt, bool supervisor, bool write_protected) 
 	return frame;
 }
 
-void mmu_free_at(void *virt, bool supervisor) {
+void mmu040_free_at(void *virt, bool supervisor) {
 	//TODO: implement
 	kprintf(LOG_LEVEL_ERROR, "mmu_free_at not implemented\n");
 }
@@ -517,6 +517,6 @@ void mmu040_map_current_userspace() {
 	_mapping_pop();
 }
 
-void mmu_print_status() {
+void mmu040_print_status() {
 	kprintf(LOG_LEVEL_INFO, "%lu kB of %lu kB RAM used\n", (_mem_layout.total_frames - _mem_layout.free_frames)*(MMU_PAGE_SIZE/1024), _mem_layout.total_frames*(MMU_PAGE_SIZE/1024));
 }

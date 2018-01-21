@@ -144,11 +144,16 @@ void mmu_bus_error();
 uint32_t mmu040_test_read(void *addr);
 void *mmu040_get_physical_manual(uint32_t virtual_address);
 PhysicalAddress mmu040_get_physical(void *phys, bool supervisor);
+void mmu040_invalidate_page(void *addr);
+void mmu040_print_status();
 
 int mmu040_init_userspace(MmuUserspaceHandle *userspace);
 void mmu040_free_userspace(MmuUserspaceHandle *userspace);
 int mmu040_clone_userspace(MmuUserspaceHandle *from, MmuUserspaceHandle *to);
 int mmu040_switch_userspace(MmuUserspaceHandle *userspace);
+
+PhysicalAddress mmu040_alloc_at(void *virt, bool supervisor, bool write_protected);
+void mmu040_free_at(void *virt, bool supervisor);
 
 void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned int size);
 void mmu040_copy_from_userspace(void *dst, void *src, size_t size);
