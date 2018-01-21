@@ -40,8 +40,8 @@ static ino_t root_inode;
 
 
 static int _read_unaligned(dev_t dev, void *buf, ssize_t bytes, off_t offset) {
-	ssize_t blksize, dobytes;
-	uint8_t buff[blksize = device_lookup(dev)->blockdev.blksize(dev)];
+	/*ssize_t blksize, dobytes;
+	uint8_t buff[blksize = device_lookup(dev)->blockdev.blksize(dev)];*/
 	struct Device *d;
 
 	if (offset < 0)
@@ -49,16 +49,20 @@ static int _read_unaligned(dev_t dev, void *buf, ssize_t bytes, off_t offset) {
 	if (!bytes)
 		return 0;
 	d = device_lookup(dev);
-	for (; bytes;) {
+
+	/* As it turns out, this is not how block devices work in TrollOS */
+	/*for (; bytes;) {
 		if (bytes <= (dobytes = (blksize - (offset % blksize))))
 			dobytes = bytes;
-		d->blockdev.read(dev, offset / blksize, buff, 1);
+		d->blockdev.read(dev, offset, buff, 1);
 		memcpy(buf, buff + offset % blksize, dobytes);
 
 		buf += dobytes;
 		offset += dobytes;
 		bytes -= dobytes;
-	}
+	}*/
+
+	d->blockdev.read(dev, offset, buf, bytes);
 
 	return 0;
 }

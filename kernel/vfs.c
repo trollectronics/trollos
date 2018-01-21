@@ -174,9 +174,11 @@ ssize_t vfs_read(int fd, void *buf, size_t count) {
 				return -ENOSYS;
 			return dev->chardev.read(buf, count);
 		} else {
-			/* We'll need to buffer this at some point */
-			//if (!dev->blockdev.read(vfs_file[fd].data.dev.dev, vfs_file[fd].pos, 
-			return -ENOSYS;
+			if (!dev->blockdev.read)
+				return -ENOSYS;
+			if ((err = dev->blockdev.read(vfs_file[fd].data.dev.dev, vfs_file[fd].pos, buf, count)) > 0)
+				vfs_file[fd].pos += err;
+			return err;
 		}
 	} else {
 		if (vfs_file[fd].directory)
