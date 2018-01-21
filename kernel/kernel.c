@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 	}
 	kprintf(LOG_LEVEL_NONE, " }\n");
 
-	for(i = 1; i < argc; i++) {
+	for(i = 0; i < argc; i++) {
 		if(!strncmp(argv[i], "loglevel=", 9)) {
 			log_set_level(str_parse_int(argv[i] + 9));
 			break;
@@ -59,6 +59,14 @@ int main(int argc, char **argv) {
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
+	
+	//for(i = 0; i < argc; i++) {
+	//	if(!strcmp(argv[i], "debug")) {
+			set_debug_traps();
+			breakpoint();
+	//		break;
+	//	}
+	//}
 	
 	dev_t console_devnum;
 	device_register("console", console, &console_devnum);

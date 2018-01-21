@@ -114,7 +114,7 @@
 #include "debug.h"
 
 
-#define mc68020
+#define mc68040
 
 /************************************************************************
  *
@@ -206,6 +206,10 @@ int* stackPtr = &remcomStack[STACKSIZE/sizeof(int) - 1];
 
 static ExceptionHook oldExceptionHook;
 
+#ifdef mc68040
+const short exceptionSize[] = { 4,4,6,6,8,0,0,30,0,0,0,0,0,0,0,0,0 };
+#endif
+
 #ifdef mc68020
 /* the size of the exception stack on the 68020 varies with the type of
  * exception.  The following table is the number of WORDS used
@@ -292,7 +296,7 @@ __asm__("\n\t\
 .globl _debug_level7\n\t\
 _debug_level7:\n\t\
 	movew   %d0,-(%sp)");
-#if defined (mc68020) || defined (mc68332)
+#if defined (mc68020) || defined (mc68332) || defined (mc68040)
 __asm__("	movew   2(%sp),%d0");
 #else
 __asm__("	movew   6(%sp),%d0");
@@ -304,13 +308,13 @@ __asm__("	andiw   #0x700,%d0\n\t\
         bra     _catchException\n\t\
 _already7:\n\t\
 	movew   (%sp)+,%d0");
-#if !defined (mc68020) && !defined (mc68332)
+#if !defined (mc68020) && !defined (mc68332) && !defined (mc68040)
 __asm__("	lea     4(%sp),%sp");     /* pull off 68000 return address */
 #endif
 __asm__("	rte");
 
 extern void _catchException ();
-#if defined (mc68020) || defined (mc68332)
+#if defined (mc68020) || defined (mc68332) || defined (mc68040)
 /* This function is called when a 68020 exception occurs.  It saves
  * all the cpu and fpcp regs in the registers array, creates a frame on a
  * linked list of frames which has the cpu and fpcp stack frames needed
@@ -501,7 +505,7 @@ _returnFromException (Frame * frame)
       frame->fsaveHeader = -1;	/* restore regs, but we dont have fsave info */
     }
 
-#if !defined (mc68020) && !defined (mc68332)
+#if !defined (mc68020) && !defined (mc68332) && !defined (mc68040)
   /* a 68000 cannot use the internal info pushed onto a bus error
    * or address error frame when doing an RTE so don't put this info
    * onto the stack or the stack will creep every time this happens.
