@@ -1,109 +1,254 @@
-#include <syslimits.h>
-#include <limits.h>
+/*
+Copyright (c) 2018 Steven Arnow <s@rdw.se>
+'vfs.c' - This file is part of trollos
+
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+	1. The origin of this software must not be misrepresented; you must not
+	claim that you wrote the original software. If you use this software
+	in a product, an acknowledgment in the product documentation would be
+	appreciated but is not required.
+
+	2. Altered source versions must be plainly marked as such, and must not be
+	misrepresented as being the original software.
+
+	3. This notice may not be removed or altered from any source
+	distribution.
+*/
+
+#include "modules/fs/romfs.h"
+#include <device.h>
 #include <errno.h>
-#include <stddef.h>
-#include "vfs.h"
-#include "util/mem.h"
-#include "util/string.h"
+#include <sys/stat.h>
+#include <trollos/vfs.h>
 
-struct Vfs vfs_state;
+static struct VFSFileEntry vfs_file[MAX_GLOBAL_FILES];
 
-void vfs_init() {
+//static dev_t device;
+
+
+static int _alloc_file() {
 	int i;
 
-	for (i = 0; i < VFS_MOUNT_MAX; i++)
-		vfs_state.mount[i].fs_type = VFS_FS_TYPE_INVALID;
-	return;
-}
-
-
-static int _merge_path(char *path_in1, char *path_in2, char path_out[PATH_MAX]) {
-	int i, j, k;
-
-	for (i = k = 0; path_in1[i] && k < PATH_MAX - 1; i++, k++)
-		path_out[k] = path_in1[i];
-	path_out[k++] = '/';
-	for (j = 0; path_in2[i] && k < PATH_MAX - 1; j++, k++)
-		path_out[k] = path_in2[j];
-	path_out[k++] = 0;
-	return (k < PATH_MAX);
-}
-
-
-static int _path_lookup(char path[PATH_MAX], struct VfsInode *ret) {
-	char tmp_path[PATH_MAX], *save, *tok;
-	struct VfsInode cur_inode;
-	int i;
-
-	path[PATH_MAX - 1] = 0;
-	if (path[0] != '/') {
-		if (!_merge_path("", path, tmp_path))
-			return -ENOENT;
-		tmp_path[PATH_MAX - 1] = 0;
+	for (i = 0; i < MAX_GLOBAL_FILES; i++) {
+		if (vfs_file[i].is_used)
+			continue;
+		vfs_file[i].is_used = true;
+		return i;
 	}
 
-	memcpy(tmp_path, path, PATH_MAX);
-	path++;
+	return -EMFILE;
+}
 
-	for (tok = strtok_r(tmp_path, "/", &save); tok; tok = strtok_r(NULL, "/", &save)) {
-		for (i = 0; i < VFS_MOUNT_MAX; i++) {
-			if (vfs_state.mount[i].fs_type == VFS_FS_TYPE_INVALID)
-				continue;
-			if (cur_inode.mount == vfs_state.mount[i].mounted_on.mount && cur_inode.inode == vfs_state.mount[i].mounted_on.inode) {
-				cur_inode = vfs_state.mount[i].root;
-				break;
-			}
+
+static int _extract_component(const char *str, char *component) {
+	int i;
+
+	for (i = 0; i < NAME_MAX && str[i]; i++)
+		if ((component[i] = str[i]) == '/')
+			break;
+	component[i] = 0;
+	if (str[i])
+		i++;
+	return i;
+}
+
+
+static int _resolv_ino(const char *path, dev_t *dev, ino_t *ino, int link) {
+	char c[NAME_MAX + 1];
+	int pos, err;
+	ino_t dir;
+	struct stat s;
+
+	if (link >= 32)
+		return -EMLINK;
+	if (!path[0])
+		return -EINVAL;
+	if (path[0] != '/')
+		return -ENOENT;
+	
+	dir = 0;
+	pos = _extract_component(&path[1], c);
+	if (path[pos] == '/')
+		pos++;
+	for (link = 0; path[pos]; ) {
+		if ((err = fs_romfs_stat(dir, c, &s)) < 0)
+			return err;
+		if (S_ISDIR(s.st_mode)) {
+			if (!path[pos]) 
+				goto done;
+			pos += _extract_component(&path[pos], c);
+			dir = s.st_ino;
+			continue;
+		} else {
+			return -ENOTDIR;
 		}
-		
-		if ((cur_inode.inode = fs_inode_lookup(cur_inode.mount, cur_inode.context_id, cur_inode.inode, tok)) < 0)
-			return cur_inode.inode;
 	}
+	
+	if ((err = fs_romfs_stat(dir, c, &s)) < 0)
+		return err;
 
-	*ret = cur_inode;
+done:
+
+	*dev = s.st_dev;
+	*ino = s.st_ino;
 	return 0;
 }
 
 
-static int _file_type(char path[PATH_MAX]) {
-	int i;
-	int best_score = -1;
-	int best_mount = -1;
-	char *file_path;
+int vfs_stat(const char *path, struct stat *s) {
+	int err;
+	dev_t dev;
+	ino_t ino;
 
-	for (i = 0; i < VFS_MOUNT_MAX; i++) {
-		if (vfs_state.mount[i].fs_type == VFS_FS_TYPE_INVALID)
-			continue;
-		else {
-			/*tmp = _score_match(vfs_state.mount[i].mount_path, path, MOUNT_PATH_MAX);
-			if (tmp > best_score)
-				best_score = tmp, best_mount = i;*/
-		}
-	}
-	
-	if (best_mount < 0)
-		return -ENOENT;
-	
-	if (best_score != INT_MAX)
-		file_path = path + best_score;
-	else // Perfect score == matches path exactly
-		return S_IFDIR;
-	/* TODO: Ask file system about file type */
-	return -ENOENT;
+	if ((err = _resolv_ino(path, &dev, &ino, 0)) < 0)
+		return err;
+	if ((err = fs_romfs_stat(ino, "", s)) < 0)
+		return err;
+	return 0;
 }
 
-/* Need to have user and group context in here somewhere */
-int vfs_open(void *data, uint32_t flags) {
-	char path[PATH_MAX];
-	struct VfsInode inode;
-	int tmp;
+
+off_t vfs_seek(int fd, off_t offset, int whence) {
+	if (whence == 0) {
+		return (vfs_file[fd].pos = offset);
+	} else if (whence == 1) {
+		return (vfs_file[fd].pos += offset);
+	} else if (whence == 2) {
+		return -ENOSYS;
+		// TODO: Implement
+	} else
+		return -EINVAL;
+}
+
+
+ssize_t vfs_write(int fd, void *buf, size_t count) {
+	struct Device *dev;
 	
-	memset(path, 0, PATH_MAX);
-	memcpy_from_user(path, data, PATH_MAX - 1);
+	if (!vfs_file[fd].is_device)
+		return -EPERM;
+	dev = device_lookup(vfs_file[fd].data.dev.dev);
+	if (dev->type == DEVICE_TYPE_BLOCK) {
+		if (dev->blockdev.write) {
+			return dev->blockdev.write(buf, count);
+		} else {
+			return -ENOSYS;
+		}
+	} else if (dev->type == DEVICE_TYPE_CHAR) {
+		if (dev->chardev.write) {
+			return dev->chardev.write(buf, count);
+		} else {
+			return -ENOSYS;
+		}
+	} else
+		return -ENOSYS;
+}
 
-	if ((tmp = _path_lookup(path, &inode)) < 0)
-		return tmp;
+
+ssize_t vfs_read(int fd, void *buf, size_t count) {
+	struct Device *dev;
+	ssize_t err;
+
+	if (fd < -1 || fd >= MAX_GLOBAL_FILES)
+		return -EBADF;
+	if (!vfs_file[fd].is_used)
+		return -EBADF;
+	if (vfs_file[fd].is_device) {
+		dev = device_lookup(vfs_file[fd].data.dev.dev);
+		if (!dev)
+			return -ENODEV;
+		if (dev->type == DEVICE_TYPE_CHAR) {
+			if (!dev->chardev.read)
+				return -ENOSYS;
+			return dev->chardev.read(buf, count);
+		} else {
+			/* We'll need to buffer this at some point */
+			//if (!dev->blockdev.read(vfs_file[fd].data.dev.dev, vfs_file[fd].pos, 
+			return -ENOSYS;
+		}
+	} else {
+		if (vfs_file[fd].directory)
+			return -EISDIR;
+		if (!vfs_file[fd].read)
+			return -EACCES;
+		err = fs_romfs_read(vfs_file[fd].data.fs.inode, buf, count, vfs_file[fd].pos);
+		if (err > 0)
+			vfs_file[fd].pos += err;
+		return err;
+
+	}
+}
+
+
+int vfs_read_directory(int fd, struct dirent *de, int dirs) {
+	int i, err;
+	struct dirent tde;
+
+	if (fd < 0 || fd >= MAX_GLOBAL_FILES)
+		return -EBADF;
+	if (vfs_file[fd].is_device)
+		return -ENOTDIR;
+	if (!vfs_file[fd].directory)
+		return -ENOTDIR;
+
+	for (i = 0; i < dirs; i++) {
+		if ((err = fs_romfs_read_directory(vfs_file[fd].data.fs.inode, vfs_file[fd].pos, &tde)) < 0)
+			return err;
+		if (!err)
+			return i;
+		de[i] = tde;
+	}
+
+	return i;
+}
+
+
+int vfs_open(const char *path, int flags) {
+	int err;
+	struct stat s;
 	
-	/* TODO: Take permissions into account */
+	if ((err = vfs_stat(path, &s)) < 0)
+		return err;
+	if ((err = _alloc_file()) < 0)
+		return err;
+
+	vfs_file[err].mode = s.st_mode;
+	vfs_file[err].is_device = false;
+	vfs_file[err].read = true;
+	vfs_file[err].write = false;
+	vfs_file[err].unsupported = false;
+	vfs_file[err].directory = false;
+	vfs_file[err].pos = 0;
+	vfs_file[err].data.fs.inode = s.st_ino;
+
+	if (S_ISBLK(s.st_mode) || S_ISCHR(s.st_mode)) {
+		vfs_file[err].is_device = true;
+		vfs_file[err].data.dev.dev = s.st_rdev;
+		vfs_file[err].write = true;
+	} else if (S_ISDIR(s.st_mode)) {
+		vfs_file[err].directory = true;
+	} else if (S_ISREG(s.st_mode)) {
+	} else {
+		vfs_file[err].unsupported = false;
+	}
+
+	vfs_file[err].ref = 1;
+	
+	return err;
+}
 
 
+int vfs_close(int fd) {
+	if (fd < 0 || fd >= MAX_GLOBAL_FILES)
+		return -EBADF;
+	vfs_file[fd].ref--;
+	if (!vfs_file[fd].ref)
+		vfs_file[fd].is_used = false;
+	return 0;
 }

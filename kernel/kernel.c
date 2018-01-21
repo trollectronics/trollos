@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 	mmu_print_status();
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
-
+	
 	memblk_init();
 	//memblk_open(
 

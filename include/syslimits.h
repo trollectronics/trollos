@@ -1,8 +1,9 @@
-#ifndef __INCLUDE_SYSLIMITS_H__
-#define	__INCLUDE_SYSLIMITS_H__
+#ifndef INCLUDE_SYSLIMITS_H_
+#define	INCLUDE_SYSLIMITS_H_
 
 
 
 #define	PATH_MAX (1024)
+#define	NAME_MAX (1024)
 
 #endif

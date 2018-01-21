@@ -42,7 +42,7 @@ static void memblk_return(int d) {
 
 int memblk_init() {
 	int i;
-
+	
 	for (i = 0; i < MAX_MEMBLK; i++)
 		memblk_return(i);
 	

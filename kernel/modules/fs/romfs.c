@@ -1,187 +1,207 @@
-#include <stdint.h>
+/*
+Copyright (c) 2018 Steven Arnow <s@rdw.se>
+'romfs.c' - This file is part of trollos
+
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+	1. The origin of this software must not be misrepresented; you must not
+	claim that you wrote the original software. If you use this software
+	in a product, an acknowledgment in the product documentation would be
+	appreciated but is not required.
+
+	2. Altered source versions must be plainly marked as such, and must not be
+	misrepresented as being the original software.
+
+	3. This notice may not be removed or altered from any source
+	distribution.
+*/
+
+#include <device.h>
+#include <dirent.h>
+#include "limits.h"
+
 #include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include <stdint.h>
 #include <sys/types.h>
-#include "../../util/log.h"
-#include "../../util/mem.h"
+#include <sys/stat.h>
+
 #include "../../util/string.h"
-#include "blkcache.h"
-#include "../../file.h"
 
-#define	_ROMFS
-#include "romfs.h"
+#define	MAKE_INT(ptr)	((((uint8_t *) ptr)[0] << 24) | (((uint8_t *) ptr)[1] << 16) | (((uint8_t *) ptr)[2] << 8) | (((uint8_t *) ptr)[3]))
 
-static struct RomfsDescriptor romfs[MAX_ROMFS];
-/* TODO: Rewrite to be endianess independent */
+static dev_t device;
+static ino_t root_inode;
 
 
-static void romfs_return(int d) {
-	if (d < 0 || d >= MAX_ROMFS)
-		return;
-	romfs[d].blkcache.major = -1;
-}
+static int _read_unaligned(dev_t dev, void *buf, ssize_t bytes, off_t offset) {
+	ssize_t blksize, dobytes;
+	uint8_t buff[blksize = device_lookup(dev)->blockdev.blksize(dev)];
+	struct Device *d;
 
-
-static int romfs_alloc() {
-	int i;
-
-	for (i = 0; i < MAX_ROMFS; i++)
-		if (romfs[i].blkcache.major < 0)
-			return i;
-	return -ENOENT;
-}
-
-
-int romfs_init() {
-	int i;
-
-	for (i = 0; i < MAX_ROMFS; i++)
-		romfs_return(i);
-	kprintf(LOG_LEVEL_INFO, "[romfs] Module initialized\n");
-	return 0;
-}
-
-
-int romfs_open(void *ptr, uint32_t flags) {
-	return -EPERM;
-}
-
-
-int romfs_open_device(void *aux, uint32_t major, uint32_t minor, uint32_t flags, uint64_t *root_inode) {
-	int fs;
-	uint32_t i;
-	char buff[256];
-
-	if ((fs = romfs_alloc()) < 0)
-		return fs;
-	romfs[fs].blkcache = romfs_blkcache_open(major, minor);
-	
-
-	romfs_blkcache_seek(&romfs[fs].blkcache, 0, SEEK_SET);
-	romfs_blkcache_read(&romfs[fs].blkcache, buff, 256);
-
-	if (strncmp(buff, "-rom1fs-", 8))
-		goto fail;
-
-	/* TODO: Handle longer volume lables */
-	for (i = 0; i < 256-16; i++)
-		if (!buff[16 + i])
-			goto end_found;
-
-	return -EINVAL;
-fail:
-	romfs_return(fs);
-	return -EINVAL;
-
-end_found:
-	if (i & 0xF)
-		i += 0x10;
-	i &= (~0xF);
-	romfs[fs].inode_offset = (i >> 4);
-	*root_inode = 0;
-
-	return fs;
-}
-
-
-int romfs_inode_stat(int context, int64_t inode, const char *name, struct stat *st_s) {
-	int i, t, link = 0;
-	uint8_t buff[256];
-	struct RomfsFileEntry *fe;
-	struct stat st;
-
-	inode += romfs[context].inode_offset;
-	inode <<= 4;
-	
-	restart:
-	if (link >= 16)
-		return -EMLINK;
-
-	if ((t = romfs_blkcache_seek(&romfs[context].blkcache, inode, 0)) < 0)
-		return t;
-	if ((i = romfs_blkcache_read(&romfs[context].blkcache, buff, 256)) < 0)
-		return i;
-	fe = (void *) buff;
-	if ((buff[3] & 0x7) == 0) { // hard link
-		link++;
-		inode = fe->next_fileheader & (~0xF);
-		goto restart;
-	} else if ((buff[3] & 0x7) != 1) // directory
-		return -ENOTDIR;
-	
-	for (inode = fe->next_fileheader; inode; inode = (fe->next_fileheader & (~0xF))) {
-		if ((t = romfs_blkcache_seek(&romfs[context].blkcache, inode, 0)) < 0)
-			return t;
-		if ((i = romfs_blkcache_read(&romfs[context].blkcache, buff, 256)) < 0)
-			return i;
-		
-		if (!(strncmp((char *) buff + 16, (char *) name, 256-16)))
-			continue;
-		goto found_it;
-	}
-
-	return -ENOENT;
-found_it:
-	// TODO: Replace this with a proper macro
-	st.st_dev = makedev(romfs[context].blkcache.major, romfs[context].blkcache.minor);
-	st.st_ino = (inode >> 4) - romfs[context].inode_offset;
-	if ((fe->next_fileheader & 0x7) == 4 || (fe->next_fileheader & 0x7) == 5) {
-		st.st_mode = 0500;
-		st.st_rdev = fe->special_info;
-	} else {
-		st.st_mode = (fe->next_fileheader & 0x7) ? 0555 : 0444;
-		st.st_rdev = 0;
-	}
-
-	st.st_nlink = 1;
-	st.st_uid = st.st_gid = 0;
-	st.st_size = fe->size;
-	st.st_blksize = module_blksize(romfs[context].blkcache.major, romfs[context].blkcache.minor);
-	st.st_blocks = fe->size / 512 + !!(fe->size & 0x1FF);
-	st.st_mtime = 0;
-
-	*st_s = st;
-	return 0;
-}
-
-int romfs_read(int fs, int64_t inode, off_t offset, void *buf, uint32_t count) {
-	int i, t;
-	uint32_t seek, c;
-	uint8_t buff[512];
-	struct RomfsFileEntry *fe;
-
-	if (fs < 0 || fs >= MAX_ROMFS)
+	if (offset < 0)
 		return -EINVAL;
-	
-	seek = ((romfs[fs].inode_offset + inode) << 4);
-	
-	romfs_blkcache_seek(&romfs[fs].blkcache, seek, 0);
-	romfs_blkcache_read(&romfs[fs].blkcache, buff, 512);
-	fe = (void *) buff;
-	
-	if (offset >= fe->size)
+	if (!bytes)
 		return 0;
-	if (offset + count >= fe->size)
-		count = fe->size - offset;
-	
-	for (i = 16; i < 256; i++)
-		if (!buff[i])
-			goto end_of_fname;
-	return -EIO;
-end_of_fname:
-	offset += (i & (~0xF)) + ((i & 0xF) ? 0x10 : 0);
-	offset += inode;
+	d = device_lookup(dev);
+	for (; bytes;) {
+		if (bytes <= (dobytes = (blksize - (offset % blksize))))
+			dobytes = bytes;
+		d->blockdev.read(dev, offset / blksize, buff, 1);
+		memcpy(buf, buff + offset % blksize, dobytes);
 
-	for (c = 0; c < count; c += i) {
-		/* TODO: Buffer this better */
-		seek = offset + c;
-		if ((t = romfs_blkcache_seek(&romfs[fs].blkcache, seek, 0)) < 0)
-			return t;
-		if ((i = romfs_blkcache_read(&romfs[fs].blkcache, buff, 512)) <= 0)
-			return i;
-		memcpy(buf + c, buff, i);
+		buf += dobytes;
+		offset += dobytes;
+		bytes -= dobytes;
 	}
 
-	return c;
+	return 0;
+}
+
+
+static mode_t _byte_to_mode(uint8_t byte, uint32_t special, dev_t *rdev) {
+	mode_t mode;
+	if ((byte & 0x7) == 0x1)
+		mode = S_IFDIR | 0444;
+	else if ((byte & 0x7) == 0x2)
+		mode = S_IFREG | 0444;
+	else if ((byte & 0x7) == 0x3)
+		mode = S_IFLNK | 0444;
+	else if ((byte & 0x7) == 0x4)
+		mode = S_IFBLK, *rdev = makedev(special >> 16, special & 0xFFFF);
+	else if ((byte & 0x7) == 0x5)
+		mode = S_IFCHR, *rdev = makedev(special >> 16, special & 0xFFFF);
+	else if ((byte & 0x7) == 0x6)
+		mode = S_IFSOCK | 0444;
+	else
+		mode = S_IFIFO | 0444;
+	if (byte & 0x8)
+		mode |= 0111;
+	return mode;
+}
+
+
+int fs_romfs_read_directory(ino_t inode, off_t pos, struct dirent *de) {
+	uint8_t buff[16 + NAME_MAX + 1];
+	int i;
+	dev_t dev;
+	
+	inode += root_inode;
+
+	if (pos < 0)
+		return -EINVAL;
+	_read_unaligned(device, buff, 16, inode * 16);
+	
+	if (inode != root_inode) {
+		inode = MAKE_INT(buff + 4) >> 4;
+		if ((buff[3] & 0x7) != 0x1)
+			return -ENOTDIR;
+	}
+		
+	for (i = 0; inode; i++) {
+		_read_unaligned(device, buff, 16 + NAME_MAX + 1, inode * 16);
+		if (i == pos)
+			break;
+
+		inode = MAKE_INT(buff) >> 4;
+		continue;
+	}
+
+	if (!inode)
+		return 0;
+
+	de->d_ino = inode - root_inode;
+	de->d_mode = _byte_to_mode(buff[3], MAKE_INT(buff + 4), &dev);
+	strncpy(de->d_name, (char *) buff + 16, NAME_MAX);
+	de->d_name[NAME_MAX] = 0;
+	
+	return sizeof(*de);
+}
+
+
+ssize_t fs_romfs_read(ino_t inode, void *data, size_t bytes, off_t offset) {
+	uint8_t node[16];
+	int i, j;
+	
+	inode += root_inode;
+	_read_unaligned(device, node, 16, inode * 16);
+	if (offset + bytes > MAKE_INT(node + 8))
+		bytes = MAKE_INT(node + 8) - offset;
+	for (i = 0; i < 16; i++) {
+		_read_unaligned(device, node, 16, inode * 16 + 16 + i * 16);
+		for (j = 0; j < 16; j++)
+			if (!node[j])
+				goto done;
+	}
+done:
+	i++;
+	_read_unaligned(device, data, bytes, inode * 16 + 16 + i * 16 + offset);
+	return bytes;
+}
+
+
+int fs_romfs_stat(ino_t inode, const char *fname, struct stat *s) {
+	uint8_t buff[16+NAME_MAX+1];
+	struct Device *d;
+
+	d = device_lookup(device);
+	inode += root_inode;
+	_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
+	if (!*fname)
+		goto stat;
+	if (inode != root_inode) {
+		if ((buff[3] & 0x7) != 1)
+			return -ENOTDIR;
+		inode = MAKE_INT(buff + 4) >> 4;
+	}
+	for (; inode; inode = MAKE_INT(buff) >> 4) {
+		_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
+		if (!strncmp(fname, (char *) buff + 16, NAME_MAX))
+			goto stat;
+	}
+
+	return -ENOENT;
+stat:
+	s->st_dev = device;
+	s->st_ino = inode - root_inode;
+	s->st_rdev = 0;
+	s->st_mode = _byte_to_mode(buff[3], MAKE_INT(buff + 4), &s->st_rdev);
+	s->st_nlink = 1;
+	s->st_uid = 0;
+	s->st_gid = 0;
+	s->st_size = MAKE_INT(buff + 8);
+	s->st_blksize = d->blockdev.blksize(device);
+	s->st_blocks = (MAKE_INT(buff + 8) + d->blockdev.blksize(device) - 1) / d->blockdev.blksize(device);
+	s->st_mtime = 0;
+
+	return 0;
+}
+
+
+int fs_romfs_instantiate(dev_t dev) {
+	uint8_t buff[512];
+	int i;
+
+	device = dev;
+
+	_read_unaligned(dev, buff, 512, 0);
+	if (strncmp("-rom1fs-", (char *) buff, 8))
+		return -EINVAL;
+	for (i = 16; i < 512; i++) {
+		if (buff[i])
+			continue;
+		break;
+	}
+
+	if (i == 512)
+		return -EINVAL;
+	i += 16;
+	root_inode = i / 16;
+
+	return 0;
 }

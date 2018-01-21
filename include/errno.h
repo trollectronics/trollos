@@ -37,6 +37,8 @@ enum Errno {
 	EPIPE,
 	EDOM,
 	ERANGE,
+	
+	ENOSYS = 38
 };
 
 #endif
