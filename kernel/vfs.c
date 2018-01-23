@@ -76,8 +76,8 @@ static int _resolv_ino(const char *path, dev_t *dev, ino_t *ino, int link) {
 		return -ENOENT;
 	
 	dir = 0;
-	pos = _extract_component(&path[1], c);
-	if (path[pos] == '/')
+	pos = _extract_component(&path[1], c) + 1;
+	while (path[pos] == '/')
 		pos++;
 	for (link = 0; path[pos]; ) {
 		if ((err = fs_romfs_stat(dir, c, &s)) < 0)
