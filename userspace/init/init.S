@@ -35,30 +35,26 @@ _start:
 	move.l #10, %a2
 	trap #10
 	
+| open
 	move.l #4, %d0
 	move.l #pathname, %a0
 	move.l #0, %a1
 	trap #10
 	
-	add.l #'0', %d0
-	move.b %d0, buf
+
+| read
+	move.l %d0, %a0
+	move.l #2, %d0
+	move.l #buf, %a1
+	move.l #512, %a2
+	trap #10
+
+| write stdout	
 	move.l #3, %d0
 	move.l #1, %a0
 	move.l #buf, %a1
 	move.l #10, %a2
 	trap #10
-	
-|	move.l %d0, %a0
-|	move.l #2, %d0
-|	move.l #buf, %a1
-|	move.l #512, %a2
-|	trap #10
-|	
-|	move.l #3, %d0
-|	move.l #1, %a0
-|	move.l #buf, %a1
-|	move.l #10, %a2
-|	trap #10
 	
 	#exit
 	move.l #5, %a4

@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
 	char buffer[512];
 	vfs_read(fd, buffer, 512);
 	kprintf(LOG_LEVEL_INFO, "%s\n", buffer);
+	for(;;);
 	
 
 	pid_t pid;

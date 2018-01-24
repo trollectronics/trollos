@@ -222,7 +222,7 @@ int vfs_open(const char *path, int flags) {
 	struct stat s;
 	
 	if ((err = vfs_stat(path, &s)) < 0) {
-		kprintf(LOG_LEVEL_ERROR, "stat error in vfs open %s", path);
+		kprintf(LOG_LEVEL_ERROR, "stat error in vfs open %s\n", path);
 		return err;
 	}
 	if ((err = _alloc_file()) < 0)
