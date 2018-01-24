@@ -82,14 +82,6 @@ int main(int argc, char **argv) {
 	if(fs_romfs_instantiate(memblk_devnum) >= 0)
 		kprintf(LOG_LEVEL_INFO, "Found romfs filesysem on memblk0\n");
 	
-	int fd;
-	fd = vfs_open("/test.txt", 0);
-	kprintf(LOG_LEVEL_INFO, "fd %i\n", fd);
-	char buffer[512];
-	vfs_read(fd, buffer, 512);
-	kprintf(LOG_LEVEL_INFO, "%s\n", buffer);
-	for(;;);
-	
 
 	pid_t pid;
 	Process *proc;

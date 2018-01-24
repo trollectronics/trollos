@@ -157,8 +157,10 @@ int fs_romfs_stat(ino_t inode, const char *fname, struct stat *s) {
 	struct Device *d;
 
 	d = device_lookup(device);
+	
 	inode += root_inode;
 	_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
+	
 	if (!*fname)
 		goto stat;
 	if (inode != root_inode) {

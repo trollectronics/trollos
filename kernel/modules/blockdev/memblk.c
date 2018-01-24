@@ -63,10 +63,12 @@ static ssize_t memblk_read(dev_t device, off_t pos, void *buf, size_t count) {
 	if (blk < 0)
 		return blk;
 	
-	if (memblk[blk].len < pos + count)
-		return -EIO;
 	if (pos < 0)
 		return -EIO;
+	
+	if (memblk[blk].len < pos + count)
+		count = memblk[blk].len - pos;
+	
 	memcpy(buf, memblk[blk].addr + pos, count);
 
 	return count;

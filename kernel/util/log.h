@@ -1,5 +1,5 @@
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef LOG_H_
+#define LOG_H_
 #include "printf.h"
 
 typedef enum LogLevel LogLevel;
@@ -10,6 +10,7 @@ enum LogLevel {
 	LOG_LEVEL_WARNING,
 	LOG_LEVEL_INFO,
 	LOG_LEVEL_DEBUG,
+	LOG_LEVEL_SPAM,
 	LOG_LEVELS
 };
 
