@@ -7,7 +7,6 @@
 
 struct MemblkDescriptor {
 	void			*addr;
-	off_t			pos;
 	int64_t			len;
 	dev_t			device;
 };
