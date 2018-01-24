@@ -31,6 +31,8 @@ freely, subject to the following restrictions:
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "../../util/log.h"
+
 #include "../../util/string.h"
 
 #define	MAKE_INT(ptr)	((((uint8_t *) ptr)[0] << 24) | (((uint8_t *) ptr)[1] << 16) | (((uint8_t *) ptr)[2] << 8) | (((uint8_t *) ptr)[3]))
@@ -61,7 +63,8 @@ static int _read_unaligned(dev_t dev, void *buf, ssize_t bytes, off_t offset) {
 		offset += dobytes;
 		bytes -= dobytes;
 	}*/
-
+	
+	
 	d->blockdev.read(dev, offset, buf, bytes);
 
 	return 0;
@@ -194,8 +197,13 @@ int fs_romfs_instantiate(dev_t dev) {
 	device = dev;
 
 	_read_unaligned(dev, buff, 512, 0);
+	
 	if (strncmp("-rom1fs-", (char *) buff, 8))
 		return -EINVAL;
+	
+	
+	
+	
 	for (i = 16; i < 512; i++) {
 		if (buff[i])
 			continue;

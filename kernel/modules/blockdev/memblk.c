@@ -15,10 +15,11 @@ static struct MemblkDescriptor memblk[MAX_MEMBLK];
 static int locate_device(dev_t device) {
 	int i;
 
-	for (i = 0; i < MAX_MEMBLK; i++)
+	for (i = 0; i < MAX_MEMBLK; i++) {
 		if (memblk[i].len >= 0)
 			if (memblk[i].device == device)
 				return i;
+	}
 	return -ENOENT;
 }
 
@@ -28,8 +29,8 @@ static int memblk_alloc() {
 
 	for (i = 0; i < MAX_MEMBLK; i++)
 		if (memblk[i].len < 0)
-			return -ENOENT;
-	return i;
+			return i;
+	return -ENOENT;
 }
 
 
@@ -58,10 +59,10 @@ int memblk_write(int uid, int blk, void *buf, uint32_t count) {
 
 static ssize_t memblk_read(dev_t device, off_t pos, void *buf, size_t count) {
 	int blk = locate_device(device);
-
+	
 	if (blk < 0)
 		return blk;
-
+	
 	if (((off_t) memblk[blk].pos) + count < memblk[blk].pos || ((off_t) memblk[blk].pos + count > memblk[blk].len))
 		return -EIO;
 	memcpy(buf, memblk[blk].addr + memblk[blk].pos, count);
@@ -83,10 +84,10 @@ static ssize_t memblk_devsize(dev_t device) {
 	return memblk[blk].len;
 }
 
+static struct Device dev = { 0 };
 
 int memblk_open(void *ptr, uint32_t length) {
 	int d, ret;
-	struct Device dev = { 0 };
 
 	if (length >= INT_MAX)
 		return -EINVAL;
@@ -103,6 +104,6 @@ int memblk_open(void *ptr, uint32_t length) {
 	if (ret < 0)
 		kprintf(LOG_LEVEL_ERROR, "[memblk] Failed to register memblk0\n");
 	else
-		kprintf(LOG_LEVEL_INFO, "[memblk] Registered memblk0 at %i, %i [@0x%X,size=0x%X]\n", major(memblk[d].device), minor(memblk[d].device), ptr, length);
+		kprintf(LOG_LEVEL_INFO, "[memblk] Registered memblk0 at %i, %i [@0x%X]\n", major(memblk[d].device), minor(memblk[d].device), &dev);
 	return ret;
 }

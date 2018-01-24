@@ -14,6 +14,7 @@
 #include "kernel.h"
 #include "debug.h"
 #include "init.h"
+#include "root.h"
 
 FileModuleMap filetable[MAX_TOTAL_FILES];
 
@@ -60,21 +61,34 @@ int main(int argc, char **argv) {
 	kprintf(LOG_LEVEL_INFO, "Kernel heap is at 0x%X\n", ksbrk(0));
 	int_init();
 	
-	//for(i = 0; i < argc; i++) {
-	//	if(!strcmp(argv[i], "debug")) {
+	for(i = 0; i < argc; i++) {
+		if(!strcmp(argv[i], "debug")) {
 			set_debug_traps();
 			breakpoint();
-	//		break;
-	//	}
-	//}
+			break;
+		}
+	}
 	
 	dev_t console_devnum;
 	device_register("console", console, &console_devnum);
 	//stdin, stdout, stderr
 	vfs_open_device(console_devnum, 0);
 	
+	Device *memblk_dev;
 	memblk_init();
-	//memblk_open(
+	memblk_open(__bin_os_romfs, __bin_os_romfs_len);
+	dev_t memblk_devnum = device_lookup_name("memblk0", &memblk_dev);
+	
+	if(fs_romfs_instantiate(memblk_devnum) >= 0)
+		kprintf(LOG_LEVEL_INFO, "Found romfs filesysem on memblk0\n");
+	
+	int fd;
+	fd = vfs_open("/test.txt", 0);
+	kprintf(LOG_LEVEL_INFO, "fd %i\n", fd);
+	char buffer[512];
+	vfs_read(fd, buffer, 512);
+	kprintf(LOG_LEVEL_INFO, "%s\n", buffer);
+	
 
 	pid_t pid;
 	Process *proc;

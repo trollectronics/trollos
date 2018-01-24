@@ -59,11 +59,16 @@ Device *device_lookup(dev_t device_number) {
 
 
 // TODO: Fix, will probably crash or malfunction if an invalid or free entry is encountered
-Device *device_lookup_name(const char *name) {
-	int i;
+dev_t device_lookup_name(const char *name, Device **device) {
+	uint32_t i;
 	for (i = 0; i < DEVICE_MAX; i++)
 		if (_device_registered[i])
-			if (!strcmp(_device_registered[i]->name, name))
-				return _device_registered[i]->device;
-	return NULL;
+			if (!strcmp(_device_registered[i]->name, name)) {
+				if(device)
+					*device = _device_registered[i]->device;
+				
+				return makedev(i, 1);
+			}
+	
+	return 0;
 }

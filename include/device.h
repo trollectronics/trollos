@@ -37,6 +37,6 @@ struct Device {
 
 int device_register(const char *name, Device *device, dev_t *device_number);
 Device *device_lookup(dev_t device_number);
-Device *device_lookup_name(const char *name);
+dev_t device_lookup_name(const char *name, Device **device);
 
 #endif

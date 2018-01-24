@@ -37,14 +37,6 @@ int32_t syscall_stub(uint32_t syscall, uint32_t arg0, uint32_t arg1, uint32_t ar
 	return call(arg0, arg1, arg2, arg3, arg4);
 }
 
-int32_t syscall_read(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
-	return 0;
-}
-
-
-int32_t syscall_open(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
-	return 0;
-}
 
 int32_t syscall_close(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
 	return 0;
