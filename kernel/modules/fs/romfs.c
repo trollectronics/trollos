@@ -161,11 +161,11 @@ int fs_romfs_stat(ino_t inode, const char *fname, struct stat *s) {
 	_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
 	if (!*fname)
 		goto stat;
-	if (inode != root_inode) {
+	//if (inode != root_inode) {
 		if ((buff[3] & 0x7) != 1)
 			return -ENOTDIR;
 		inode = MAKE_INT(buff + 4) >> 4;
-	}
+	//}
 	for (; inode; inode = MAKE_INT(buff) >> 4) {
 		_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
 		if (!strncmp(fname, (char *) buff + 16, NAME_MAX))
