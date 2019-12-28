@@ -152,28 +152,15 @@ done:
 }
 
 
-int fs_romfs_stat(ino_t inode, const char *fname, struct stat *s) {
-	uint8_t buff[16+NAME_MAX+1];
+int fs_romfs_stat_inode(ino_t inode, struct stat *s) {
+	uint8_t buff[16];
 	struct Device *d;
 
 	d = device_lookup(device);
+	
 	inode += root_inode;
-	_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
-	if (!*fname)
-		goto stat;
-	//if (inode != root_inode) {
-		if ((buff[3] & 0x7) != 1)
-			return -ENOTDIR;
-		inode = MAKE_INT(buff + 4) >> 4;
-	//}
-	for (; inode; inode = MAKE_INT(buff) >> 4) {
-		_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
-		if (!strncmp(fname, (char *) buff + 16, NAME_MAX))
-			goto stat;
-	}
-
-	return -ENOENT;
-stat:
+	_read_unaligned(device, buff, 16, inode * 16);
+	
 	s->st_dev = device;
 	s->st_ino = inode - root_inode;
 	s->st_rdev = 0;
@@ -187,6 +174,30 @@ stat:
 	s->st_mtime = 0;
 
 	return 0;
+}
+
+
+int fs_romfs_stat(ino_t inode, const char *fname, struct stat *s) {
+	uint8_t buff[16+NAME_MAX+1];
+	
+	inode += root_inode;
+	_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
+	if (!*fname)
+		goto stat;
+	if (inode != root_inode) {
+		if ((buff[3] & 0x7) != 1)
+			return -ENOTDIR;
+		inode = MAKE_INT(buff + 4) >> 4;
+	}
+	for (; inode; inode = MAKE_INT(buff) >> 4) {
+		_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
+		if (!strncmp(fname, (char *) buff + 16, NAME_MAX))
+			goto stat;
+	}
+
+	return -ENOENT;
+stat:
+	return fs_romfs_stat_inode(inode - root_inode, s);
 }
 
 

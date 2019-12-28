@@ -117,14 +117,25 @@ int vfs_stat(const char *path, struct stat *s) {
 }
 
 
+static int vfs_stat_inode(ino_t ino, dev_t dev, struct stat *s) { // Must *not* be exposed to userspsace
+	return fs_romfs_stat_inode(ino, s);
+}
+
+
+off_t vfs_tell(int fd) {
+	return vfs_file[fd].pos;
+}
+
+
 off_t vfs_seek(int fd, off_t offset, int whence) {
 	if (whence == 0) {
 		return (vfs_file[fd].pos = offset);
 	} else if (whence == 1) {
 		return (vfs_file[fd].pos += offset);
 	} else if (whence == 2) {
-		return -ENOSYS;
-		// TODO: Implement
+		struct stat s;
+		vfs_stat_inode(vfs_file[fd].data.fs.inode, vfs_file[fd].data.dev.dev, &s);
+		return (vfs_file[fd].pos = s.st_size + offset);
 	} else
 		return -EINVAL;
 }

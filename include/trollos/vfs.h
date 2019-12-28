@@ -67,6 +67,7 @@ int vfs_read_directory(int fd, struct dirent *de, int dirs);
 ssize_t vfs_read(int fd, void *buf, size_t count);
 ssize_t vfs_write(int fd, void *buf, size_t count);
 off_t vfs_seek(int fd, off_t offset, int whence);
+off_t vfs_tell(int fd);
 int vfs_stat(const char *path, struct stat *s);
 int vfs_close(int fd);
 
