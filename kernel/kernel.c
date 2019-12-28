@@ -1,6 +1,7 @@
 #include <syscall.h>
 #include <chipset.h>
 #include <module.h>
+#include <fcntl.h>
 #include "modules/binformat/elf.h"
 #include "modules/blockdev/memblk.h"
 #include "util/log.h"
@@ -83,11 +84,15 @@ int main(int argc, char **argv) {
 		kprintf(LOG_LEVEL_INFO, "Found romfs filesysem on memblk0\n");
 	
 	int fd;
-	fd = vfs_open("/test.txt", 0);
+	fd = vfs_open("/sbin/init", 0);
 	kprintf(LOG_LEVEL_INFO, "fd %i\n", fd);
-	char buffer[512];
-	vfs_read(fd, buffer, 512);
-	kprintf(LOG_LEVEL_INFO, "%s\n", buffer);
+	vfs_seek(fd, 0, SEEK_END);
+	size_t init_size = vfs_tell(fd);
+	vfs_seek(fd, 0, SEEK_SET);
+	void *init_elf = kmalloc(init_size);
+	vfs_read(fd, init_elf, init_size);
+
+	kprintf(LOG_LEVEL_INFO, "size: %u %s\n", init_size, init_elf);
 	for(;;);
 	
 
