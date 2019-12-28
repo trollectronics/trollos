@@ -2,6 +2,7 @@
 #include <chipset.h>
 #include <module.h>
 #include <fcntl.h>
+#include <trollos/vfs.h>
 #include "modules/binformat/elf.h"
 #include "modules/blockdev/memblk.h"
 #include "util/log.h"
@@ -92,16 +93,15 @@ int main(int argc, char **argv) {
 	void *init_elf = kmalloc(init_size);
 	vfs_read(fd, init_elf, init_size);
 
-	kprintf(LOG_LEVEL_INFO, "size: %u %s\n", init_size, init_elf);
-	for(;;);
-	
-
 	pid_t pid;
 	Process *proc;
 	pid = process_create(0, 0);
 	kprintf(LOG_LEVEL_DEBUG, "process created\n");
 	process_switch_to(pid);
-	process_set_pc(pid, init = elf_load(bin_init));
+	process_set_pc(pid, init = elf_load(init_elf));
+
+	kfree(init_elf);
+
 	proc = process_from_pid(pid);
 	
 	//stdin, stdout, stderr
