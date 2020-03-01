@@ -53,7 +53,7 @@ _start:
 	move.l #3, %d0
 	move.l #1, %a0
 	move.l #buf, %a1
-	move.l #10, %a2
+	move.l #512, %a2
 	trap #10
 	
 	#exit

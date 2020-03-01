@@ -10,6 +10,7 @@ static const char const *logprefix[] = {
 	[LOG_LEVEL_WARNING] = "WARN",
 	[LOG_LEVEL_INFO] = "INFO",
 	[LOG_LEVEL_DEBUG] = "DBUG",
+	[LOG_LEVEL_SPAM] = "SPAM",
 };
 
 static const char const *logcolor[] = {
@@ -19,6 +20,7 @@ static const char const *logcolor[] = {
 	[LOG_LEVEL_WARNING] = "\x1b[1;33m",
 	[LOG_LEVEL_INFO] = "\x1b[1;37m",
 	[LOG_LEVEL_DEBUG] = "\x1b[37m",
+	[LOG_LEVEL_SPAM] = "\x1b[36m",
 };
 
 static LogLevel loglevel = LOG_LEVEL_DEBUG;

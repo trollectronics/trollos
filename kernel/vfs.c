@@ -92,7 +92,6 @@ static int _resolv_ino(const char *path, dev_t *dev, ino_t *ino, int link) {
 			return -ENOTDIR;
 		}
 	}
-	
 	if ((err = fs_romfs_stat(dir, c, &s)) < 0)
 		return err;
 
@@ -109,8 +108,10 @@ int vfs_stat(const char *path, struct stat *s) {
 	dev_t dev;
 	ino_t ino;
 
-	if ((err = _resolv_ino(path, &dev, &ino, 0)) < 0)
+	if ((err = _resolv_ino(path, &dev, &ino, 0)) < 0) {
+		kprintf(LOG_LEVEL_ERROR, "vfs_stat failed to resolve inode for %s (%i)\n", path, err);
 		return err;
+	}
 	if ((err = fs_romfs_stat(ino, "", s)) < 0)
 		return err;
 	return 0;
@@ -145,12 +146,12 @@ off_t vfs_seek(int fd, off_t offset, int whence) {
 ssize_t vfs_write(int fd, void *buf, size_t count) {
 	struct Device *dev;
 	
-	kprintf(LOG_LEVEL_DEBUG, "Write to file %i from 0x%X (%lu)\n", fd, buf, count);
+	kprintf(LOG_LEVEL_SPAM, "Write to file %i from 0x%X (%lu)\n", fd, buf, count);
 	
 	if (!vfs_file[fd].is_device)
 		return -EPERM;
 	dev = device_lookup(vfs_file[fd].data.dev.dev);
-	kprintf(LOG_LEVEL_DEBUG, "Device %u (0x%X)\n", vfs_file[fd].data.dev.dev, dev);
+	kprintf(LOG_LEVEL_SPAM, "Device %u (0x%X)\n", vfs_file[fd].data.dev.dev, dev);
 	if (dev->type == DEVICE_TYPE_BLOCK) {
 		if (dev->blockdev.write) {
 			return dev->blockdev.write(buf, count);
@@ -159,7 +160,6 @@ ssize_t vfs_write(int fd, void *buf, size_t count) {
 		}
 	} else if (dev->type == DEVICE_TYPE_CHAR) {
 		if (dev->chardev.write) {
-			kprintf(LOG_LEVEL_DEBUG, "is chardev\n");
 			return dev->chardev.write(buf, count);
 		} else {
 			return -ENOSYS;
@@ -234,7 +234,6 @@ int vfs_open(const char *path, int flags) {
 	struct stat s;
 	
 	if ((err = vfs_stat(path, &s)) < 0) {
-		kprintf(LOG_LEVEL_ERROR, "stat error in vfs open %s\n", path);
 		return err;
 	}
 	if ((err = _alloc_file()) < 0)
@@ -285,7 +284,7 @@ int vfs_open_device(dev_t device, int flags) {
 
 	vfs_file[fd].ref = 1;
 	
-	kprintf(LOG_LEVEL_DEBUG, "Opened file %i as device %lu\n", fd, device);
+	kprintf(LOG_LEVEL_SPAM, "Opened file %i as device %lu\n", fd, device);
 	
 	return fd;
 }

@@ -31,7 +31,9 @@ freely, subject to the following restrictions:
 #include <sys/stat.h>
 
 
-int fs_devfs_stat(ino_t inode, const char *fnmae, struct stat *s) {
+
+
+int fs_devfs_stat(ino_t inode, const char *fname, struct stat *s) {
 	// TODO: make devfs something with a device number
 	dev_t dev;
 	Device d;
