@@ -1,6 +1,8 @@
 #ifndef INCLUDE_DEVICE_H_
 #define INCLUDE_DEVICE_H_
 
+#define	DEVICE_NAME_LEN 32
+
 #include "sys/types.h"
 
 typedef enum DeviceType DeviceType;
@@ -35,8 +37,18 @@ struct Device {
 	};
 };
 
+
+typedef struct DeviceRegistration DeviceRegistration;
+struct DeviceRegistration {
+	char name[DEVICE_NAME_LEN];
+	dev_t device;
+	DeviceType type;
+};
+
 int device_register(const char *name, Device *device, dev_t *device_number);
 Device *device_lookup(dev_t device_number);
 dev_t device_lookup_name(const char *name, Device **device);
+int device_list(DeviceRegistration *dr, int id);
+int device_max();
 
 #endif

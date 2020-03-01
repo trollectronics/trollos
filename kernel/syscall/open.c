@@ -2,11 +2,15 @@
 #include <trollos/process.h>
 #include <trollos/vfs.h>
 
+#include "../util/log.h"
+
 static inline int _open(const char *filename, int flags) {
 	Process *proc;
 	int global_fd;
 	int fd;
-	
+
+	kprintf(LOG_LEVEL_INFO, "open %s: %i\n", filename, flags);
+
 	if(!filename)
 		return -EINVAL;
 	

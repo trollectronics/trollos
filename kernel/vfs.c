@@ -129,13 +129,14 @@ off_t vfs_tell(int fd) {
 
 off_t vfs_seek(int fd, off_t offset, int whence) {
 	if (whence == 0) {
-		return (vfs_file[fd].pos = offset);
+		return vfs_file[fd].pos = offset, 0;
 	} else if (whence == 1) {
-		return (vfs_file[fd].pos += offset);
+		return vfs_file[fd].pos += offset, 0;
 	} else if (whence == 2) {
 		struct stat s;
 		vfs_stat_inode(vfs_file[fd].data.fs.inode, vfs_file[fd].data.dev.dev, &s);
-		return (vfs_file[fd].pos = s.st_size + offset);
+		vfs_file[fd].pos = s.st_size + offset;
+		return 0;
 	} else
 		return -EINVAL;
 }

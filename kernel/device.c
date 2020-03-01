@@ -8,7 +8,7 @@
 
 typedef struct RegisteredDevice RegisteredDevice;
 struct RegisteredDevice {
-	char name[32];
+	char name[DEVICE_NAME_LEN];
 	Device *device;
 };
 
@@ -71,4 +71,24 @@ dev_t device_lookup_name(const char *name, Device **device) {
 			}
 	
 	return 0;
+}
+
+
+int device_list(DeviceRegistration *dr, int id) {
+	if (id < DEVICE_MAX)
+		return -ENOENT;
+	if (_device_registered[id]) {
+		strncpy(dr->name, _device_registered[id]->name, DEVICE_NAME_LEN);
+		dr->name[DEVICE_NAME_LEN-1] = 0;
+		dr->device = makedev(id, 1);
+		dr->type = _device_registered[id]->device->type;
+		return dr;
+	}
+
+	return -ENOENT;
+}
+
+
+int device_max() {
+	return DEVICE_MAX;
 }

@@ -2,10 +2,14 @@
 #include <trollos/process.h>
 #include <trollos/vfs.h>
 
+#include "../util/log.h"
+
 static inline ssize_t _read(int fd, const char *buf, size_t count) {
 	Process *proc;
 	int global_fd;
-	
+
+	kprintf(LOG_LEVEL_INFO, "read %i %i\n", fd, count);
+
 	if(fd < 0 || fd >= MAX_PROCESS_FILES)
 		return -EBADF;
 	
