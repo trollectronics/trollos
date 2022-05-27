@@ -221,28 +221,55 @@ int mmu040_init_userspace(MmuUserspaceHandle *userspace) {
 }
 
 void mmu040_free_userspace(MmuUserspaceHandle *userspace) {
-	kprintf(LOG_LEVEL_ERROR, "mmu040_free_userspace not implemented\n");
-	//MmuDescriptorShort *dir;
-	//MmuDescriptorShort *page;
-	//int i, j;
+	Mmu040RegRootPointer *urp;
+	Mmu040RootTableDescriptor *root_table_mapped;
+	Mmu040PointerTableDescriptor *pointer_table_mapped;
+	Mmu040PageTableDescriptor *page_table_mapped;
+	PhysicalAddress root_table_ph, pointer_table_ph, page_table_ph, page_ph;
+	uint32_t i, j, k;
 	
-	//if(!crp || crp->descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
-		//return;
+	urp = (void *) userspace;
 	
-	//dir = (void *) (crp->table_address << 4);
-	//for(i = 0; i < 1024; i++) {
-		//if(dir[i].table.descriptor_type != MMU_DESCRIPTOR_TYPE_TABLE_SHORT)
-			//continue;
+	root_table_ph = urp->root_pointer << SRP_URP_DESCRIPTOR_BITS;
+	root_table_mapped = (void *) REPAGE(root_table_ph, _mapping_push(root_table_ph));
+	
+	for(i = 0; i < ROOT_LEVEL_DESCRIPTORS; i++) {
+		if(!UDT_IS_RESIDENT(root_table_mapped[i].table.upper_level_descriptor_type)) {
+			continue;
+		}
 		
-		//page = (void *) (dir[i].table.table_address << 4);
-		//for(j = 0; j < 1024; j++) {
-			//if(page[i].page.descriptor_type != MMU_DESCRIPTOR_TYPE_PAGE)
-				//continue;
+		pointer_table_ph = ROOT_LEVEL_FIELD_ADDR(root_table_mapped[i].table.table_address);
+		pointer_table_mapped = (void *) REPAGE(pointer_table_ph, _mapping_push(pointer_table_ph));
+		
+		for(j = 0; j < POINTER_LEVEL_DESCRIPTORS; j++) {
+			if(!UDT_IS_RESIDENT(pointer_table_mapped[j].table.upper_level_descriptor_type)) {
+				continue;
+			}
 			
-			////TODO: refcount?
-			//mmu_free_frame((void *) (page[i].page.page_address << 8));
-		//}
-	//}
+			
+			page_table_ph = POINTER_LEVEL_FIELD_ADDR(pointer_table_mapped[j].table.table_address);
+			page_table_mapped = (void *) REPAGE(page_table_ph, _mapping_push(page_table_ph));
+			
+			for(k = 0; k < PAGE_DESCRIPTORS; k++) {
+				if(!PDT_IS_RESIDENT(page_table_mapped[k].page.page_descriptor_type)) {
+					continue;
+				}
+				
+				page_ph = PAGE_LEVEL_FIELD_ADDR(page_table_mapped[k].page.physical_address);
+				_free_frame(page_ph);
+				
+			}
+			
+			_mapping_pop();
+			_free_frame(page_table_ph);
+		}
+		
+		_mapping_pop();
+		_free_frame(pointer_table_ph);
+		root_table_mapped[i].table.upper_level_descriptor_type = MMU040_UPPER_LEVEL_DESCRIPTOR_TYPE_INVALID;
+	}
+	
+	_mapping_pop();
 }
 
 int mmu040_clone_userspace(MmuUserspaceHandle *from, MmuUserspaceHandle *to) {
