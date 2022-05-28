@@ -5,6 +5,7 @@
 #include <trollos/vfs.h>
 #include "modules/binformat/elf.h"
 #include "modules/blockdev/memblk.h"
+#include "modules/fs/romfs.h"
 #include "util/log.h"
 #include "util/kconsole.h"
 #include "util/mem.h"
@@ -12,6 +13,7 @@
 #include "util/string.h"
 #include "int.h"
 #include "mmu.h"
+#include <trollos/vfs.h>
 #include <trollos/process.h>
 #include "kernel.h"
 #include "debug.h"
@@ -80,8 +82,10 @@ int main(int argc, char **argv) {
 	memblk_init();
 	memblk_open(__bin_os_romfs, __bin_os_romfs_len);
 	dev_t memblk_devnum = device_lookup_name("memblk0", &memblk_dev);
-	
-	if(fs_romfs_instantiate(memblk_devnum) >= 0)
+
+	fs_romfs_init();
+
+	if (vfs_mount(memblk_devnum, "/", "romfs") >= 0)
 		kprintf(LOG_LEVEL_INFO, "Found romfs filesysem on memblk0\n");
 	
 	int fd;
