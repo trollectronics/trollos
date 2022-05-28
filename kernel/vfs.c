@@ -84,7 +84,7 @@ static int _is_mountpoint(dev_t dev, ino_t ino) {
 	for (i = 0; i < MAX_MOUNT_POINTS; i++) {
 		if (!_vfs_mount[i].is_used)
 			continue;
-		if (!(_vfs_mount[i].dev == dev && _vfs_mount[i].inode == ino))
+		if ((_vfs_mount[i].dev == dev && _vfs_mount[i].inode == ino))
 			return i;
 	}
 
@@ -113,6 +113,10 @@ static int _resolv_ino(const char *path, int *mp_out, ino_t *ino, int link) {
 		break;
 	}
 
+	if (i == MAX_MOUNT_POINTS)
+		return -ENOENT;
+	
+	
 	cur_fs = _vfs_mount[i].mounted_fs;
 	cur_fsi = i;
 	
@@ -121,13 +125,14 @@ static int _resolv_ino(const char *path, int *mp_out, ino_t *ino, int link) {
 	while (path[pos] == '/')
 		pos++;
 	for (link = 0; path[pos]; ) {
-		if ((err = _vfs_type[cur_fs]._stat(_vfs_mount[cur_fsi].mounted_instance, dir, c, &s)) < 0)
+		if ((err = _vfs_type[cur_fs]._stat(_vfs_mount[cur_fsi].mounted_instance, dir, c, &s)) < 0) {
 			return err;
+		}
 		if ((mp = _is_mountpoint(s.st_dev, s.st_ino)) >= 0) {
 			cur_fs = _vfs_mount[mp].mounted_fs;
 			cur_fsi = mp;
 			dir = _vfs_mount[mp].mounted_ino;
-			pos += _extract_component(&path[pos], c);
+			pos += _extract_component(&path[pos], c);	
 			continue;
 		}
 
@@ -142,8 +147,9 @@ static int _resolv_ino(const char *path, int *mp_out, ino_t *ino, int link) {
 		}
 	}
 
-	if ((err = _vfs_type[cur_fs]._stat(_vfs_mount[cur_fsi].mounted_instance, dir, c, &s)) < 0)
+	if ((err = _vfs_type[cur_fs]._stat(_vfs_mount[cur_fsi].mounted_instance, dir, c, &s)) < 0) {
 		return err;
+	}
 
 done:
 	*mp_out = cur_fsi;
@@ -383,6 +389,7 @@ int vfs_fs_register(struct VFSFSType *fs) {
 		return -ENOMEM;
 
 	_vfs_type[q] = _fs;
+	_vfs_type[q].used = 1;
 	return q;
 }
 
@@ -402,11 +409,13 @@ int vfs_mount(dev_t dev, const char *path, const char *fs) {
 	if (i == MAX_FILE_SYSTEMS)
 		return -EINVAL;
 	
+	
 	for (instance = 0; instance < MAX_MOUNT_POINTS; instance++)
 		if (!_vfs_mount[instance].is_used)
 			break;
 	if (instance == MAX_MOUNT_POINTS)
 		return -ENOMEM;
+	
 	
 	if (path[0] == '/' && !path[1]) {
 		_vfs_mount[instance].dev = ~0;

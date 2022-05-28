@@ -11,6 +11,8 @@ SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.c.o)
 OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
+ROOTFS		=	rootfs.o
+
 # Flags
 CFLAGS		+=	
 ASFLAGS		+=	
@@ -26,7 +28,7 @@ LIBS		=	$(addsuffix /out.a,$(SUBDIRS))
 
 all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
 	@echo " [ LD ] bin/kernel.elf"
-	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(OBJFILES) $(LIBS) -o $(KERNEL) $(LDFLAGS)
+	@$(TARGETCC) $(OSCFLAGS) $(CFLAGS) $(ROOTFS) $(OBJFILES) $(LIBS) -o $(KERNEL) $(LDFLAGS)
 	@mkdir -p $(TOPDIR)/bin/root/boot
 #	@cp $(KERNEL) $(TOPDIR)/bin/root/boot/`basename "$(KERNEL)"`
 	@echo "Done."

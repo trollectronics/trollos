@@ -9,9 +9,6 @@ SUBDIRS	=	 userspace kernel
 .PHONY: $(SUBDIRS)
 
 all: $(SUBDIRS)
-	@echo " [MKFS] $(OSFS)"
-	@genromfs -f $(OSFS) -d bin/root/ -V TrollOS
-	@cat "$(OSFS)" >> "$(BOOTIMG)"
 	@dd if=/dev/zero of=bin/sd.img bs=1M count=32
 	@/sbin/mkfs.msdos bin/sd.img
 	@cp bin/kernel.elf bin/kernel-debug.elf
@@ -36,6 +33,14 @@ clean: $(SUBDIRS)
 	@echo "Source tree cleaned."
 	@echo
 
-$(SUBDIRS): | bin
+kernel: userspace | bin
 	@echo " [ CD ] $(CURRENTPATH)$@/"
 	@+make -C "$@" "CURRENTPATH=$(CURRENTPATH)$@/" $(MAKECMDGOALS)
+
+userspace: | bin
+	@echo " [ CD ] $(CURRENTPATH)$@/"
+	@+make -C "$@" "CURRENTPATH=$(CURRENTPATH)$@/" $(MAKECMDGOALS)
+	@echo " [MKFS] $(OSFS)"
+	@genromfs -f $(OSFS) -d bin/root/ -V TrollOS
+	@echo " [OCPY] kernel/rootfs.o"
+	@m68k-elf-objcopy -I binary -O elf32-m68k "$(OSFS)" kernel/rootfs.o

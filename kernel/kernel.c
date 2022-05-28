@@ -18,7 +18,10 @@
 #include "kernel.h"
 #include "debug.h"
 #include "init.h"
-#include "root.h"
+
+extern char _binary___bin_os_romfs_start;
+extern char _binary___bin_os_romfs_end;
+
 
 FileModuleMap filetable[MAX_TOTAL_FILES];
 
@@ -80,7 +83,11 @@ int main(int argc, char **argv) {
 	
 	Device *memblk_dev;
 	memblk_init();
-	memblk_open(__bin_os_romfs, __bin_os_romfs_len);
+
+	void *rootfs = &_binary___bin_os_romfs_start;
+	size_t rootfs_size = &_binary___bin_os_romfs_end - &_binary___bin_os_romfs_start;
+
+	memblk_open(rootfs, rootfs_size);
 	dev_t memblk_devnum = device_lookup_name("memblk0", &memblk_dev);
 
 	fs_romfs_init();

@@ -215,8 +215,8 @@ int fs_romfs_mount(dev_t dev, ino_t *root_inode) {
 	int i, q;
 	
 	for (q = 0; q < MAX_ROMFS; q++)
-		if (_instance[q].used)
-			continue;
+		if (!_instance[q].used)
+			break;
 	if (q == MAX_ROMFS)
 		return -ENOMEM;
 	_instance[q].device = dev;
