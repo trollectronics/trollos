@@ -9,7 +9,7 @@ static inline int _open(const char *filename, int flags) {
 	int global_fd;
 	int fd;
 
-	kprintf(LOG_LEVEL_INFO, "open %s: %i\n", filename, flags);
+	kprintf(LOG_LEVEL_INFO, "open %s (%x): %i\n", filename, (uint32_t) filename, flags);
 
 	if(!filename)
 		return -EINVAL;

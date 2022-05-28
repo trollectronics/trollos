@@ -8,7 +8,7 @@
 static pid_t _fork(void) {
 	Process *current, *new;
 	pid_t pid;
-	
+
 	if(!(current = process_from_pid(process_current())))
 		return -EAGAIN;
 	if((pid = process_create(current->user, current->group)) < 0)
@@ -16,7 +16,7 @@ static pid_t _fork(void) {
 	if(!(new = process_from_pid(pid)))
 		return -EAGAIN;
 	
-	kprintf(LOG_LEVEL_DEBUG, "fork: created process %i\n", new->pid);
+	kprintf(LOG_LEVEL_INFO, "fork: created process %i\n", new->pid);
 	if(mmu_clone_userspace(&current->userspace, &new->userspace) < 0) {
 		process_exit(pid, 1);
 		new->state = PROCESS_STATE_ZOMBIE;
