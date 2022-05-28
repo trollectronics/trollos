@@ -89,7 +89,7 @@ int vprintf(char *format, va_list va) {
 					
 					goto baseconv;
 				case 'p':
-					length = (sizeof(void *) == 8) ? = LENGTH_LONG_LONG : LENGTH_LONG;
+					length = (sizeof(void *) == 8) ? LENGTH_LONG_LONG : LENGTH_LONG;
 					prefix = 1;
 				case 'x':
 				case 'X':
