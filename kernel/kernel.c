@@ -16,6 +16,7 @@
 #include "kernel.h"
 #include "debug.h"
 #include "init.h"
+#include "modules/bus/trollbook-spi.h"
 
 extern char _binary___bin_os_romfs_start;
 extern char _binary___bin_os_romfs_end;

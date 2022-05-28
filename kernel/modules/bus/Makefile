@@ -13,8 +13,7 @@ OBJFILES	+=	$(ASMFILES:.S=.S.o)
 OUTFILE		=	out.a
 
 # Sub directories to build
-SUBDIRS		=	fs blockdev chardev binformat bus
-
+SUBDIRS		=	
 LIBS		=	$(addsuffix /$(OUTFILE),$(SUBDIRS))
 
 .PHONY: all clean

@@ -1,8 +1,7 @@
 #include <stdint.h>
 #include <chipset.h>
 #include "debug.h"
-
-#define nop() do {__asm__ __volatile__ ("nop\n");} while(0)
+#include <nop.h>
 
 void debug_put_byte(uint8_t byte) {
 	nop();
