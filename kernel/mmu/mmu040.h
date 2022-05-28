@@ -148,6 +148,7 @@ void mmu040_invalidate_page(void *addr);
 void mmu040_print_status();
 
 int mmu040_init_userspace(MmuUserspaceHandle *userspace);
+void mmu040_clear_userspace(MmuUserspaceHandle *userspace);
 void mmu040_free_userspace(MmuUserspaceHandle *userspace);
 int mmu040_clone_userspace(MmuUserspaceHandle *from, MmuUserspaceHandle *to);
 int mmu040_switch_userspace(MmuUserspaceHandle *userspace);

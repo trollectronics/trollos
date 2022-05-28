@@ -10,6 +10,7 @@
 #include "../mmu.h"
 #include "../util/mem.h"
 #include "../util/log.h"
+#include "../kernel.h"
 #include "mmu040.h"
 
 #define SRP_URP_DESCRIPTOR_BITS 9
@@ -77,7 +78,7 @@ static void *_mapping_push(uint32_t physical_address) {
 	};
 	
 	if(mapping >= MAPPER_PAGES)
-		return NULL;
+		panic("MMU mapper stack exhausted");
 	
 	_mapper.page_descriptor[mapping] = desc;
 	mmu040_invalidate_page(_mapper.page[mapping]);
@@ -221,6 +222,17 @@ int mmu040_init_userspace(MmuUserspaceHandle *userspace) {
 }
 
 void mmu040_free_userspace(MmuUserspaceHandle *userspace) {
+	Mmu040RegRootPointer *urp;
+
+	mmu040_clear_userspace(userspace);
+	urp = (void *) userspace;
+	
+	PhysicalAddress ph = urp->root_pointer << SRP_URP_DESCRIPTOR_BITS;
+
+	_free_frame(ph);
+}
+
+void mmu040_clear_userspace(MmuUserspaceHandle *userspace) {
 	Mmu040RegRootPointer *urp;
 	Mmu040RootTableDescriptor *root_table_mapped;
 	Mmu040PointerTableDescriptor *pointer_table_mapped;
@@ -448,6 +460,7 @@ PhysicalAddress mmu040_alloc_at(void *virt, bool supervisor, bool write_protecte
 void mmu040_free_at(void *virt, bool supervisor) {
 	//TODO: implement
 	kprintf(LOG_LEVEL_ERROR, "mmu_free_at not implemented\n");
+	panic("not implemented");
 }
 
 void mmu040_fill_frame(PhysicalAddress frame, int offset, void *src, unsigned int size) {
