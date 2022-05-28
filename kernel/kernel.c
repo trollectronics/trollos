@@ -97,8 +97,9 @@ int main(int argc, char **argv) {
 	Process *proc;
 	pid = process_create(0, 0);
 	kprintf(LOG_LEVEL_DEBUG, "process created\n");
+	init = elf_load(init_elf);
 	process_switch_to(pid);
-	process_set_pc(pid, init = elf_load(init_elf));
+	process_set_pc(pid, init);
 
 	kfree(init_elf);
 
