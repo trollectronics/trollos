@@ -25,6 +25,11 @@ int32_t (*syscall_handler[SYSCALLS])(uint32_t arg0, uint32_t arg1, uint32_t arg2
 	[SYSCALL_GETPID] = syscall_getpid,
 };
 
+extern uint8_t syscall_context_switch_flag;
+void syscall_trigger_context_switch() {
+	syscall_context_switch_flag = 1;
+}
+
 int32_t syscall_stub(uint32_t syscall, uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) {
 	int32_t (*call)(uint32_t arg0, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4);
 	

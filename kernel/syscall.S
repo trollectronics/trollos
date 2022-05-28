@@ -1,3 +1,11 @@
+.data
+
+.align 4
+.global syscall_context_switch_flag
+syscall_context_switch_flag: .byte 0
+
+ctxsw: .asciz "force context switch\n"
+
 .text
 
 .align 2
@@ -57,9 +65,21 @@ int_syscall:
 	
 	unlk %fp
 	
-	cmp  #-1000, %d0
-	bne 1f
-	jmp process_isr
+	move.l %d0, -(%sp)
+	moveq #0, %d0
+	cmp.b (syscall_context_switch_flag), %d0
+	beq 1f
+
+	move.b %d0, (syscall_context_switch_flag)
+
+	|pea ctxsw
+	|move.l #3, -(%sp)
+	|jsr.l kprintf
+	|adda.l #8, %sp
+
+	move.l (%sp)+, %d0
+	jmp process_force_context_switch
 
 1:
+	move.l (%sp)+, %d0
 	rte

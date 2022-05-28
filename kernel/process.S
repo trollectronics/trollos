@@ -7,6 +7,7 @@ regs_tmp:
 .section .text
 .align 2
 .global process_isr
+.global process_force_context_switch
 process_isr:
 	movem.l %a0-%a6/%d0-%d7, (regs_tmp)
 	link %fp, #0
@@ -23,10 +24,11 @@ process_isr:
 	andi.l #0xFFFF, %d0
 	move.l %a0, -(%sp)
 	
-	jsr.l scheduler
+	jsr.l process_save_context
 	adda.l #16, %sp
 	
-	
+process_force_context_switch:	
+	jsr.l scheduler
 	move.l (%d0), %a0
 	move.w %a0, 4(%fp)
 	move.l 4(%d0), 6(%fp)

@@ -153,7 +153,7 @@ void process_save_context(uint32_t status_reg, void *stack_pointer, void *progra
 void *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter, void *regs_tmp) {
 	pid_t next;
 	
-	process_save_context(status_reg, stack_pointer, program_counter, regs_tmp);
+	//process_save_context(status_reg, stack_pointer, program_counter, regs_tmp);
 	
 	for(next = (_process_current + 1) % MAX_PROCESSES; !_process[next]; next = (next + 1) % MAX_PROCESSES);
 	process_switch_to(next);
