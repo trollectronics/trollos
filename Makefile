@@ -5,13 +5,12 @@ include config.mk
 # Sub directories to build
 SUBDIRS	=	 userspace kernel
 
-.PHONY: all clean
+.PHONY: all clean rootfs
 .PHONY: $(SUBDIRS)
 
 all: $(SUBDIRS)
 	@echo " [MKFS] $(OSFS)"
 	@genromfs -f $(OSFS) -d bin/root/ -V TrollOS
-	#@xxd -i $(OSFS) kernel/root.c
 	@cat "$(OSFS)" >> "$(BOOTIMG)"
 	@dd if=/dev/zero of=bin/sd.img bs=1M count=32
 	@/sbin/mkfs.msdos bin/sd.img
@@ -21,6 +20,9 @@ all: $(SUBDIRS)
 	
 	@echo "Build complete."
 	@echo 
+
+rootfs:
+	@xxd -i $(OSFS) kernel/root.c
 
 bin:
 	@echo " [INIT] bin/"

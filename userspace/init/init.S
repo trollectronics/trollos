@@ -5,36 +5,11 @@ buf: .space 512
 init_text: .asciz "I am init\n"
 
 pathname: .asciz "/test.txt"
+exename: .asciz "/sbin/testbin"
 
 .align 2
 .global _start
 _start:
-	#try invalid trap
-	trap #5
-	
-	addq.l #1, %d1
-	ori.l #1, %d1
-	andi.l #1, %d1
-	or.l %d1, %d2
-	
-	move.l #1, %d0
-	trap #10
-	cmp #0, %d0
-1:	bne 1b
-	
-	move.l #0xFFFF, %d0
-1:
-	subi.l #1, %d0
-	bne 1b
-	
-	trap #4
-	
-	move.l #3, %d0
-	move.l #1, %a0
-	move.l #init_text, %a1
-	move.l #10, %a2
-	trap #10
-	
 | open
 	move.l #4, %d0
 	move.l #pathname, %a0
@@ -56,6 +31,36 @@ _start:
 	move.l #512, %a2
 	trap #10
 	
+| write fname stdout	
+	move.l #3, %d0
+	move.l #1, %a0
+	move.l #pathname, %a1
+	move.l #8, %a2
+	trap #10
+
+| fork
+	move.l #1, %d0
+	trap #10
+
+	cmp.l #0, %d0
+	beq execve
+
+testtext:
+| test text
+	move.l #3, %d0
+	move.l #1, %a0
+	move.l #init_text, %a1
+	move.l #10, %a2
+	trap #10
+
+	bra testtext
+
+execve:
+| execve
+	move.l #10, %d0
+	move.l #exename, %a0
+	trap #10
+
 	#exit
 	move.l #5, %a4
 	move.l #4, %a3

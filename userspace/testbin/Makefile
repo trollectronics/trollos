@@ -11,28 +11,28 @@ SRCFILES	=	$(wildcard *.c)
 OBJFILES	=	$(SRCFILES:.c=.c.o)
 OBJFILES	+=	$(ASMFILES:.S=.S.o)
 
+BINFILE		=	 $(TOPDIR)/bin/testbin
+
 # Flags
 CFLAGS		+=	
 ASFLAGS		+=
 LSFLAGS		+=
 
 # Sub directories to build
-SUBDIRS		=	init testbin
+SUBDIRS	=	
 
 .PHONY: all clean
 .PHONY: $(SUBDIRS)
 
 all: $(OBJFILES) $(DEPENDS) $(SUBDIRS)
-	@$(MKDIR) $(TOPDIR)/bin/root/sbin
-	@cp $(TOPDIR)/bin/init $(TOPDIR)/bin/root/sbin/init
-	@cp $(TOPDIR)/bin/testbin $(TOPDIR)/bin/root/sbin/testbin
-	@echo 
+	@echo " [ LD ] bin/testbin"
+	@$(TARGETCC) $(CFLAGS) $(OBJFILES) -o $(BINFILE) $(LDFLAGS)
 	@echo "Done."
 	@echo
 	
 clean: $(SUBDIRS)
 	@echo
-	@echo " [ RM ] $(OBJFILES)"
+	@echo " [ RM ] $(OBJFILES) $(BINFILE)"
 	@$(RM) $(OBJFILES) $(BINFILE)
 	@echo "Done."
 	@echo 
