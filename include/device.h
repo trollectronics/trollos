@@ -35,6 +35,7 @@ struct Device {
 		CharDev chardev;
 		BlockDev blockdev;
 	};
+	void *priv;
 };
 
 
@@ -45,7 +46,7 @@ struct DeviceRegistration {
 	DeviceType type;
 };
 
-int device_register(const char *name, Device *device, dev_t *device_number);
+int device_register(const char *name, Device *device, dev_t *device_number_out);
 Device *device_lookup(dev_t device_number);
 dev_t device_lookup_name(const char *name, Device **device);
 int device_list(DeviceRegistration *dr, int id);

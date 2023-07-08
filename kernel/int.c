@@ -1,11 +1,25 @@
 #include <chipset.h>
 #include <mem_addr.h>
 #include <syscall.h>
+#include <errno.h>
 #include "util/log.h"
+#include "util/mem.h"
 #include "kernel.h"
 #include "int.h"
 
 void **int_vector = (void *) 0xDDD00;
+
+typedef struct IntHandler IntHandler;
+struct IntHandler {
+	void (*isr)(uint32_t interrupt, void *data);
+	void *data;
+
+	IntHandler *next;
+};
+
+
+IntHandler *int_handler[INTERRUPTS];
+
 
 void int_init() {
 	int i;
@@ -38,6 +52,38 @@ void int_perihperal_enable(uint32_t n) {
 	*CHIPSET_IO(n) = 0x1; //priority
 }
 
+int int_isr_register(uint32_t i, void (*isr)(uint32_t, void *), void *data) {
+	IntHandler *handler = NULL;
+
+	if (!(handler = kmalloc(sizeof(IntHandler))))
+		goto fail;
+
+
+	handler->isr = isr;
+	handler->data = data;
+	handler->next = int_handler[i];
+	int_handler[i] = handler;
+
+	return 0;
+	
+	fail:
+	return -ENOMEM;
+}
+
+void int_handler_internal(uint32_t interrupt) {
+	IntHandler *handler = NULL;
+
+	for (handler = int_handler[interrupt]; handler; handler = handler->next) {
+		//TODO: check return value, skip rest?
+		handler->isr(interrupt, handler->data);
+	}
+
+	//TODO: run scheduler here?
+	//Should ISRs be able to set a flag somewhere that scheduler needs to run
+}
+
+
+// TODO: move
 void int_vga_handle() {
 	*CHIPSET_IO(32 + CHIPSET_INT_NUM_VGA) = 0x0;
 }

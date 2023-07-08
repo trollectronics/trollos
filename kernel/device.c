@@ -16,14 +16,15 @@ struct RegisteredDevice {
 static RegisteredDevice *_device_registered[DEVICE_MAX];
 static uint16_t major_free = 1;
 
-int device_register(const char *name, Device *device, dev_t *device_number) {
+int device_register(const char *name, Device *device, dev_t *device_number_out) {
 	int i;
 	
 	//TODO: support minor numbers
-	*device_number = (major_free << 16) | 0x1;
+	dev_t devno = (major_free << 16) | 0x1;
+	*device_number_out = devno;
 	
 	for(i = 0; i < DEVICE_MAX; i++) {
-		if(!_device_registered[major(*device_number)])
+		if(!_device_registered[major(devno)])
 			continue;
 		if(!strcmp(_device_registered[i]->name, name)) {
 			kprintf(LOG_LEVEL_ERROR, "Device name '%s' already taken\n", name);

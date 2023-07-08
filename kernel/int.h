@@ -2,6 +2,7 @@
 #define	__INT_H__
 
 #define INT_OFFSET_TRAP 32
+#define INTERRUPTS 256
 
 void int_stub();
 void int_syscall();
