@@ -52,4 +52,8 @@ dev_t device_lookup_name(const char *name, Device **device);
 int device_list(DeviceRegistration *dr, int id);
 int device_max();
 
+ssize_t chardev_read(Device *dev, void *buf, size_t count);
+ssize_t chardev_write(Device *dev, const void *buf, size_t count);
+ssize_t chardev_ioctl(Device *dev, unsigned long request, ...);
+
 #endif

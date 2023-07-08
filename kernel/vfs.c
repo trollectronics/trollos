@@ -215,11 +215,7 @@ ssize_t vfs_write(int fd, void *buf, size_t count) {
 			return -ENOSYS;
 		}
 	} else if (dev->type == DEVICE_TYPE_CHAR) {
-		if (dev->chardev.write) {
-			return dev->chardev.write(buf, count);
-		} else {
-			return -ENOSYS;
-		}
+		return chardev_write(dev, buf, count);
 	} else
 		return -ENOSYS;
 }
@@ -242,9 +238,7 @@ ssize_t vfs_read(int fd, void *buf, size_t count) {
 		if (!dev)
 			return -ENODEV;
 		if (dev->type == DEVICE_TYPE_CHAR) {
-			if (!dev->chardev.read)
-				return -ENOSYS;
-			return dev->chardev.read(buf, count);
+			return chardev_read(dev, buf, count);
 		} else {
 			if (!dev->blockdev.read)
 				return -ENOSYS;
