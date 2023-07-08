@@ -14,7 +14,11 @@ process_isr:
 
 	#set up userspace stack frame with stack pointer, return address, etc
 	
-	jsr.l int_vga_handle
+	move.w 10(%fp), %d0
+	andi.l #0x0FFF, %d0
+	move.l %d0, -(%sp)
+	jsr.l int_handler_internal
+	adda.l #4, %sp
 	
 	pea regs_tmp
 	move.l 6(%fp), -(%sp)

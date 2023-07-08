@@ -2,6 +2,7 @@
 #define	__INT_H__
 
 #define INT_OFFSET_TRAP 32
+#define INT_VECTOR_OFFSET_AVEC 0x63
 #define INTERRUPTS 256
 
 void int_stub();

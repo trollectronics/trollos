@@ -35,6 +35,10 @@ void panic(const char *message) {
 	for(;;);
 }
 
+void isr_vga(uint32_t interrupt, void *data) {
+	*CHIPSET_IO(32 + CHIPSET_INT_NUM_VGA) = 0x0;
+}
+
 int main(int argc, char **argv) {
 	int (*init)(int argc, char **argv);
 	int i;
@@ -119,6 +123,7 @@ int main(int argc, char **argv) {
 	proc->file[2] = 0;
 	
 	kprintf(LOG_LEVEL_INFO, "Now starting init @ 0x%X\n", init);
+	int_isr_register(1, isr_vga, NULL);
 	int_set_handler(CHIPSET_INT_BASE + 1, process_isr);
 	int_disable();
 	int_perihperal_enable(CHIPSET_INT_NUM_VGA);

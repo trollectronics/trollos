@@ -73,6 +73,8 @@ int int_isr_register(uint32_t i, void (*isr)(uint32_t, void *), void *data) {
 void int_handler_internal(uint32_t interrupt) {
 	IntHandler *handler = NULL;
 
+	interrupt -= INT_VECTOR_OFFSET_AVEC; //first autovector interrupt
+
 	for (handler = int_handler[interrupt]; handler; handler = handler->next) {
 		//TODO: check return value, skip rest?
 		handler->isr(interrupt, handler->data);
@@ -83,7 +85,3 @@ void int_handler_internal(uint32_t interrupt) {
 }
 
 
-// TODO: move
-void int_vga_handle() {
-	*CHIPSET_IO(32 + CHIPSET_INT_NUM_VGA) = 0x0;
-}

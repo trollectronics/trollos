@@ -33,7 +33,11 @@ int_stub:
 	move.l %d0, -(%sp)
 	move.l %d1, -(%sp)
 	
-	jsr.l int_vga_handle
+	move.w 22(%fp), %d0 //22 ?!?!
+	andi.l #0x0FFF, %d0
+	move.l %d0, -(%sp)
+	jsr.l int_handler_internal
+	adda.l #4, %sp
 	
 	move.l (%sp)+, %d1
 	move.l (%sp)+, %d0
@@ -41,21 +45,6 @@ int_stub:
 	move.l (%sp)+, %a0
 	rte
 
-.align 2
-.global int_vga
-int_vga:
-	move.l %a0, -(%sp)
-	move.l %a1, -(%sp)
-	move.l %d0, -(%sp)
-	move.l %d1, -(%sp)
-	
-	jsr.l int_vga_handle
-	
-	move.l (%sp)+, %d1
-	move.l (%sp)+, %d0
-	move.l (%sp)+, %a1
-	move.l (%sp)+, %a0
-	rte
 
 arne: .asciz "syscall %u with %u %u %u %u %u\n"
 
