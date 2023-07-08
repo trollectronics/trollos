@@ -31,15 +31,24 @@ freely, subject to the following restrictions:
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <trollos/vfs.h>
+
 #include "../../util/log.h"
 
 #include "../../util/string.h"
 
+#define	MAX_ROMFS 2
+
 #define	MAKE_INT(ptr)	((((uint8_t *) ptr)[0] << 24) | (((uint8_t *) ptr)[1] << 16) | (((uint8_t *) ptr)[2] << 8) | (((uint8_t *) ptr)[3]))
 
-static dev_t device;
-static ino_t root_inode;
+struct Instance {
+	int used;
+	dev_t device;
+	ino_t root_inode;
+};
 
+
+static struct Instance _instance[MAX_ROMFS];
 
 static int _read_unaligned(dev_t dev, void *buf, ssize_t bytes, off_t offset) {
 	/*ssize_t blksize, dobytes;
@@ -93,25 +102,25 @@ static mode_t _byte_to_mode(uint8_t byte, uint32_t special, dev_t *rdev) {
 }
 
 
-int fs_romfs_read_directory(ino_t inode, off_t pos, struct dirent *de) {
+int fs_romfs_read_directory(int instance, ino_t inode, off_t pos, struct dirent *de) {
 	uint8_t buff[16 + NAME_MAX + 1];
 	int i;
 	dev_t dev;
 	
-	inode += root_inode;
+	inode += _instance[instance].root_inode;
 
 	if (pos < 0)
 		return -EINVAL;
-	_read_unaligned(device, buff, 16, inode * 16);
+	_read_unaligned(_instance[instance].device, buff, 16, inode * 16);
 	
-	if (inode != root_inode) {
+	if (inode != _instance[instance].root_inode) {
 		inode = MAKE_INT(buff + 4) >> 4;
 		if ((buff[3] & 0x7) != 0x1)
 			return -ENOTDIR;
 	}
 		
 	for (i = 0; inode; i++) {
-		_read_unaligned(device, buff, 16 + NAME_MAX + 1, inode * 16);
+		_read_unaligned(_instance[instance].device, buff, 16 + NAME_MAX + 1, inode * 16);
 		if (i == pos)
 			break;
 
@@ -122,7 +131,7 @@ int fs_romfs_read_directory(ino_t inode, off_t pos, struct dirent *de) {
 	if (!inode)
 		return 0;
 
-	de->d_ino = inode - root_inode;
+	de->d_ino = inode - _instance[instance].root_inode;
 	de->d_mode = _byte_to_mode(buff[3], MAKE_INT(buff + 4), &dev);
 	strncpy(de->d_name, (char *) buff + 16, NAME_MAX);
 	de->d_name[NAME_MAX] = 0;
@@ -131,90 +140,92 @@ int fs_romfs_read_directory(ino_t inode, off_t pos, struct dirent *de) {
 }
 
 
-ssize_t fs_romfs_read(ino_t inode, void *data, size_t bytes, off_t offset) {
+ssize_t fs_romfs_read(int instance, ino_t inode, void *data, size_t bytes, off_t offset) {
 	uint8_t node[16];
 	int i, j;
 	
-	inode += root_inode;
-	_read_unaligned(device, node, 16, inode * 16);
+	inode += _instance[instance].root_inode;
+	_read_unaligned(_instance[instance].device, node, 16, inode * 16);
 	if (offset + bytes > MAKE_INT(node + 8))
 		bytes = MAKE_INT(node + 8) - offset;
 	for (i = 0; i < 16; i++) {
-		_read_unaligned(device, node, 16, inode * 16 + 16 + i * 16);
+		_read_unaligned(_instance[instance].device, node, 16, inode * 16 + 16 + i * 16);
 		for (j = 0; j < 16; j++)
 			if (!node[j])
 				goto done;
 	}
 done:
 	i++;
-	_read_unaligned(device, data, bytes, inode * 16 + 16 + i * 16 + offset);
+	_read_unaligned(_instance[instance].device, data, bytes, inode * 16 + 16 + i * 16 + offset);
 	return bytes;
 }
 
 
-int fs_romfs_stat_inode(ino_t inode, struct stat *s) {
+int fs_romfs_stat_inode(int instance, ino_t inode, struct stat *s) {
 	uint8_t buff[16];
 	struct Device *d;
 
-	d = device_lookup(device);
+	d = device_lookup(_instance[instance].device);
 	
-	inode += root_inode;
-	_read_unaligned(device, buff, 16, inode * 16);
+	inode += _instance[instance].root_inode;
+	_read_unaligned(_instance[instance].device, buff, 16, inode * 16);
 	
-	s->st_dev = device;
-	s->st_ino = inode - root_inode;
+	s->st_dev = _instance[instance].device;
+	s->st_ino = inode - _instance[instance].root_inode;
 	s->st_rdev = 0;
 	s->st_mode = _byte_to_mode(buff[3], MAKE_INT(buff + 4), &s->st_rdev);
 	s->st_nlink = 1;
 	s->st_uid = 0;
 	s->st_gid = 0;
 	s->st_size = MAKE_INT(buff + 8);
-	s->st_blksize = d->blockdev.blksize(device);
-	s->st_blocks = (MAKE_INT(buff + 8) + d->blockdev.blksize(device) - 1) / d->blockdev.blksize(device);
+	s->st_blksize = d->blockdev.blksize(_instance[instance].device);
+	s->st_blocks = (MAKE_INT(buff + 8) + d->blockdev.blksize(_instance[instance].device) - 1) / d->blockdev.blksize(_instance[instance].device);
 	s->st_mtime = 0;
 
 	return 0;
 }
 
 
-int fs_romfs_stat(ino_t inode, const char *fname, struct stat *s) {
+int fs_romfs_stat(int instance, ino_t inode, const char *fname, struct stat *s) {
 	uint8_t buff[16+NAME_MAX+1];
 	
-	inode += root_inode;
-	_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
+	inode += _instance[instance].root_inode;
+	_read_unaligned(_instance[instance].device, buff, 16+NAME_MAX+1, inode * 16);
 	if (!*fname)
 		goto stat;
-	if (inode != root_inode) {
+	if (inode != _instance[instance].root_inode) {
 		if ((buff[3] & 0x7) != 1)
 			return -ENOTDIR;
 		inode = MAKE_INT(buff + 4) >> 4;
 	}
 	for (; inode; inode = MAKE_INT(buff) >> 4) {
-		_read_unaligned(device, buff, 16+NAME_MAX+1, inode * 16);
+		_read_unaligned(_instance[instance].device, buff, 16+NAME_MAX+1, inode * 16);
 		if (!strncmp(fname, (char *) buff + 16, NAME_MAX))
 			goto stat;
 	}
 
 	return -ENOENT;
 stat:
-	return fs_romfs_stat_inode(inode - root_inode, s);
+	return fs_romfs_stat_inode(instance, inode - _instance[instance].root_inode, s);
 }
 
 
-int fs_romfs_instantiate(dev_t dev) {
+int fs_romfs_mount(dev_t dev, ino_t *root_inode) {
 	uint8_t buff[512];
-	int i;
-
-	device = dev;
+	int i, q;
+	
+	for (q = 0; q < MAX_ROMFS; q++)
+		if (!_instance[q].used)
+			break;
+	if (q == MAX_ROMFS)
+		return -ENOMEM;
+	_instance[q].device = dev;
 
 	_read_unaligned(dev, buff, 512, 0);
 	
 	if (strncmp("-rom1fs-", (char *) buff, 8))
 		return -EINVAL;
-	
-	
-	
-	
+
 	for (i = 16; i < 512; i++) {
 		if (buff[i])
 			continue;
@@ -224,7 +235,23 @@ int fs_romfs_instantiate(dev_t dev) {
 	if (i == 512)
 		return -EINVAL;
 	i += 16;
-	root_inode = i / 16;
+	_instance[q].root_inode = i / 16;
+	*root_inode = 0;
+	_instance[q].used = 1;
 
-	return 0;
+	return q;
+}
+
+
+int fs_romfs_init() {
+	struct VFSFSType instance;
+
+	strcpy(instance.name, "romfs");
+	instance._stat = fs_romfs_stat;
+	instance._stat_inode = fs_romfs_stat_inode;
+	instance._read = fs_romfs_read;
+	instance._read_directory = fs_romfs_read_directory;
+	instance._mount = fs_romfs_mount;
+	
+	return vfs_fs_register(&instance);
 }

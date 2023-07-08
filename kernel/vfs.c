@@ -29,9 +29,25 @@ freely, subject to the following restrictions:
 #include <trollos/vfs.h>
 #include "util/log.h"
 #include "util/printf.h"
+#include "util/string.h"
 
 static struct VFSFileEntry vfs_file[MAX_GLOBAL_FILES];
+static struct VFSFSType _vfs_type[MAX_FILE_SYSTEMS];
 
+struct VFSMountPoint {
+	int		is_used;
+	int		open_files;
+	dev_t		dev;
+	ino_t		inode;
+
+	int		mounted_fs;
+	int		mounted_instance;
+	dev_t		mounted_dev;
+	ino_t		mounted_ino;
+};
+
+
+static struct VFSMountPoint _vfs_mount[MAX_MOUNT_POINTS];
 //static dev_t device;
 
 
@@ -62,9 +78,23 @@ static int _extract_component(const char *str, char *component) {
 }
 
 
-static int _resolv_ino(const char *path, dev_t *dev, ino_t *ino, int link) {
+static int _is_mountpoint(dev_t dev, ino_t ino) {
+	int i;
+
+	for (i = 0; i < MAX_MOUNT_POINTS; i++) {
+		if (!_vfs_mount[i].is_used)
+			continue;
+		if ((_vfs_mount[i].dev == dev && _vfs_mount[i].inode == ino))
+			return i;
+	}
+
+	return -1;
+}
+
+
+static int _resolv_ino(const char *path, int *mp_out, ino_t *ino, int link) {
 	char c[NAME_MAX + 1];
-	int pos, err;
+	int pos, err, cur_fs, cur_fsi, i, mp;
 	ino_t dir;
 	struct stat s;
 
@@ -74,14 +104,38 @@ static int _resolv_ino(const char *path, dev_t *dev, ino_t *ino, int link) {
 		return -EINVAL;
 	if (path[0] != '/')
 		return -ENOENT;
+
+	for (i = 0; i < MAX_MOUNT_POINTS; i++) {
+		if (!_vfs_mount[i].is_used)
+			continue;
+		if (_vfs_mount[i].dev != ~0 || _vfs_mount[i].inode != ~0)
+			continue;
+		break;
+	}
+
+	if (i == MAX_MOUNT_POINTS)
+		return -ENOENT;
+	
+	
+	cur_fs = _vfs_mount[i].mounted_fs;
+	cur_fsi = i;
 	
 	dir = 0;
 	pos = _extract_component(&path[1], c) + 1;
 	while (path[pos] == '/')
 		pos++;
 	for (link = 0; path[pos]; ) {
-		if ((err = fs_romfs_stat(dir, c, &s)) < 0)
+		if ((err = _vfs_type[cur_fs]._stat(_vfs_mount[cur_fsi].mounted_instance, dir, c, &s)) < 0) {
 			return err;
+		}
+		if ((mp = _is_mountpoint(s.st_dev, s.st_ino)) >= 0) {
+			cur_fs = _vfs_mount[mp].mounted_fs;
+			cur_fsi = mp;
+			dir = _vfs_mount[mp].mounted_ino;
+			pos += _extract_component(&path[pos], c);	
+			continue;
+		}
+
 		if (S_ISDIR(s.st_mode)) {
 			if (!path[pos]) 
 				goto done;
@@ -92,34 +146,36 @@ static int _resolv_ino(const char *path, dev_t *dev, ino_t *ino, int link) {
 			return -ENOTDIR;
 		}
 	}
-	if ((err = fs_romfs_stat(dir, c, &s)) < 0)
+
+	if ((err = _vfs_type[cur_fs]._stat(_vfs_mount[cur_fsi].mounted_instance, dir, c, &s)) < 0) {
 		return err;
+	}
 
 done:
-
-	*dev = s.st_dev;
+	*mp_out = cur_fsi;
 	*ino = s.st_ino;
 	return 0;
 }
 
 
-int vfs_stat(const char *path, struct stat *s) {
-	int err;
-	dev_t dev;
+int vfs_stat(const char *path, int *mp_out, struct stat *s) {
+	int err, mp;
 	ino_t ino;
 
-	if ((err = _resolv_ino(path, &dev, &ino, 0)) < 0) {
+	if ((err = _resolv_ino(path, &mp, &ino, 0)) < 0) {
 		kprintf(LOG_LEVEL_ERROR, "vfs_stat failed to resolve inode for %s (%i)\n", path, err);
 		return err;
 	}
-	if ((err = fs_romfs_stat(ino, "", s)) < 0)
+	if ((err = _vfs_type[_vfs_mount[mp].mounted_fs]._stat_inode(_vfs_mount[mp].mounted_instance, ino, s)) < 0)
 		return err;
+	if (mp_out)
+		*mp_out = mp;
 	return 0;
 }
 
 
-static int vfs_stat_inode(ino_t ino, dev_t dev, struct stat *s) { // Must *not* be exposed to userspsace
-	return fs_romfs_stat_inode(ino, s);
+static int vfs_stat_inode(int instance, ino_t ino, struct stat *s) { // Must *not* be exposed to userspsace
+	return _vfs_type[_vfs_mount[instance].mounted_fs]._stat_inode(_vfs_mount[instance].mounted_instance, ino, s);
 }
 
 
@@ -135,7 +191,7 @@ off_t vfs_seek(int fd, off_t offset, int whence) {
 		return vfs_file[fd].pos += offset, 0;
 	} else if (whence == 2) {
 		struct stat s;
-		vfs_stat_inode(vfs_file[fd].data.fs.inode, vfs_file[fd].data.dev.dev, &s);
+		vfs_stat_inode(vfs_file[fd].data.fs.instance, vfs_file[fd].data.fs.inode, &s);
 		vfs_file[fd].pos = s.st_size + offset;
 		return 0;
 	} else
@@ -172,11 +228,15 @@ ssize_t vfs_write(int fd, void *buf, size_t count) {
 ssize_t vfs_read(int fd, void *buf, size_t count) {
 	struct Device *dev;
 	ssize_t err;
+	int mp;
 
 	if (fd < -1 || fd >= MAX_GLOBAL_FILES)
 		return -EBADF;
 	if (!vfs_file[fd].is_used)
 		return -EBADF;
+
+	mp = vfs_file[fd].data.fs.instance;
+
 	if (vfs_file[fd].is_device) {
 		dev = device_lookup(vfs_file[fd].data.dev.dev);
 		if (!dev)
@@ -197,7 +257,7 @@ ssize_t vfs_read(int fd, void *buf, size_t count) {
 			return -EISDIR;
 		if (!vfs_file[fd].read)
 			return -EACCES;
-		err = fs_romfs_read(vfs_file[fd].data.fs.inode, buf, count, vfs_file[fd].pos);
+		err = _vfs_type[_vfs_mount[mp].mounted_fs]._read(_vfs_mount[mp].mounted_instance, vfs_file[fd].data.fs.inode, buf, count, vfs_file[fd].pos);
 		if (err > 0)
 			vfs_file[fd].pos += err;
 		return err;
@@ -207,7 +267,7 @@ ssize_t vfs_read(int fd, void *buf, size_t count) {
 
 
 int vfs_read_directory(int fd, struct dirent *de, int dirs) {
-	int i, err;
+	int i, err, mp;
 	struct dirent tde;
 
 	if (fd < 0 || fd >= MAX_GLOBAL_FILES)
@@ -216,9 +276,11 @@ int vfs_read_directory(int fd, struct dirent *de, int dirs) {
 		return -ENOTDIR;
 	if (!vfs_file[fd].directory)
 		return -ENOTDIR;
+	
+	mp = vfs_file[fd].data.fs.instance;
 
 	for (i = 0; i < dirs; i++) {
-		if ((err = fs_romfs_read_directory(vfs_file[fd].data.fs.inode, vfs_file[fd].pos, &tde)) < 0)
+		if ((err = _vfs_type[_vfs_mount[mp].mounted_fs]._read_directory(_vfs_mount[mp].mounted_instance, vfs_file[fd].data.fs.inode, vfs_file[fd].pos, &tde)) < 0)
 			return err;
 		if (!err)
 			return i;
@@ -230,10 +292,10 @@ int vfs_read_directory(int fd, struct dirent *de, int dirs) {
 
 
 int vfs_open(const char *path, int flags) {
-	int err;
+	int err, mp;
 	struct stat s;
 	
-	if ((err = vfs_stat(path, &s)) < 0) {
+	if ((err = vfs_stat(path, &mp, &s)) < 0) {
 		return err;
 	}
 	if ((err = _alloc_file()) < 0)
@@ -247,6 +309,7 @@ int vfs_open(const char *path, int flags) {
 	vfs_file[err].directory = false;
 	vfs_file[err].pos = 0;
 	vfs_file[err].data.fs.inode = s.st_ino;
+	vfs_file[err].data.fs.instance = mp;
 
 	if (S_ISBLK(s.st_mode) || S_ISCHR(s.st_mode)) {
 		vfs_file[err].is_device = true;
@@ -260,6 +323,7 @@ int vfs_open(const char *path, int flags) {
 	}
 
 	vfs_file[err].ref = 1;
+	_vfs_mount[mp].open_files++;
 	
 	return err;
 }
@@ -294,7 +358,83 @@ int vfs_close(int fd) {
 	if (fd < 0 || fd >= MAX_GLOBAL_FILES)
 		return -EBADF;
 	vfs_file[fd].ref--;
-	if (!vfs_file[fd].ref)
+	if (!vfs_file[fd].ref) {
 		vfs_file[fd].is_used = false;
+		_vfs_mount[vfs_file[fd].data.fs.instance].open_files--;
+	}
+
+	return 0;
+}
+
+
+int vfs_fs_register(struct VFSFSType *fs) {
+	int i, q;
+	struct VFSFSType _fs = *fs;
+
+	_fs.name[15] = 0;
+	
+	q = -1;
+
+	for (i = 0; i < MAX_FILE_SYSTEMS; i++) {
+		if (_vfs_type[i].used) {
+			if (!strcmp(_vfs_type[i].name, _fs.name))
+				return -EEXIST;
+			continue;
+		}
+
+		q = i;
+	}
+
+	if (q < 0)
+		return -ENOMEM;
+
+	_vfs_type[q] = _fs;
+	_vfs_type[q].used = 1;
+	return q;
+}
+
+
+int vfs_mount(dev_t dev, const char *path, const char *fs) {
+	int i, instance;
+	struct stat s;
+
+	for (i = 0; i < MAX_FILE_SYSTEMS; i++) {
+		if (!_vfs_type[i].used)
+			continue;
+		if (strcmp(_vfs_type[i].name, fs))
+			continue;
+		break;
+	}
+
+	if (i == MAX_FILE_SYSTEMS)
+		return -EINVAL;
+	
+	
+	for (instance = 0; instance < MAX_MOUNT_POINTS; instance++)
+		if (!_vfs_mount[instance].is_used)
+			break;
+	if (instance == MAX_MOUNT_POINTS)
+		return -ENOMEM;
+	
+	
+	if (path[0] == '/' && !path[1]) {
+		_vfs_mount[instance].dev = ~0;
+		_vfs_mount[instance].inode = ~0;
+	} else {
+		int err, parent;
+		if ((err = vfs_stat(path, &parent, &s)) < 0)
+			return err;
+		_vfs_mount[instance].dev = s.st_dev;
+		_vfs_mount[instance].inode = s.st_ino;
+		_vfs_mount[parent].open_files++;
+	}
+	
+	if ((_vfs_mount[instance].mounted_instance = _vfs_type[i]._mount(dev, &_vfs_mount[instance].mounted_ino)) < 0)
+		return _vfs_mount[instance].mounted_instance;
+	_vfs_mount[instance].mounted_dev = dev;
+	_vfs_mount[instance].mounted_fs = i;
+	_vfs_mount[instance].open_files = 0;
+	_vfs_mount[instance].is_used = 1;
+
 	return 0;
 }
