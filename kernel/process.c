@@ -155,7 +155,7 @@ void *scheduler(uint32_t status_reg, void *stack_pointer, void *program_counter,
 	
 	//process_save_context(status_reg, stack_pointer, program_counter, regs_tmp);
 	
-	for(next = (_process_current + 1) % MAX_PROCESSES; !_process[next]; next = (next + 1) % MAX_PROCESSES);
+	for(next = (_process_current + 1) % MAX_PROCESSES; !_process[next] || _process[next]->state == PROCESS_STATE_BLOCKED; next = (next + 1) % MAX_PROCESSES);
 	process_switch_to(next);
 	//kprintf(LOG_LEVEL_DEBUG, "Scheduler switching to %i PC=%X\n", next, _process[next]->reg.pc);
 	/*kprintf(LOG_LEVEL_DEBUG, " - PC = 0x%x\n", _process[_process_current]->reg.pc);
