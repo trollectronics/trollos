@@ -5,6 +5,14 @@
 
 #include "sys/types.h"
 
+
+typedef struct DeviceIOQueue DeviceIOQueue;
+struct DeviceIOQueue {
+	pid_t pid;
+
+	DeviceIOQueue *next;
+};
+
 typedef enum DeviceType DeviceType;
 enum DeviceType {
 	DEVICE_TYPE_INVALID = -1,
@@ -17,6 +25,10 @@ struct CharDev {
 	ssize_t (*read)(void *buf, size_t count);
 	ssize_t (*write)(const void *buf, size_t count);
 	ssize_t (*ioctl)(unsigned long request, ...);
+
+	DeviceIOQueue *queue_read;
+	DeviceIOQueue *queue_write;
+	DeviceIOQueue *queue_ioctl;
 };
 
 typedef struct BlockDev BlockDev;
@@ -26,6 +38,8 @@ struct BlockDev {
 	ssize_t (*size)(dev_t device);
 	ssize_t (*blksize)(dev_t device);
 	ssize_t (*ioctl)(unsigned long request, ...);
+
+	DeviceIOQueue *queue;
 };
 
 typedef struct Device Device;

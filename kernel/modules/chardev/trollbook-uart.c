@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <uart.h>
+#include <errno.h>
 
 #include "../../util/mem.h"
 
@@ -42,14 +43,17 @@ struct TrollbookUart {
 };
 
 int _isr(uint32_t interrupt, void *data) {
-	TrollbookUart *uart = data;
+	UartBackend *uart = data;
+	TrollbookUart *tbuart = uart->private;
 
-	if (uart->hw->status.rx_full) {
-		uart->hw->ctrl.rx_full_ie = false;
+	if (tbuart->hw->status.rx_full) {
+		tbuart->hw->ctrl.rx_full_ie = false;
+
+		chardev_read_callback(uart);
 	}
 
-	if (uart->hw->status.tx_empty) {
-		uart->hw->ctrl.tx_empty_ie = false;
+	if (tbuart->hw->status.tx_empty) {
+		tbuart->hw->ctrl.tx_empty_ie = false;
 	}
 
 	return 0;
@@ -65,6 +69,7 @@ int _putc(UartBackend *uart, int c) {
 	} else {
 
 		tbuart->hw->ctrl.tx_empty_ie = true;
+		return -EWOULDBLOCK;
 	}
 
 	//check txfull

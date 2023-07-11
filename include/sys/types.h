@@ -15,6 +15,7 @@ typedef int32_t uid_t;
 typedef int32_t gid_t;
 typedef uint32_t blksize_t;
 typedef uint64_t blkcnt_t;
+typedef int32_t pid_t;
 
 #define makedev(maj, min) ((dev_t) ((((maj) & 0xFFFF) << 16) | (min & 0xFFFF)))
 #define minor(dev) ((dev) & 0xFFFF)

@@ -7,7 +7,6 @@
 #include <mmu.h>
 #include "time.h"
 
-typedef int32_t pid_t;
 
 #define MAX_PROCESS_FILES 64
 #define MAX_PROCESSES 1024

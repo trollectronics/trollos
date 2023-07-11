@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_ERRNO_H__
 #define __INCLUDE_ERRNO_H__
 
+#define EWOULDBLOCK EAGAIN
+
 typedef enum Errno Errno;
 enum Errno {
 	EPERM = 1,
@@ -40,5 +42,6 @@ enum Errno {
 	
 	ENOSYS = 38
 };
+
 
 #endif
